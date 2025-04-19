@@ -49,16 +49,18 @@ int esperar_cliente(int socket_servidor){
     return socket_cliente;
 }
 int esperar_clientes_multiplexado(int socket_servidor){
-    while(1){
+    int nuevo_socket = accept(socket_servidor, NULL, NULL);
+    if(nuevo_socket == -1){
+        log_error(logger, "error en el accept");
+    }
         pthread_t thread;
         int *fd_conexion_ptr = malloc(sizeof(int));
-        *fd_conexion_ptr = accept(socket_servidor,NULL,NULL);
+        *fd_conexion_ptr = nuevo_socket;
         pthread_create(&thread,
                        NULL,
-                       (void*) atender_cliente,
+                       atender_cliente,
                        fd_conexion_ptr);
     pthread_detach(thread);
-    }
 }
 
 

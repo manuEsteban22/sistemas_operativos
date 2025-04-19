@@ -9,14 +9,25 @@ char* puerto_dispatch;
 char* puerto_interrupt;
 int socket_dispatch;
 int socket_interrupt;
+pthread_t thread_dispatch;
+pthread_t thread_interrupt;
 
 int main(int argc, char* argv[]) {
     int conexion_memoria;
     logger = iniciar_logger();
     config = iniciar_config();
+    //hago la conexion como cliente al servidor memoria
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    //inicio ambos servidores para recibir señales de dispatch e interrupt del CPU
     socket_dispatch = iniciar_servidor(puerto_dispatch);
     socket_interrupt = iniciar_servidor(puerto_interrupt);
+    //creo hilos para poder manejar los accept en ambas instancias de servidor
+    pthread_create(&thread_dispatch, NULL, (void*)esperar_clientes_multiplexado, socket_dispatch);
+    pthread_create(&thread_interrupt, NULL, (void*)esperar_clientes_multiplexado, socket_interrupt);
+    //desconecta los hilos cuando terminan
+    pthread_join(thread_dispatch, NULL);
+    pthread_join(thread_interrupt, NULL);
+    //esperar_clientes_multiplexado(socket_dispatch)
     //esperar_cliente
     return 0;
 }
