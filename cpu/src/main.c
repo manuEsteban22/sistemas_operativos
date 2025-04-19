@@ -1,6 +1,6 @@
-#include <utils/hello.h>
+#include <utils/utils.c>
 
 int main(int argc, char* argv[]) {
-    saludar("cpu");
+    
     return 0;
 }
