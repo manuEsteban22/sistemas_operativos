@@ -10,13 +10,13 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-t_log* iniciar_logger(){
+t_log* iniciar_logger(void){
     t_log* nuevo_logger;
     nuevo_logger = log_create("memoria.log","LogMem",true,LOG_LEVEL_INFO);
     log_info(nuevo_logger, "funciona logger memoria :)");
     return nuevo_logger;
 }
-//blito Puto
+//cerrar logger, config, etc
 void terminar_programa(t_log* logger){
     log_destroy(logger);
 }
