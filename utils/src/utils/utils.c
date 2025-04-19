@@ -2,7 +2,19 @@
 
 t_log* logger;
 int fd_escucha;
-int iniciar_servidor(void){
+
+void* atender_cliente(void* fd_conexion_ptr) {
+    int socket_cliente = *((int*)fd_conexion_ptr);
+    free(fd_conexion_ptr);
+
+    log_info(logger, "se conectó un cliente");
+
+    close(socket_cliente);
+
+    return NULL;
+}
+
+int iniciar_servidor(char* PUERTO){
     int socket_servidor;
 
     struct addrinfo hints, *server_info, *p;
@@ -27,15 +39,30 @@ int iniciar_servidor(void){
     listen(fd_escucha, SOMAXCONN);
     freeaddrinfo(server_info);
     log_info(logger, "Listo para escucha");
-    return socket_servidor;
+    return fd_escucha;
 }
 
 int esperar_cliente(int socket_servidor){
     int socket_cliente;
-    socket_cliente = accept(fd_escucha, NULL, NULL);
+    socket_cliente = accept(socket_servidor, NULL, NULL);
     log_info(logger, "se conecto un cliente");
     return socket_cliente;
 }
+int esperar_clientes_multiplexado(int socket_servidor){
+    while(1){
+        pthread_t thread;
+        int *fd_conexion_ptr = malloc(sizeof(int));
+        *fd_conexion_ptr = accept(socket_servidor,NULL,NULL);
+        pthread_create(&thread,
+                       NULL,
+                       (void*) atender_cliente,
+                       fd_conexion_ptr);
+    pthread_detach(thread);
+    }
+}
+
+
+
 
 int recibir_operacion(int socket_cliente){
     int cod_op;

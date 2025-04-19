@@ -9,5 +9,4 @@
 #include<sys/socket.h>
 #include<netdb.h>
 #include<string.h>
-#define PUERTO "4444"
-#define IP "127.0.0.1"
+#include<pthread.h>
