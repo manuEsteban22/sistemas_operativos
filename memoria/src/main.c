@@ -16,7 +16,7 @@ t_log* iniciar_logger(){
     log_info(nuevo_logger, "funciona logger memoria :)");
     return nuevo_logger;
 }
-
+//blito Puto
 void terminar_programa(t_log* logger){
     log_destroy(logger);
 }
