@@ -7,8 +7,11 @@ char* ip_memoria;
 char* puerto_memoria;
 char* puerto_dispatch;
 char* puerto_interrupt;
+char* puerto_io;
+int socket_io;
 int socket_dispatch;
 int socket_interrupt;
+pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
 
@@ -19,14 +22,17 @@ int main(int argc, char* argv[]) {
     //hago la conexion como cliente al servidor memoria
     conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
     //inicio ambos servidores para recibir señales de dispatch e interrupt del CPU
+    socket_io = iniciar_servidor(puerto_io);
     socket_dispatch = iniciar_servidor(puerto_dispatch);
     socket_interrupt = iniciar_servidor(puerto_interrupt);
     //creo hilos para poder manejar los accept en ambas instancias de servidor
     pthread_create(&thread_dispatch, NULL, (void*)esperar_clientes_multiplexado, socket_dispatch);
     pthread_create(&thread_interrupt, NULL, (void*)esperar_clientes_multiplexado, socket_interrupt);
+    pthread_create(&thread_io, NULL, (void*)esperar_clientes_multiplexado, socket_io);
     //desconecta los hilos cuando terminan
     pthread_join(thread_dispatch, NULL);
     pthread_join(thread_interrupt, NULL);
+    pthread_join(thread_io, NULL);
     //esperar_clientes_multiplexado(socket_dispatch)
     //esperar_cliente
     return 0;
@@ -45,17 +51,20 @@ t_config* iniciar_config(void){
     if(config_has_property(nuevo_config, "IP_MEMORIA") &&
     config_has_property(nuevo_config, "PUERTO_MEMORIA") && 
     config_has_property(nuevo_config, "PUERTO_ESCUCHA_DISPATCH") &&
-    config_has_property(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT")){
+    config_has_property(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT") &&
+    config_has_property(nuevo_config, "PUERTO_ESCUCHA_IO")){
         ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
+        puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del server memoria es: %s", ip_memoria);
     log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
     log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
-     log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
+    log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
+    log_info(logger, "el puerto del server io es: %s", puerto_io);
     return nuevo_config;
 }
 
