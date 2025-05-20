@@ -1,3 +1,6 @@
+#ifndef UTILS_H_
+#define UTILS_H_
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -11,3 +14,13 @@
 #include<string.h>
 #include<pthread.h>
 #include<semaphore.h>
+
+//#include<conexion_cpu.c>
+typedef struct
+{
+    int size;
+    void* stream;
+} t_buffer;
+
+
+#endif

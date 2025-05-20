@@ -98,3 +98,24 @@ int crear_conexion(char* ip, char* puerto){
 
     return socket_cliente;
 }
+
+t_buffer* crear_buffer(void){
+    t_buffer* buffer;
+    buffer = malloc(sizeof(t_buffer));
+    buffer->size = 0;
+    buffer->stream = NULL;
+    return buffer;
+}
+
+void agregar_a_buffer(t_buffer* buffer, void* contenido, int tamanio){
+    buffer->stream = realloc(buffer->stream, buffer->size + tamanio + sizeof(int));
+
+    memcpy((char*)buffer->stream + buffer->size, &tamanio, sizeof(int));
+    memcpy((char*)buffer->stream + buffer->size + sizeof(int), contenido, tamanio);
+
+    buffer->size += tamanio + sizeof(int);
+}
+
+void enviar_buffer(t_buffer* buffer, int socket){
+    send(socket, buffer->stream, 2*sizeof(int) + buffer->size, 0);
+}
