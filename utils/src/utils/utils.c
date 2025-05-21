@@ -48,7 +48,7 @@ int esperar_cliente(int socket_servidor){
     log_info(logger, "se conecto un cliente");
     return socket_cliente;
 }
-int esperar_clientes_multiplexado(int socket_servidor){
+/*int esperar_clientes_multiplexado(int socket_servidor){
     int nuevo_socket = accept(socket_servidor, NULL, NULL);
     if(nuevo_socket == -1){
         log_error(logger, "error en el accept");
@@ -61,7 +61,7 @@ int esperar_clientes_multiplexado(int socket_servidor){
                        atender_cliente,
                        fd_conexion_ptr);
     pthread_detach(thread);
-}
+}*/
 
 
 
