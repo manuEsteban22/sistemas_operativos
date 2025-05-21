@@ -99,23 +99,56 @@ int crear_conexion(char* ip, char* puerto){
     return socket_cliente;
 }
 
-t_buffer* crear_buffer(void){
-    t_buffer* buffer;
-    buffer = malloc(sizeof(t_buffer));
-    buffer->size = 0;
-    buffer->stream = NULL;
-    return buffer;
+void* serializar(t_paquete* paquete, int bytes_a_enviar){
+    //meto el contenido del paquete en un unico stream de datos para hacer el send
+    //se serializa con el formato opcode / size / contenido
+    void* stream_a_enviar = malloc(bytes_a_enviar);
+    int offset = 0;
+
+    memcpy(stream_a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));
+    offset += sizeof(int);
+
+    memcpy(stream_a_enviar + offset, &(paquete->buffer->size), sizeof(int));
+    offset += sizeof(int);
+
+    memcpy(stream_a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    offset += paquete->buffer->size;
+
+    return stream_a_enviar;
 }
 
-void agregar_a_buffer(t_buffer* buffer, void* contenido, int tamanio){
-    buffer->stream = realloc(buffer->stream, buffer->size + tamanio + sizeof(int));
-
-    memcpy((char*)buffer->stream + buffer->size, &tamanio, sizeof(int));
-    memcpy((char*)buffer->stream + buffer->size + sizeof(int), contenido, tamanio);
-
-    buffer->size += tamanio + sizeof(int);
+void crear_buffer(t_paquete* paquete){
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->size = 0;
+    paquete->buffer->stream = NULL;
 }
 
-void enviar_buffer(t_buffer* buffer, int socket){
-    send(socket, buffer->stream, 2*sizeof(int) + buffer->size, 0);
+t_paquete* crear_paquete(void){
+    t_paquete* paquete;
+    paquete = malloc(sizeof(t_paquete));
+    crear_buffer(paquete);
+    return paquete;
+}
+
+void agregar_a_paquete(t_paquete* paquete, void* contenido, int tamanio){
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
+
+    memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
+    memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), contenido, tamanio);
+
+    paquete->buffer->size += tamanio + sizeof(int);
+}
+
+void enviar_paquete(t_paquete* paquete, int socket){
+    int bytes_a_enviar = paquete->buffer->size + 2*sizeof(int);
+    void* stream_a_enviar = serializar(paquete, bytes_a_enviar);
+
+    send(socket, stream_a_enviar, bytes_a_enviar, 0);
+    free(stream_a_enviar);
+}
+
+void borrar_paquete(t_paquete* paquete){
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }
