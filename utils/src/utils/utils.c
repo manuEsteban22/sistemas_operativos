@@ -65,18 +65,6 @@ int esperar_cliente(int socket_servidor){
 
 
 
-
-int recibir_operacion(int socket_cliente){
-    int cod_op;
-    if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
-        return cod_op;
-    else
-    {
-        close(socket_cliente);
-        return -1;
-    }
-}
-
 int crear_conexion(char* ip, char* puerto){
     struct addrinfo hints;
     struct addrinfo *server_info;
@@ -146,6 +134,18 @@ void enviar_paquete(t_paquete* paquete, int socket){
     send(socket, stream_a_enviar, bytes_a_enviar, 0);
     free(stream_a_enviar);
 }
+
+int recibir_operacion(int socket_cliente){
+    int codigo_operacion;
+    if(recv(socket_cliente, &codigo_operacion, sizeof(int), MSG_WAITALL) > 0)
+        return codigo_operacion;
+    else
+    {
+        close(socket_cliente);
+        return -1;
+    }
+}
+
 
 void borrar_paquete(t_paquete* paquete){
     free(paquete->buffer->stream);

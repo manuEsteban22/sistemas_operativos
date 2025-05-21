@@ -1,4 +1,5 @@
 #include <utils/utils.c>
+#include <utils/utils.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
