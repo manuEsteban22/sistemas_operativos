@@ -1,6 +1,13 @@
 #include <utils/utils.c>
 
-int main ()
+t_list* instrucciones = list_create();
+
+
+
+t_instruccion* instuccion_create (char* contenido, int pc)
 {
-    txt_open_for_append (./home/utnso/scripts/);
+    t_instrucciones* instruccion = malloc(sizeof(t_person));
+    instruccion->name = string_duplicate(name);
+    instruccion->age = age;
+    return person;
 }
