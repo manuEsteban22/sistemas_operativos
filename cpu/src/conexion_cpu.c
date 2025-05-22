@@ -4,8 +4,6 @@
 void handshake_kernel(int socket){
     t_paquete* handshake = crear_paquete();
     enviar_paquete(handshake, socket);
-    //enviar_buffer
-    //destruir_buffer
     return;
 }
 

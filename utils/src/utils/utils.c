@@ -99,9 +99,11 @@ void* serializar(t_paquete* paquete, int bytes_a_enviar){
     memcpy(stream_a_enviar + offset, &(paquete->buffer->size), sizeof(int));
     offset += sizeof(int);
 
-    memcpy(stream_a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-    offset += paquete->buffer->size;
-
+    if(paquete->buffer->size > 0 && paquete->buffer->stream != NULL){
+        memcpy(stream_a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+        offset += paquete->buffer->size;
+    }
+    
     return stream_a_enviar;
 }
 
@@ -114,8 +116,28 @@ void crear_buffer(t_paquete* paquete){
 t_paquete* crear_paquete(void){
     t_paquete* paquete;
     paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PAQUETE;
     crear_buffer(paquete);
     return paquete;
+}
+
+void enviar_handshake(int socket_cliente)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = HANDSHAKE;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = 0;
+	paquete->buffer->stream = NULL;
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	borrar_paquete(paquete);
 }
 
 void agregar_a_paquete(t_paquete* paquete, void* contenido, int tamanio){
@@ -137,15 +159,31 @@ void enviar_paquete(t_paquete* paquete, int socket){
 
 int recibir_operacion(int socket_cliente){
     int codigo_operacion;
-    if(recv(socket_cliente, &codigo_operacion, sizeof(int), MSG_WAITALL) > 0)
+    int resultado = recv(socket_cliente, &codigo_operacion, sizeof(int), MSG_WAITALL);
+    if(resultado > 0){
         return codigo_operacion;
-    else
-    {
+    }
+    else if(resultado == 0){
+        //el cliente cerro la conexion
+        close(socket_cliente);
+        return 2;
+    }
+    else{
         close(socket_cliente);
         return -1;
     }
 }
 
+void* recibir_buffer(int* size, int socket_cliente)
+{
+	void * buffer;
+
+	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+	buffer = malloc(*size);
+	recv(socket_cliente, buffer, *size, MSG_WAITALL);
+
+	return buffer;
+}
 
 void borrar_paquete(t_paquete* paquete){
     free(paquete->buffer->stream);

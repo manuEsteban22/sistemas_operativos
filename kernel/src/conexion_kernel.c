@@ -1,12 +1,34 @@
 #include <utils/utils.h>
 #include <kernel.h>
+#include <conexion_kernel.h>
 
-void manejar_servidor(void* arg){
-    t_args_hilo* argumentos = (t_args_hilo*) arg
-
-    int socket = t_args_hilo->socket;
-    char* nombre_cliente = t_args_hilo->nombre;
+void* manejar_servidor(void* arg){
+    t_args_hilo* argumentos = (t_args_hilo*) arg;
+    int socket = argumentos->socket;
+    char* nombre_cliente = strdup(argumentos->nombre);
     free(arg);
 
-    esperar_cliente()
+    int socket_cliente = esperar_cliente(socket);
+
+    //falta agregar recv
+    int codigo_operacion = recibir_operacion(socket_cliente);
+    switch (codigo_operacion){
+        case HANDSHAKE:
+            log_info(logger, "recibi un handshake");
+            //enviar otro
+            break;
+        case PAQUETE:
+            log_info(logger, "llego un paquete");
+            //recibir paquete
+            break;
+        case CERRADO:
+            log_info(logger, "cerro la conexion");
+            break;
+        default:
+            log_info(logger, "error en el recv");
+            break;
+    }
+
+    //devolver el handshake
 }
+//por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept
