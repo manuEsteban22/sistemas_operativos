@@ -1,4 +1,5 @@
 #include <utils/utils.c>
+#include <instrucciones.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
@@ -10,9 +11,11 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     socket_servidor = iniciar_servidor(puerto);
-    esperar_clientes_multiplexado(socket_servidor);
+    //esperar_clientes_multiplexado(socket_servidor);
     //esperar_cliente(socket_servidor);
+    devolver_instrucciones();
     return 0;
+
 }
 
 t_log* iniciar_logger(void){
@@ -36,4 +39,4 @@ t_config* iniciar_config(void){
 void terminar_programa(t_log* logger){
     log_destroy(logger);
     config_destroy(config);
-}
+} 
