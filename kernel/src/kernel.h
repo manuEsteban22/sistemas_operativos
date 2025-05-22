@@ -2,6 +2,8 @@
 #define KERNEL_H_
 #include<utils/utils.h>
 
+extern t_log* logger;
+
 typedef struct
 {
     int socket;

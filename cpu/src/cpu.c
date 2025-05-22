@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger(argv[1]);
     config = iniciar_config();
     conexion_kernel_dispatch = conectar_dispatch(ip_kernel, puerto_kernel_dispatch);
+    enviar_handshake(conexion_kernel_dispatch);
     //crear_conexion(ip_kernel, puerto_kernel_dispatch);
     log_info(logger, "anda aca");
     conexion_kernel_interrupt = crear_conexion(ip_kernel, puerto_kernel_interrupt);
