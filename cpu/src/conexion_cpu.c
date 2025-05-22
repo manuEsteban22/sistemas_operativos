@@ -2,8 +2,8 @@
 #include <conexion_cpu.h>
 
 void handshake_kernel(int socket){
-    t_buffer* handshake = crear_buffer();
-    enviar_buffer(handshake, socket);
+    t_paquete* handshake = crear_paquete();
+    enviar_paquete(handshake, socket);
     //enviar_buffer
     //destruir_buffer
     return;

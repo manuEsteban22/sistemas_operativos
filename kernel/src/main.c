@@ -1,4 +1,5 @@
 #include <utils/utils.c>
+#include <utils/utils.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
@@ -26,9 +27,9 @@ int main(int argc, char* argv[]) {
     socket_dispatch = iniciar_servidor(puerto_dispatch);
     socket_interrupt = iniciar_servidor(puerto_interrupt);
     //creo hilos para poder manejar los accept en ambas instancias de servidor
-    pthread_create(&thread_dispatch, NULL, (void*)esperar_clientes_multiplexado, socket_dispatch);
-    pthread_create(&thread_interrupt, NULL, (void*)esperar_clientes_multiplexado, socket_interrupt);
-    pthread_create(&thread_io, NULL, (void*)esperar_clientes_multiplexado, socket_io);
+    pthread_create(&thread_dispatch, NULL, (void*)esperar_cliente, socket_dispatch);
+    pthread_create(&thread_interrupt, NULL, (void*)esperar_cliente, socket_interrupt);
+    pthread_create(&thread_io, NULL, (void*)esperar_cliente, socket_io);
     //desconecta los hilos cuando terminan
     pthread_join(thread_dispatch, NULL);
     pthread_join(thread_interrupt, NULL);
