@@ -7,6 +7,7 @@ t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
 t_config* config;
+int PROCESOS_MEMORIA;
 char* ip_memoria;
 char* puerto_memoria;
 char* puerto_dispatch;
@@ -52,11 +53,6 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_io, NULL, manejar_servidor, (void*)args_io);
     pthread_detach(thread_io);
 
-    /*
-    pthread_join(thread_dispatch, NULL);
-    pthread_join(thread_interrupt, NULL);
-    pthread_join(thread_io, NULL);
-    */
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
         pause();
@@ -75,16 +71,13 @@ t_log* iniciar_logger(void){
 t_config* iniciar_config(void){
     t_config* nuevo_config;
     nuevo_config = config_create("kernel.config");
-    if(config_has_property(nuevo_config, "IP_MEMORIA") &&
-    config_has_property(nuevo_config, "PUERTO_MEMORIA") && 
-    config_has_property(nuevo_config, "PUERTO_ESCUCHA_DISPATCH") &&
-    config_has_property(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT") &&
-    config_has_property(nuevo_config, "PUERTO_ESCUCHA_IO")){
+    if(config_has_property(nuevo_config, "IP_MEMORIA")){
         ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
+        PROCESOS_MEMORIA = config_get_string_value(nuevo_config, "PROCESOS_MEMORIA");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del server memoria es: %s", ip_memoria);
