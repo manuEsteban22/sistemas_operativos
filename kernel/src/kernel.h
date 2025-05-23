@@ -4,6 +4,7 @@
 
 extern t_log* logger;
 extern int PROCESOS_MEMORIA;
+extern int socket_memoria;
 typedef struct
 {
     int socket;

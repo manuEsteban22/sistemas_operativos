@@ -16,17 +16,17 @@ char* puerto_io;
 int socket_io;
 int socket_dispatch;
 int socket_interrupt;
+int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
 
 int main(int argc, char* argv[]) {
-    int conexion_memoria;
     logger = iniciar_logger();
     config = iniciar_config();
 
     //Hago la conexion como cliente al servidor memoria
-    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
     //Inicio los servidores de dispatch, interrupt e I/O
     socket_io = iniciar_servidor(puerto_io);
@@ -52,6 +52,8 @@ int main(int argc, char* argv[]) {
 
     pthread_create(&thread_io, NULL, manejar_servidor, (void*)args_io);
     pthread_detach(thread_io);
+
+    inicializar_planificador_lp();
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){

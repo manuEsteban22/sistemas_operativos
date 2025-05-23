@@ -15,6 +15,7 @@ void* manejar_servidor(void* arg){
     switch (codigo_operacion){
         case CERRADO:
             log_info(logger, "cerro la conexion");
+            //enviar otro
             break;
         case HANDSHAKE:
             log_info(logger, "recibi un handshake");

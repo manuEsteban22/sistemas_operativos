@@ -20,9 +20,9 @@
 
 typedef enum
 {
+    CERRADO
     HANDSHAKE,
     PAQUETE,
-    CERRADO,
     OK,
     ERROR
 } op_code;

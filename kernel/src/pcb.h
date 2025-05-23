@@ -22,6 +22,7 @@ typedef struct
     uint64_t metricas_tiempo[CANTIDAD_ESTADOS];
     t_estado_proceso estado_actual;
     t_temporal* temporal_estado;
+    int tamanio;
 } t_pcb;
 
 t_pcb* crear_pcb(int pid);
