@@ -1,5 +1,5 @@
 #include <utils/utils.c>
-//#include <conexion_cpu.c>
+#include <conexion_cpu.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
@@ -11,15 +11,13 @@ char* ip_memoria;
 char* puerto_memoria;
 
 int main(int argc, char* argv[]) {
-    int conexion_kernel_dispatch, conexion_kernel_interrupt, conexion_memoria;
+    int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
     logger = iniciar_logger(argv[1]);
     config = iniciar_config();
-    conexion_kernel_dispatch = conectar_dispatch(ip_kernel, puerto_kernel_dispatch);
-    enviar_handshake(conexion_kernel_dispatch);
-    //crear_conexion(ip_kernel, puerto_kernel_dispatch);
-    log_info(logger, "anda aca");
-    conexion_kernel_interrupt = crear_conexion(ip_kernel, puerto_kernel_interrupt);
-    conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH");
+    socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT");
+
+    socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
     return 0;
 }
 
@@ -52,12 +50,6 @@ t_config* iniciar_config(void){
     log_info(logger, "el puerto del kernel de interrupt es: %s", puerto_kernel_interrupt);
     return nuevo_config;
 }
-
-//void handshake_kernel_dispatch(char* id, int socket_dispatch){
-//   t_* identificador = malloc(sizeof(t_));
-//}
-// pruebas
-
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){
     config_destroy(config);

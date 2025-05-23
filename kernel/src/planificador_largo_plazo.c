@@ -1,5 +1,8 @@
 #include<planificador_largo_plazo.h>
 
+int procesos_en_memoria = 0;
+pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
+
 t_queue* cola_new;
 t_queue* cola_ready;
 
@@ -73,7 +76,9 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
 
     int respuesta = recibir_operacion(socket_memoria);
     if (respuesta == 3) {
+        pthread_mutex_lock(&mutex_procesos_en_memoria);
         procesos_en_memoria++;
+        pthread_mutex_unlock(&mutex_procesos_en_memoria);
         return true;
     } else {
         return false;

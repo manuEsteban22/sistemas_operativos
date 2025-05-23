@@ -20,7 +20,7 @@
 
 typedef enum
 {
-    CERRADO
+    CERRADO,
     HANDSHAKE,
     PAQUETE,
     OK,
@@ -49,5 +49,7 @@ void enviar_paquete(t_paquete*, int socket);
 int recibir_operacion(int socket_cliente);
 void borrar_paquete(t_paquete*);
 void* serializar(t_paquete*, int bytes_a_enviar);
+t_list* deserializar(t_buffer* buffer);
+void enviar_handshake(int socket_cliente);
 
 #endif

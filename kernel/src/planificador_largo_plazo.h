@@ -16,5 +16,6 @@ extern sem_t sem_procesos_en_memoria;
 extern int pid_global;
 
 void inicializar_planificador_lp();
+bool enviar_pedido_memoria(t_pcb* pcb);
 
 #endif

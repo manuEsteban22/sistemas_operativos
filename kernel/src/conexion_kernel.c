@@ -10,23 +10,22 @@ void* manejar_servidor(void* arg){
 
     int socket_cliente = esperar_cliente(socket);
 
-    //falta agregar recv
     int codigo_operacion = recibir_operacion(socket_cliente);
     switch (codigo_operacion){
         case CERRADO:
+            close(socket_cliente);
             log_info(logger, "cerro la conexion");
-            //enviar otro
             break;
         case HANDSHAKE:
             log_info(logger, "recibi un handshake");
-            int respuesta = OK;
+            op_code respuesta = OK;
             send(socket_cliente, &respuesta, sizeof(int),0);
             log_info(logger, "Envie OK a %s", nombre_cliente);
             // chequear que los otros modulos 
             break;
         case PAQUETE:
             log_info(logger, "llego un paquete");
-            deserealizar ()
+            //deserealizar ()
             //recibir paquete -> deserializar
             break;
         
@@ -35,6 +34,5 @@ void* manejar_servidor(void* arg){
             break;
     }
 
-    //devolver el handshake
 }
 //por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept

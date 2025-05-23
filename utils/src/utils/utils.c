@@ -91,20 +91,44 @@ void* serializar(t_paquete* paquete, int bytes_a_enviar){
     return stream_a_enviar;
 }
 
-// el buffer es lo que queda del paquete luego del recv de recibir_operacion
-void* deserealizar (void* stream_recibido, int socket_cliente){
-    t_paquete* buffer = malloc(sizeof(t_buffer));
+
+t_list* recibir_paquete (int socket_cliente){
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    t_list* contenido;
 
     recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
     
-    buffer -> stream = malloc (&(buffer->size));
+    buffer->stream = malloc(&(buffer->size));
 
     recv(socket_cliente, &(buffer->stream), sizeof(int), MSG_WAITALL);
 
-    // funcion para desempaquetar un stream
-    return buffer;
+    contenido = deserializar(buffer);
+    return contenido;
 }
 
+t_list* deserializar(t_buffer* buffer){
+    void* stream = buffer->stream;
+    int size = buffer->size;
+
+    t_list* elementos = list_create();
+    int offset = 0;
+
+    while(offset < size){
+        int tamanio_elemento = 0;
+
+        memcpy(&tamanio_elemento, stream + offset, sizeof(int));
+        offset += sizeof(int);
+
+        void* elemento = malloc(tamanio_elemento);
+
+        memcpy(elemento, stream + offset, tamanio_elemento);
+        offset += tamanio_elemento;
+
+        list_add(elementos,elemento);
+    }
+    return elementos;
+    free(buffer);
+}
 
 void crear_buffer(t_paquete* paquete){
     paquete->buffer = malloc(sizeof(t_buffer));
@@ -173,7 +197,7 @@ int recibir_operacion(int socket_cliente){
     }
 }
 
-void* recibir_buffer(int* size, int socket_cliente)
+/*void* recibir_buffer(int* size, int socket_cliente)
 {
 	void * buffer;
 
@@ -182,7 +206,7 @@ void* recibir_buffer(int* size, int socket_cliente)
 	recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
 	return buffer;
-}
+}*/
 
 void borrar_paquete(t_paquete* paquete){
     free(paquete->buffer->stream);
