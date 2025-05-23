@@ -13,16 +13,16 @@ void* manejar_servidor(void* arg){
     //falta agregar recv
     int codigo_operacion = recibir_operacion(socket_cliente);
     switch (codigo_operacion){
-        case HANDSHAKE:
-            log_info(logger, "recibi un handshake");
+        case CERRADO:
+            log_info(logger, "cerro la conexion");
             //enviar otro
+            break;
+        case HANDSHAKE:
+            log_info(logger, "llego un handshake");
+            //recibir paquete
             break;
         case PAQUETE:
             log_info(logger, "llego un paquete");
-            //recibir paquete
-            break;
-        case CERRADO:
-            log_info(logger, "cerro la conexion");
             break;
         default:
             log_info(logger, "error en el recv");

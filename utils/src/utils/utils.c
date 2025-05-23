@@ -48,22 +48,6 @@ int esperar_cliente(int socket_servidor){
     log_info(logger, "se conecto un cliente");
     return socket_cliente;
 }
-/*int esperar_clientes_multiplexado(int socket_servidor){
-    int nuevo_socket = accept(socket_servidor, NULL, NULL);
-    if(nuevo_socket == -1){
-        log_error(logger, "error en el accept");
-    }
-        pthread_t thread;
-        int *fd_conexion_ptr = malloc(sizeof(int));
-        *fd_conexion_ptr = nuevo_socket;
-        pthread_create(&thread,
-                       NULL,
-                       atender_cliente,
-                       fd_conexion_ptr);
-    pthread_detach(thread);
-}*/
-
-
 
 int crear_conexion(char* ip, char* puerto){
     struct addrinfo hints;
@@ -166,7 +150,7 @@ int recibir_operacion(int socket_cliente){
     else if(resultado == 0){
         //el cliente cerro la conexion
         close(socket_cliente);
-        return 2;
+        return 0;
     }
     else{
         close(socket_cliente);

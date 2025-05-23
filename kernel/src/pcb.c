@@ -1,10 +1,11 @@
 #include<pcb.h>
 
 
-t_pcb* crear_pcb(int pid) {
+t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
     pcb->pid = pid;
     pcb->pc = 0;
+    pcb->tamanio = tamanio_proceso;
     pcb->estado_actual = NEW;
     pcb->temporal_estado = temporal_create();
     //Inicializo el pcb en estado NEW y creo el cronometro
