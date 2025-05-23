@@ -107,6 +107,21 @@ void* serializar(t_paquete* paquete, int bytes_a_enviar){
     return stream_a_enviar;
 }
 
+// el buffer es lo que queda del paquete luego del recv de recibir_operacion
+void* deserealizar (void* stream_recibido, int socket_cliente){
+    t_paquete* buffer = malloc(sizeof(t_buffer));
+
+    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
+    
+    buffer -> stream = malloc (&(buffer->size));
+
+    recv(socket_cliente, &(buffer->stream), sizeof(int), MSG_WAITALL);
+
+    // funcion para desempaquetar un stream
+    return buffer;
+}
+
+
 void crear_buffer(t_paquete* paquete){
     paquete->buffer = malloc(sizeof(t_buffer));
     paquete->buffer->size = 0;

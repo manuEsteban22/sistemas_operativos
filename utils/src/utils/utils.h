@@ -22,7 +22,9 @@ typedef enum
 {
     HANDSHAKE,
     PAQUETE,
-    CERRADO
+    CERRADO,
+    OK,
+    ERROR
 } op_code;
 typedef struct
 {
