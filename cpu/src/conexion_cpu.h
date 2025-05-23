@@ -3,6 +3,6 @@
 #include<utils/utils.h>
 #include<cpu.h>
 
-int conectar_kernel(char* ip, char* puerto, char* nombre);
+int conectar_kernel(char* ip, char* puerto, char* nombre, int cpu_id);
 
 #endif

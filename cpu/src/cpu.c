@@ -12,18 +12,23 @@ char* puerto_memoria;
 
 int main(int argc, char* argv[]) {
     int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
-    logger = iniciar_logger(argv[1]);
+    if(argc < 2){
+        //log_error(logger, "faltaron argumentos en la ejecucion");
+        return EXIT_FAILURE;
+    }
+    int cpu_id = atoi(argv[1]);
+    logger = iniciar_logger(cpu_id);
     config = iniciar_config();
-    socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH");
-    socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT");
+    socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
+    socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
     return 0;
 }
 
-t_log* iniciar_logger(char* id){
+t_log* iniciar_logger(int id){
     t_log* nuevo_logger;
-    char* log_file = string_from_format("cpu%s.log", id);
+    char* log_file = string_from_format("cpu%d.log", id);
     nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_INFO);
     log_info(nuevo_logger, "funciona logger cpu :)");
     free(log_file);

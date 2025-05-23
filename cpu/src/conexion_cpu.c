@@ -18,7 +18,7 @@ void handshake_kernel(int socket, char* nombre){
     return;
 }
 
-int conectar_kernel(char* ip, char* puerto, char* nombre){
+int conectar_kernel(char* ip, char* puerto, char* nombre, int cpu_id){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -37,5 +37,7 @@ int conectar_kernel(char* ip, char* puerto, char* nombre){
     freeaddrinfo(server_info);
     //envio y recibo un handhsake a kernel
     handshake_kernel(fd_socket, nombre);
+    send(fd_socket, CPUID, sizeof(int), 0);
+    send(fd_socket, &cpu_id, sizeof(int), 0);
     return fd_socket;
 }

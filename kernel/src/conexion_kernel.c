@@ -11,6 +11,8 @@ void* manejar_servidor(void* arg){
     int socket_cliente = esperar_cliente(socket);
 
     int codigo_operacion = recibir_operacion(socket_cliente);
+    log_info(logger, "[%s] Código de operación recibido: %d", nombre_cliente, codigo_operacion);
+
     switch (codigo_operacion){
         case CERRADO:
             close(socket_cliente);
@@ -25,14 +27,19 @@ void* manejar_servidor(void* arg){
             break;
         case PAQUETE:
             log_info(logger, "llego un paquete");
-            //deserealizar ()
+            //deserializar ()
             //recibir paquete -> deserializar
             break;
-        
+        case CPUID:
+            int cpu_id;
+            recv(socket_cliente, &cpu_id, sizeof(int), MSG_WAITALL);
+            log_info(logger, "Conexion de CPU ID: %d", cpu_id);
+            break;
+        case ERROR:
+            break;
         default:
             log_info(logger, "error en el recv");
             break;
     }
-
 }
 //por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept
