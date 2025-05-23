@@ -11,8 +11,10 @@ void handshake_kernel(int socket, char* nombre){
     }
     if(respuesta == OK){
         log_info(logger, "Recibi el OK de kernel (%s)", nombre);
+        return;
     }else {
         log_error(logger, "Fallo en el handshake (%s), recibí %d", nombre, respuesta);
+        return;
     }
 
     return;
@@ -37,7 +39,10 @@ int conectar_kernel(char* ip, char* puerto, char* nombre, int cpu_id){
     freeaddrinfo(server_info);
     //envio y recibo un handhsake a kernel
     handshake_kernel(fd_socket, nombre);
-    send(fd_socket, CPUID, sizeof(int), 0);
+
+    log_info(logger, "aca estoy andando");
+
     send(fd_socket, &cpu_id, sizeof(int), 0);
+    log_info(logger, "aca ya lo deberia haber mandado");
     return fd_socket;
 }

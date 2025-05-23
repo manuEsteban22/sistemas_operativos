@@ -144,7 +144,7 @@ t_paquete* crear_paquete(void){
     return paquete;
 }
 
-void enviar_handshake(int socket_cliente)
+/*void enviar_handshake(int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 
@@ -161,6 +161,11 @@ void enviar_handshake(int socket_cliente)
 
 	free(a_enviar);
 	borrar_paquete(paquete);
+}*/
+
+void enviar_handshake(int socket_cliente){
+    int cod_op = HANDSHAKE;    
+    send(socket_cliente, &cod_op, sizeof(int), 0);
 }
 
 void agregar_a_paquete(t_paquete* paquete, void* contenido, int tamanio){

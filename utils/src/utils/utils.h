@@ -24,7 +24,6 @@ typedef enum
     HANDSHAKE,
     PAQUETE,
     OK,
-    CPUID,
     ERROR
 } op_code;
 typedef struct

@@ -44,10 +44,10 @@ int main(int argc, char* argv[]) {
     args_interrupt->nombre = "INTERRUPT";
     args_io->nombre = "IO";
 
-    pthread_create(&thread_dispatch, NULL, manejar_servidor, (void*)args_dispatch);
+    pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
     pthread_detach(thread_dispatch);
 
-    pthread_create(&thread_interrupt, NULL, manejar_servidor, (void*)args_interrupt);
+    pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
     pthread_detach(thread_interrupt);
 
     pthread_create(&thread_io, NULL, manejar_servidor, (void*)args_io);
