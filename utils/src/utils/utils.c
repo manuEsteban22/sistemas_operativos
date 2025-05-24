@@ -17,7 +17,7 @@ void* atender_cliente(void* fd_conexion_ptr) {
 int iniciar_servidor(char* PUERTO){
     int socket_servidor;
 
-    struct addrinfo hints, *server_info, *p;
+    struct addrinfo hints, *server_info;
 
     memset(&hints, 0, sizeof(hints));
 
@@ -146,7 +146,10 @@ t_paquete* crear_paquete(void){
     crear_buffer(paquete);
     return paquete;
 }
-
+t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo){
+    paquete->codigo_operacion = codigo;
+    return paquete;
+}
 /*void enviar_handshake(int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));

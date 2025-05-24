@@ -24,6 +24,8 @@ typedef enum
     HANDSHAKE,
     PAQUETE,
     OK,
+    WRITE,
+    READ,
     ERROR
 } op_code;
 typedef struct
@@ -51,5 +53,7 @@ void borrar_paquete(t_paquete*);
 void* serializar(t_paquete*, int bytes_a_enviar);
 t_list* deserializar(t_buffer* buffer);
 void enviar_handshake(int socket_cliente);
+t_list* recibir_paquete (int socket_cliente);
+t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo);
 
 #endif
