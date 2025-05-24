@@ -6,8 +6,13 @@
 static t_list* lista_instrucciones = NULL;
 
 void cargar_instrucciones(int pid) {
+<<<<<<< HEAD
     char* rutaArchivo = string_from_format("instrucciones_pid%i.txt", pid);
     FILE* archivo = fopen(rutaArchivo, "r");
+=======
+    char* Archivo = string_from_format("instrucciones_pid%i.txt", pid);
+    FILE* archivo = fopen(Archivo, "r");
+>>>>>>> be56af050e129a8f027a8e487d456f3a11715785
     if (!archivo) {
         perror("No se pudo abrir el archivo de instrucciones");
         exit(EXIT_FAILURE);
