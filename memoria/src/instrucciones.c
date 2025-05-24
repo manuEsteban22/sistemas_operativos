@@ -56,10 +56,10 @@ int mandar_instrucciones()
     cargar_instrucciones(pid);
 
     int cant = cantidad_instrucciones();
-    for (int a = pc; a < cant; a++) 
+    for (; pc < cant; pc++) 
     {
-        char* instruccion = obtener_instruccion(a);
-        printf("Instrucción %d: %s\n", a, instruccion);
+        char* instruccion = obtener_instruccion(pc);
+        printf("Instrucción %d: %s\n", pc, instruccion);
     }
 
     printf("Espacio libre: %d\n", espacio_libre());
