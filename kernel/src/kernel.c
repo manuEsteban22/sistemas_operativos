@@ -20,6 +20,7 @@ int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
+char* algoritmo_planificacion;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
@@ -80,15 +81,19 @@ t_config* iniciar_config(void){
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
         PROCESOS_MEMORIA = config_get_string_value(nuevo_config, "PROCESOS_MEMORIA");
-    }
-    else{log_info(logger, "no se pudo leer el archivo de config");}
-    log_info(logger, "la ip del server memoria es: %s", ip_memoria);
-    log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
-    log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
-    log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
-    log_info(logger, "el puerto del server io es: %s", puerto_io);
-    return nuevo_config;
+        algoritmo_planificacion = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION");
+        
+        chequear_algoritmo_planificacion (algoritmo_planificacion);
+        log_info(logger, "no se pudo leer el archivo de config");}
+        log_info(logger, "la ip del server memoria es: %s", ip_memoria);
+        log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
+        log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
+        log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
+        log_info(logger, "el puerto del server io es: %s", puerto_io);
+        log_info(logger, "algoritmo de planificación: %s", algoritmo_planificacion);
+        return nuevo_config;
 }
+
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){
     config_destroy(config);

@@ -5,15 +5,12 @@
 
 static t_list* lista_instrucciones = NULL;
 
-void cargar_instrucciones(int pid) {
-<<<<<<< HEAD
-    char* rutaArchivo = string_from_format("instrucciones_pid%i.txt", pid);
-    FILE* archivo = fopen(rutaArchivo, "r");
-=======
-    char* Archivo = string_from_format("instrucciones_pid%i.txt", pid);
-    FILE* archivo = fopen(Archivo, "r");
->>>>>>> be56af050e129a8f027a8e487d456f3a11715785
-    if (!archivo) {
+void cargar_instrucciones(int pid) 
+{
+    char* Archivo = string_from_format("%sinstrucciones_pid%i.txt", campos_config.path_instrucciones, pid);
+    FILE* archivo = fopen( Archivo, "r");
+    if (!archivo) 
+    {
         perror("No se pudo abrir el archivo de instrucciones");
         exit(EXIT_FAILURE);
     }
@@ -21,7 +18,8 @@ void cargar_instrucciones(int pid) {
     lista_instrucciones = list_create();
 
     char linea[MAX_LINEA];
-    while (fgets(linea, sizeof(linea), archivo)) {
+    while (fgets(linea, sizeof(linea), archivo)) 
+    {
         linea[strcspn(linea, "\n")] = 0; // eliminar \n
         list_add(lista_instrucciones, strdup(linea)); // guardar copia
     }
@@ -29,32 +27,39 @@ void cargar_instrucciones(int pid) {
     fclose(archivo);
 }
 
-char* obtener_instruccion(int pc) {
+char* obtener_instruccion(int pc) 
+{
     if (pc >= list_size(lista_instrucciones)) return NULL;
     return list_get(lista_instrucciones, pc);
 }
 
-int cantidad_instrucciones() {
+int cantidad_instrucciones() 
+{
     return list_size(lista_instrucciones);
 }
 
-int espacio_libre() {
-    return 4096;
+int espacio_libre()
+{
+    const int tam_mem = campos_config.tam_memoria;
+    return tam_mem;
 }
 
-void liberar_memoria() {
+void liberar_memoria() 
+{
     list_destroy_and_destroy_elements(lista_instrucciones, free);
 }
 
-int mandar_instrucciones() {
+int mandar_instrucciones() 
+{
     int pc = 2;
     int pid = 0;
     cargar_instrucciones(pid);
 
     int cant = cantidad_instrucciones();
-    for (int a = pc; a < cant; a++) {
-        char* instruccion = obtener_instruccion(a);
-        printf("Instrucción %d: %s\n", a, instruccion);
+    for (; pc < cant; pc++) 
+    {
+        char* instruccion = obtener_instruccion(pc);
+        printf("Instrucción %d: %s\n", pc, instruccion);
     }
 
     printf("Espacio libre: %d\n", espacio_libre());

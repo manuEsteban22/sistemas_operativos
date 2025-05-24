@@ -110,6 +110,7 @@ t_list* deserializar(t_buffer* buffer){
     void* stream = buffer->stream;
     int size = buffer->size;
 
+
     t_list* elementos = list_create();
     int offset = 0;
 
@@ -126,8 +127,8 @@ t_list* deserializar(t_buffer* buffer){
 
         list_add(elementos,elemento);
     }
+    
     return elementos;
-    free(buffer);
 }
 
 void crear_buffer(t_paquete* paquete){
