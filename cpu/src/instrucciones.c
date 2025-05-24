@@ -48,7 +48,7 @@ int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
     log_info(logger, "Dirección fisica %d", direccion_fisica);*/
 }
 
-void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica){
+void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid){
     char* datos = (char*)instruccion->param2;
     int size_datos = strlen(datos);
 
@@ -58,6 +58,8 @@ void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccio
     cambiar_opcode_paquete(paquete, WRITE);
     enviar_paquete(paquete, socket_memoria);
     borrar_paquete(paquete);
+
+    log_info(logger, "PID: %d - Accion: ESCRIBIR - Direccion fisica: %d - Valor: %s", pid, direccion_fisica, datos);
 }
 
 char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid){
@@ -81,8 +83,10 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
     return copia_datos;
 }
 
-void execute(t_instruccion* instruccion, int socket_memoria){
+void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
     int direccion_fisica;
+    int pid = pcb->pid;
+    int pc = pcb->pc;
     switch (instruccion->identificador)
     {
     case NOOP:
@@ -90,11 +94,14 @@ void execute(t_instruccion* instruccion, int socket_memoria){
         break;
     case WRITE:
         direccion_fisica = decode(instruccion);
-        ejecutar_write(instruccion, socket_memoria, direccion_fisica);
+        ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
         break;
     case READ:
         direccion_fisica = decode(instruccion);
-
+        ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
+    case GOTO:
+        
+        break;
     default:
         break;
     }
@@ -108,7 +115,8 @@ void prueba_write(int socket_memoria){
     instruccion->param1 = direccion_logica;
     char* datos = strdup("HolaMundo");
     instruccion->param2 = datos;
-    execute(instruccion, socket_memoria);
+    int pid_prueba = 4;
+    execute(instruccion, socket_memoria, pid_prueba);
     free(direccion_logica);
     free(datos);
     free(instruccion);

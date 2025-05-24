@@ -33,7 +33,7 @@ void* manejar_servidor(int socket){
                 log_info(logger, "recibi un read");
                 break;
             case WRITE:
-                log_info(logger, "recibi un read");
+                log_info(logger, "recibi un write");
                 break;
             case ERROR:
                 break;
