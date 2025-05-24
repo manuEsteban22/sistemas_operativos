@@ -26,9 +26,20 @@ char *algoritmo_planificacion;
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
+    
     inicializar_planificador_lp();
+    /*if(argc < 3){
+        log_error(logger, "faltaron argumentos en la ejecucion");
+        return EXIT_FAILURE;
+    }
+    char* archivo_pseudocodigo = argv[1];
+    int tamanio_proceso = atoi(argv[2]);
+
     
-    
+    crear_proceso(tamanio_proceso);
+    planificador_largo_plazo();
+    */
+
     //Hago la conexion como cliente al servidor memoria
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
     
@@ -96,7 +107,6 @@ t_config* iniciar_config(void){
         log_info(logger, "algoritmo de planificación: %s", algoritmo_planificacion);
         return nuevo_config;
 }
-
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){
     config_destroy(config);

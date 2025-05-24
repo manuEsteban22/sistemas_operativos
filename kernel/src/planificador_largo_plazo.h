@@ -23,5 +23,7 @@ extern int pid_global;
 void inicializar_planificador_lp();
 bool enviar_pedido_memoria(t_pcb* pcb);
 void chequear_algoritmo_planificacion (char* algoritmo_planificacion);
+void planificador_largo_plazo();
+void crear_proceso(int tamanio_proceso);
 
 #endif
