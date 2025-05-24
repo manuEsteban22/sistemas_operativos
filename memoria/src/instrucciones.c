@@ -1,72 +1,59 @@
 #include <utils/utils.h>
 #include <instrucciones.h>
 #include <memoria.h>
-//t_list* instrucciones = list_create();
+#define MAX_LINEA 256
 
-t_list* cargar_instrucciones(const char* rutaArchivo) {
+static t_list* lista_instrucciones = NULL;
+
+void cargar_instrucciones(int pid) {
+    char* rutaArchivo = string_from_format("/home/utnso/Desktop/SISTEMAS OPERATIVOS/tp-2025-1c-power-rangers/memoria/src/instrucciones_pid%i.txt", pid);
     FILE* archivo = fopen(rutaArchivo, "r");
     if (!archivo) {
-        perror("Error al abrir archivo");
-        return NULL;
+        perror("No se pudo abrir el archivo de instrucciones");
+        exit(EXIT_FAILURE);
     }
 
-    t_list* lista = list_create();
-    char* linea = NULL;
-    size_t len = 0;
-    ssize_t read;
-    int pc = 0;
+    lista_instrucciones = list_create();
 
-    while ((read = getline(&linea, &len, archivo)) != -1) {
-        // Quitar salto de línea
-        string_trim(&linea);
-
-        t_instruccion* instr = malloc(sizeof(t_instruccion));
-        instr->pc = pc;
-        instr->instruccion = strdup(linea);
-        list_add(lista, instr);
-
-        pc++;
+    char linea[MAX_LINEA];
+    while (fgets(linea, sizeof(linea), archivo)) {
+        linea[strcspn(linea, "\n")] = 0; // eliminar \n
+        list_add(lista_instrucciones, strdup(linea)); // guardar copia
     }
 
-    free(linea);
     fclose(archivo);
-    return lista;
 }
 
-t_instruccion* get_instruccion(t_list* lista, int pc) {
-    if (pc < 0 || pc >= list_size(lista)) return NULL;
-    return list_get(lista, pc);
+char* obtener_instruccion(int pc) {
+    if (pc >= list_size(lista_instrucciones)) return NULL;
+    return list_get(lista_instrucciones, pc);
 }
 
-void memoria_liberar(t_list* lista) {
-    for (int i = 0; i < list_size(lista); i++) {
-        t_instruccion* instr = list_get(lista, i);
-        free(instr->instruccion);
-        free(instr);
-    }
-    list_destroy(lista);
+int cantidad_instrucciones() {
+    return list_size(lista_instrucciones);
 }
 
-int devolver_instrucciones() {
-    
+int espacio_libre() {
+    return 1024;
+}
+
+void liberar_memoria() {
+    list_destroy_and_destroy_elements(lista_instrucciones, free);
+}
+
+int mandar_instrucciones() {
+    int pc = 2;
     int pid = 0;
+    cargar_instrucciones(pid);
 
-    char* archivo_instrucciones = string_from_format("instrucciones_pid%i.txt", pid);
-
-    t_list* memoria = cargar_instrucciones(archivo_instrucciones);
-    //if (!memoria) return 1;
-
-    int pc;
-    printf("Ingrese PC para obtener instruccion: ");
-    scanf("%d", &pc);
-
-    t_instruccion* instr = get_instruccion(memoria, pc);
-    if (instr) {
-        printf("PC %d: %s\n", instr->pc, instr->instruccion);
-    } else {
-        printf("PC fuera de rango\n");
+    int cant = cantidad_instrucciones();
+    for (int a = pc; a < cant; a++) {
+        char* instruccion = obtener_instruccion(a);
+        printf("Instrucción %d: %s\n", a, instruccion);
     }
 
-    memoria_liberar(memoria);
+    printf("Espacio libre: %d\n", espacio_libre());
+
+    liberar_memoria();
     return 0;
 }

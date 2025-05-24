@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     socket_servidor = iniciar_servidor(puerto);
     //esperar_clientes_multiplexado(socket_servidor);
     //esperar_cliente(socket_servidor);
-    devolver_instrucciones();
+    mandar_instrucciones();
     return 0;
 
 }
