@@ -19,13 +19,19 @@ typedef enum {
 
 typedef struct {
     t_id_instruccion identificador;
-    int param1;
-    int param2;
+    void* param1;
+    void* param2;
 } t_instruccion;
+
 
 typedef struct {
     int pagina;
     int marco;
 } t_entrada_tlb;
+
+typedef struct {
+    int pid;
+    int pagina;
+} t_paquete_frame;
 
 #endif

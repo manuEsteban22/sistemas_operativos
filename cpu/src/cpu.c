@@ -14,7 +14,7 @@ int entradas_tlb;
 int main(int argc, char* argv[]) {
     int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
     if(argc < 2){
-        //log_error(logger, "faltaron argumentos en la ejecucion");
+        log_error(logger, "faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
     }
     int cpu_id = atoi(argv[1]);
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
-    socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     return 0;
 }
 
@@ -45,7 +45,7 @@ t_config* iniciar_config(void){
         puerto_kernel_interrupt = config_get_string_value(nuevo_config, "PUERTO_KERNEL_INTERRUPT");
         ip_memoria = config_get_string_value(nuevo_config,"IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
-        entradas_tlb = atoi(config_get_string_value(nuevo_config, "ENTRADAS_TLB"));
+        entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del kernel es: %s", ip_kernel);

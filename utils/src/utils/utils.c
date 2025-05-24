@@ -27,19 +27,19 @@ int iniciar_servidor(char* PUERTO){
 
     getaddrinfo(NULL, PUERTO, &hints, &server_info);
 
-    fd_escucha = socket(server_info->ai_family,
+    socket_servidor = socket(server_info->ai_family,
                         server_info->ai_socktype,
                         server_info->ai_protocol);
 
 
-    setsockopt(fd_escucha, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
+    setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
 
-    bind(fd_escucha,server_info->ai_addr,server_info->ai_addrlen);
+    bind(socket_servidor,server_info->ai_addr,server_info->ai_addrlen);
 
-    listen(fd_escucha, SOMAXCONN);
+    listen(socket_servidor, SOMAXCONN);
     freeaddrinfo(server_info);
     log_info(logger, "Listo para escucha");
-    return fd_escucha;
+    return socket_servidor;
 }
 
 int esperar_cliente(int socket_servidor){

@@ -5,10 +5,6 @@ tamaño_pagina
 entradas_por_tabla
 cantidad_niveles
 */
-int tamanio_pagina = 64;
-int entradas_por_tabla = 4;
-int cantidad_niveles = 3;
-t_list* tlb;
 
 t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     int pc = pcb->pc;
@@ -30,37 +26,63 @@ bool requiere_traduccion(t_instruccion* instruccion){
     }
 }
 
-bool esta_en_tlb(int pagina, int* marco){
-    for(int i=0;i < list_size(tlb);i++){
-        t_entrada_tlb* entrada = list_get(tlb, i);
-        if(entrada->pagina == pagina){
-            *marco = entrada->marco;
-            return true;
-        }
-    }
-    return false;
-}
-
-void limpiar_tlb() {
-    list_destroy_and_destroy_elements(tlb, free);
-    tlb = list_create();
-}
-
-void decode(t_instruccion* instruccion, t_pcb* pcb){
-    if(!requiere_traduccion(instruccion)) return;
-
-    int direccion_logica = instruccion->param1;
+int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
+    if(!requiere_traduccion(instruccion)) return -1;
+    int direccion_logica = (int*)instruccion->param1;
+    int direccion_fisica = direccion_logica;
+    return direccion_fisica;
+    /*
     int nro_pagina = direccion_logica / tamanio_pagina;
     int desplazamiento = direccion_logica % tamanio_pagina;
     int marco;
 
     if(entradas_tlb > 0 && esta_en_tlb(nro_pagina, &marco)){
-        log_info(logger,"PID: %d - TLB HIT - Pagina: %s", pcb->pid, nro_pagina);
+        log_info(logger,"PID: %d - TLB HIT - Pagina: %d", pcb->pid, nro_pagina);
         return 
     } else{
-        log_info(logger,"PID: %d - TLB MISS - Pagina: %s", pcb->pid, nro_pagina);
+        log_info(logger,"PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
+        pedir_frame(pcb, nro_pagina, marco, socket_memoria);
     }
 
     int direccion_fisica = marco * tamanio_pagina + desplazamiento;
-    log_info(logger, "Dirección fisica %d", direccion_fisica);
+    log_info(logger, "Dirección fisica %d", direccion_fisica);*/
+}
+
+void execute(t_instruccion* instruccion, int socket_memoria){
+    switch (instruccion->identificador)
+    {
+    case NOOP:
+        //no hace nada
+        break;
+    case WRITE:
+        int direccion_fisica = decode(instruccion);
+        char* datos = (char*)instruccion->param2;
+        int size = strlen(datos) + 1;
+        t_paquete* paquete = crear_paquete();
+        agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
+        agregar_a_paquete(paquete, datos, size);
+        enviar_paquete(paquete, socket_memoria);
+        borrar_paquete(paquete);
+        break;
+    default:
+        break;
+    }
+}
+
+void prueba_write(int socket_memoria){
+    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+    instruccion->identificador = WRITE;
+    int* direccion_logica = malloc(sizeof(int));
+    *direccion_logica = 128;
+    instruccion->param1 = direccion_logica;
+    char* datos = strdup("HolaMundo");
+    instruccion->param2 = datos;
+    execute(instruccion, socket_memoria);
+    free(direccion_logica);
+    free(datos);
+    free(instruccion);
+}
+
+void iniciar_ciclo_de_instrucciones(){
+
 }
