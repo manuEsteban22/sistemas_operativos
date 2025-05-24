@@ -1,6 +1,7 @@
 #include <utils/utils.c>
 #include <utils/utils.h>
 #include <conexion_kernel.h>
+#include <planificador_largo_plazo.h>
 #include <kernel.h>
 
 t_log* iniciar_logger();
@@ -20,15 +21,17 @@ int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
-char* algoritmo_planificacion;
+char *algoritmo_planificacion;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
-
+    inicializar_planificador_lp();
+    
+    
     //Hago la conexion como cliente al servidor memoria
     socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
-
+    
     //Inicio los servidores de dispatch, interrupt e I/O
     socket_io = iniciar_servidor(puerto_io);
     socket_dispatch = iniciar_servidor(puerto_dispatch);
@@ -54,7 +57,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_io, NULL, manejar_servidor, (void*)args_io);
     pthread_detach(thread_io);
 
-    inicializar_planificador_lp();
+    
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){

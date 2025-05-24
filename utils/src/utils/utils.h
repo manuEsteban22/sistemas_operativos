@@ -24,8 +24,8 @@ typedef enum
     HANDSHAKE,
     PAQUETE,
     OK,
-    WRITE,
-    READ,
+    OCWRITE,
+    OCREAD,
     ERROR
 } op_code;
 typedef struct

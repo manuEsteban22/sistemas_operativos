@@ -9,8 +9,6 @@ typedef enum {
     MENOR_MEMORIA
 } t_algoritmo_planificacion;
 
-t_algoritmo_planificacion algoritmo;
-
 extern t_queue* cola_new;
 extern t_queue* cola_ready;
 
@@ -24,5 +22,6 @@ extern int pid_global;
 
 void inicializar_planificador_lp();
 bool enviar_pedido_memoria(t_pcb* pcb);
+void chequear_algoritmo_planificacion (char* algoritmo_planificacion);
 
 #endif

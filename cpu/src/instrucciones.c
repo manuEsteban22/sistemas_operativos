@@ -55,7 +55,7 @@ void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccio
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, datos, size_datos);
-    cambiar_opcode_paquete(paquete, WRITE);
+    cambiar_opcode_paquete(paquete, OCWRITE);
     enviar_paquete(paquete, socket_memoria);
     borrar_paquete(paquete);
 
@@ -68,7 +68,7 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
-    cambiar_opcode_paquete(paquete, READ);
+    cambiar_opcode_paquete(paquete, OCREAD);
     enviar_paquete(paquete, socket_memoria);
     borrar_paquete(paquete);
 
@@ -103,7 +103,7 @@ void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
         pc += 1;
     case GOTO:
-        pc = instruccion->param1;
+        pc = (int*)instruccion->param1;
         break;
     default:
         break;
@@ -112,14 +112,15 @@ void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
 
 void prueba_write(int socket_memoria){
     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-    instruccion->identificador = WRITE;
+    instruccion->identificador = OCWRITE;
     int* direccion_logica = malloc(sizeof(int));
     *direccion_logica = 128;
     instruccion->param1 = direccion_logica;
     char* datos = strdup("HolaMundo");
     instruccion->param2 = datos;
-    int pid_prueba = 4;
-    execute(instruccion, socket_memoria, pid_prueba);
+    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
+    pcb_prueba->pid = 4;
+    execute(instruccion, socket_memoria, pcb_prueba);
     free(direccion_logica);
     free(datos);
     free(instruccion);
