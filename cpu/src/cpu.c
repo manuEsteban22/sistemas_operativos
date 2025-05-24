@@ -9,6 +9,7 @@ char* puerto_kernel_dispatch;
 char* puerto_kernel_interrupt;
 char* ip_memoria;
 char* puerto_memoria;
+int entradas_tlb;
 
 int main(int argc, char* argv[]) {
     int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
@@ -38,16 +39,13 @@ t_log* iniciar_logger(int id){
 t_config* iniciar_config(void){
     t_config* nuevo_config;
     nuevo_config = config_create("cpu.config");
-    if(config_has_property(nuevo_config, "IP_KERNEL") &&
-    config_has_property(nuevo_config, "PUERTO_KERNEL_DISPATCH") &&
-    config_has_property(nuevo_config, "PUERTO_KERNEL_INTERRUPT") &&
-    config_has_property(nuevo_config, "IP_MEMORIA") &&
-    config_has_property(nuevo_config, "PUERTO_MEMORIA")){
+    if(config_has_property(nuevo_config, "IP_KERNEL")){
         ip_kernel = config_get_string_value(nuevo_config, "IP_KERNEL");
         puerto_kernel_dispatch = config_get_string_value(nuevo_config, "PUERTO_KERNEL_DISPATCH");
         puerto_kernel_interrupt = config_get_string_value(nuevo_config, "PUERTO_KERNEL_INTERRUPT");
         ip_memoria = config_get_string_value(nuevo_config,"IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
+        entradas_tlb = atoi(config_get_string_value(nuevo_config, "ENTRADAS_TLB"));
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del kernel es: %s", ip_kernel);
