@@ -83,8 +83,7 @@ void* manejar_servidor(void* arg){
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
-                //deserializar ()
-                //recibir paquete -> deserializar
+                recibir_paquete(socket_cliente);
                 break;
             case ERROR:
                 break;

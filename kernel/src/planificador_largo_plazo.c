@@ -15,7 +15,20 @@ sem_t sem_procesos_en_memoria;
 
 int pid_global = 0;
 
+void chequear_algoritmo_planificacion(char* algoritmo_planificacion){
+    if (strcmp(algoritmo_planificacion,"FIFO") == 0){
+    algoritmo = FIFO;
+    } else if(strcmp(algoritmo_planificacion,"MENOR_MEMORIA") == 0){
+    algoritmo = MENOR_MEMORIA;
+    } else{
+    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion);
+    exit(EXIT_FAILURE);
+    }
+}
+
 void inicializar_planificador_lp(){
+    printf("Presione Enter para iniciar la planificacion largo plazo\n");
+    getchar();
     cola_new = queue_create();
     cola_ready = queue_create();
     sem_init(&sem_procesos_en_new, 0, 0);

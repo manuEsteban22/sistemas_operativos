@@ -4,6 +4,13 @@
 #include<pcb.h>
 #include<kernel.h>
 
+typedef enum {
+    FIFO,
+    MENOR_MEMORIA
+} t_algoritmo_planificacion;
+
+t_algoritmo_planificacion algoritmo;
+
 extern t_queue* cola_new;
 extern t_queue* cola_ready;
 
