@@ -91,21 +91,6 @@ void* serializar(t_paquete* paquete, int bytes_a_enviar){
     return stream_a_enviar;
 }
 
-
-t_list* recibir_paquete (int socket_cliente){
-    t_buffer* buffer = malloc(sizeof(t_buffer));
-    t_list* contenido;
-
-    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
-    
-    buffer->stream = malloc(&(buffer->size));
-
-    recv(socket_cliente, &(buffer->stream), sizeof(int), MSG_WAITALL);
-
-    contenido = deserializar(buffer);
-    return contenido;
-}
-
 t_list* deserializar(t_buffer* buffer){
     void* stream = buffer->stream;
     int size = buffer->size;
@@ -129,6 +114,23 @@ t_list* deserializar(t_buffer* buffer){
     }
     
     return elementos;
+}
+
+t_list* recibir_paquete (int socket_cliente){
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    t_list* contenido;
+
+    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
+    
+    buffer->stream = malloc(buffer->size);
+
+    recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
+
+    contenido = deserializar(buffer);
+
+    free(buffer->stream);
+    free(buffer);
+    return contenido;
 }
 
 void crear_buffer(t_paquete* paquete){

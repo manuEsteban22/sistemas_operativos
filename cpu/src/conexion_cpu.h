@@ -4,5 +4,6 @@
 #include<cpu.h>
 
 int conectar_kernel(char* ip, char* puerto, char* nombre, int cpu_id);
+int conectar_memoria(char* ip, char* puerto);
 
 #endif

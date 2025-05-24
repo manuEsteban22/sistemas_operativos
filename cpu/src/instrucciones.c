@@ -57,10 +57,11 @@ void execute(t_instruccion* instruccion, int socket_memoria){
     case WRITE:
         int direccion_fisica = decode(instruccion);
         char* datos = (char*)instruccion->param2;
-        int size = strlen(datos) + 1;
+        int size_datos = strlen(datos);
+
         t_paquete* paquete = crear_paquete();
         agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
-        agregar_a_paquete(paquete, datos, size);
+        agregar_a_paquete(paquete, datos, size_datos);
         enviar_paquete(paquete, socket_memoria);
         borrar_paquete(paquete);
         break;
