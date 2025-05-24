@@ -9,28 +9,41 @@ char* puerto_kernel;
 int main(int argc, char* argv[]) {
     int conexion_kernel;
     logger = iniciar_logger();
+
+    if (argc < 2){
+        log_error(logger, "Falta el nombre del dispositivo IO");
+        abort();
+    }
+
+    char* nombre_dispositivo = argv[1];
+    log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
     config = iniciar_config();
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
+
     return 0;
 }
 
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
     nuevo_logger = log_create("io.log","LogIO",true,LOG_LEVEL_INFO);
-    log_info(nuevo_logger, "funciona logger IO :)");
+    log_info(nuevo_logger, "Funciona logger IO :)");
     return nuevo_logger;
 }
 
 t_config* iniciar_config(void){
-    t_config* nuevo_config;
-    nuevo_config = config_create("io.config");
-    if(config_has_property(nuevo_config, "IP_KERNEL") &&
-    config_has_property(nuevo_config, "PUERTO_KERNEL")){
-        ip_kernel = config_get_string_value(nuevo_config, "IP_KERNEL");
-        puerto_kernel = config_get_string_value(nuevo_config, "PUERTO_KERNEL");
+    t_config* nuevo_config = config_create("io.config");
+
+    if(!config_has_property(nuevo_config, "IP_KERNEL") || !config_has_property(nuevo_config, "PUERTO_KERNEL")){
+        log_error(logger, "Faltan valores en el archivo de config");
+        config_destroy(nuevo_config);
+        abort();
     }
-    else{log_info(logger, "no se pudo leer el archivo de config");}
-    log_info(logger, "la ip del kernel es: %s", ip_kernel);
-    log_info(logger, "el puerto del kernel es: %s", puerto_kernel);
+
+    ip_kernel = config_get_string_value(nuevo_config, "IP_KERNEL");
+    puerto_kernel = config_get_string_value(nuevo_config, "PUERTO_KERNEL");
+    
+    log_info(logger, "La IP del kernel es: %s", ip_kernel);
+    log_info(logger, "El puerto del kernel es: %s", puerto_kernel);
+
     return nuevo_config;
 }
