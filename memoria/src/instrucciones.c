@@ -49,7 +49,7 @@ void liberar_memoria()
     list_destroy_and_destroy_elements(lista_instrucciones, free);
 }
 
-int mandar_instrucciones() 
+int mandar_instrucciones(int socket_cliente) 
 {
     int pc = 2;
     int pid = 0;
@@ -59,11 +59,17 @@ int mandar_instrucciones()
     for (; pc < cant; pc++) 
     {
         char* instruccion = obtener_instruccion(pc);
-        printf("Instrucción %d: %s\n", pc, instruccion);
+        t_paquete* paquete = crear_paquete();
+        int tamanio = strlen(instruccion) + 1;
+        agregar_a_paquete(paquete, instruccion, tamanio);
+        enviar_paquete(paquete, socket_cliente);
+        borrar_paquete(paquete);
     }
+    
 
     printf("Espacio libre: %d\n", espacio_libre());
 
     liberar_memoria();
     return 0;
 }
+

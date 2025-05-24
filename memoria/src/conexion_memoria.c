@@ -1,7 +1,7 @@
 #include<conexion_memoria.h>
-
+#include<instrucciones.h>
+#include<utils/utils.h>
 void* manejar_servidor(int socket){
-
     int socket_cliente = esperar_cliente(socket);
 
     while(1){
@@ -35,6 +35,7 @@ void* manejar_servidor(int socket){
                 break;
         }
     }
+    mandar_instrucciones(socket_cliente);
     close(socket_cliente);
     return NULL;
 }

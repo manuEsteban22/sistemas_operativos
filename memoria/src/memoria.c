@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha);
     manejar_servidor(socket_servidor);
     //esperar_clientes_multiplexado(socket_servidor);
-    //esperar_cliente(socket_servidor);
-    mandar_instrucciones();
+    esperar_cliente(socket_servidor);
+    
     return 0;
 
 }
