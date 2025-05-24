@@ -1,11 +1,6 @@
 #include<conexion_memoria.h>
-<<<<<<< HEAD
 #include<instrucciones.h>
 #include<utils/utils.h>
-=======
-
-
->>>>>>> b938e47e4b41f4421daba73b3dd52f454da58853
 void* manejar_servidor(int socket){
     int socket_cliente = esperar_cliente(socket);
 
