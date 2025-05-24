@@ -40,7 +40,8 @@ int cantidad_instrucciones()
 
 int espacio_libre()
 {
-    return campos_config.tam_memoria;
+    const int tam_mem = campos_config.tam_memoria;
+    return tam_mem;
 }
 
 void liberar_memoria() 
