@@ -91,16 +91,19 @@ void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
     {
     case NOOP:
         //no hace nada
+        pc += 1;
         break;
     case WRITE:
         direccion_fisica = decode(instruccion);
         ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
+        pc += 1;
         break;
     case READ:
         direccion_fisica = decode(instruccion);
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
+        pc += 1;
     case GOTO:
-        
+        pc = instruccion->param1;
         break;
     default:
         break;
