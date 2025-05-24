@@ -25,7 +25,7 @@ typedef struct {
 
 typedef struct {
     int pagina;
-    in marco;
+    int marco;
 } t_entrada_tlb;
 
 #endif
