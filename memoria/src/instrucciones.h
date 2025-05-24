@@ -14,7 +14,4 @@ int mandar_instrucciones(int socket_cliente);
 
 
 
-
-
 #endif
-
