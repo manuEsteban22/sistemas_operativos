@@ -28,8 +28,8 @@ t_log* iniciar_logger(void){
 t_config* iniciar_config(void){
     t_config* nuevo_config;
     nuevo_config = config_create("memoria.config");
-    if(config_has_property(nuevo_config, "PUERTO_MEMORIA")){
-        puerto = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
+    if(config_has_property(nuevo_config, "PUERTO_ESCUCHA")){
+        puerto = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "el puerto: %s", puerto);

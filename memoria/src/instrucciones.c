@@ -6,7 +6,7 @@
 static t_list* lista_instrucciones = NULL;
 
 void cargar_instrucciones(int pid) {
-    char* rutaArchivo = string_from_format("/home/utnso/Desktop/SISTEMAS OPERATIVOS/tp-2025-1c-power-rangers/memoria/src/instrucciones_pid%i.txt", pid);
+    char* rutaArchivo = string_from_format("instrucciones_pid%i.txt", pid);
     FILE* archivo = fopen(rutaArchivo, "r");
     if (!archivo) {
         perror("No se pudo abrir el archivo de instrucciones");
