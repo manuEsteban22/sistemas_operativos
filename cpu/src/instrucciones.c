@@ -48,23 +48,53 @@ int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
     log_info(logger, "Dirección fisica %d", direccion_fisica);*/
 }
 
+void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica){
+    char* datos = (char*)instruccion->param2;
+    int size_datos = strlen(datos);
+
+    t_paquete* paquete = crear_paquete();
+    agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
+    agregar_a_paquete(paquete, datos, size_datos);
+    cambiar_opcode_paquete(paquete, WRITE);
+    enviar_paquete(paquete, socket_memoria);
+    borrar_paquete(paquete);
+}
+
+char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid){
+    int tamanio = ((int*)instruccion->param2);
+
+    t_paquete* paquete = crear_paquete();
+    agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
+    agregar_a_paquete(paquete, &tamanio, sizeof(int));
+    cambiar_opcode_paquete(paquete, READ);
+    enviar_paquete(paquete, socket_memoria);
+    borrar_paquete(paquete);
+
+    t_list* contenido = recibir_paquete(socket_memoria);
+    char* datos = list_get(contenido, 0);
+    log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pid, direccion_fisica, datos);
+
+    char* copia_datos = strdup(datos);
+
+    list_destroy_and_destroy_elements(contenido, free);
+
+    return copia_datos;
+}
+
 void execute(t_instruccion* instruccion, int socket_memoria){
+    int direccion_fisica;
     switch (instruccion->identificador)
     {
     case NOOP:
         //no hace nada
         break;
     case WRITE:
-        int direccion_fisica = decode(instruccion);
-        char* datos = (char*)instruccion->param2;
-        int size_datos = strlen(datos);
-
-        t_paquete* paquete = crear_paquete();
-        agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
-        agregar_a_paquete(paquete, datos, size_datos);
-        enviar_paquete(paquete, socket_memoria);
-        borrar_paquete(paquete);
+        direccion_fisica = decode(instruccion);
+        ejecutar_write(instruccion, socket_memoria, direccion_fisica);
         break;
+    case READ:
+        direccion_fisica = decode(instruccion);
+
     default:
         break;
     }

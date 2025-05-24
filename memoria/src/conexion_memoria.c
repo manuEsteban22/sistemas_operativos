@@ -1,5 +1,6 @@
 #include<conexion_memoria.h>
 
+
 void* manejar_servidor(int socket){
 
     int socket_cliente = esperar_cliente(socket);
@@ -27,6 +28,12 @@ void* manejar_servidor(int socket){
             case PAQUETE:
                 log_info(logger, "llego un paquete");
                 recibir_paquete(socket_cliente);
+                break;
+            case READ:
+                log_info(logger, "recibi un read");
+                break;
+            case WRITE:
+                log_info(logger, "recibi un read");
                 break;
             case ERROR:
                 break;
