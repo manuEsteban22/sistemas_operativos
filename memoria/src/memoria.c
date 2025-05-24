@@ -1,6 +1,7 @@
 #include <utils/utils.c>
 #include <instrucciones.h>
 #include <memoria.h>
+#include<conexion_memoria.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
@@ -13,6 +14,7 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha);
+    manejar_servidor(socket_servidor);
     //esperar_clientes_multiplexado(socket_servidor);
     //esperar_cliente(socket_servidor);
     mandar_instrucciones();

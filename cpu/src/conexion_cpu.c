@@ -21,18 +21,18 @@ void handshake_kernel(int socket, char* nombre){
 }
 void handshake_memoria(int socket){
     enviar_handshake(socket);
-    log_info(logger, "envié el handshake");
+    log_info(logger, "envié el handshake a memoria");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
-        log_error(logger, "Fallo al recibir OK de kernel");
+        log_error(logger, "Fallo al recibir OK de memoria");
         return;
     }
     if(respuesta == OK){
-        log_info(logger, "Recibi el OK de kernel");
+        log_info(logger, "Recibi el OK de memoria");
         return;
     }else {
-        log_error(logger, "Fallo en el handshake, recibí %d", respuesta);
+        log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
         return;
     }
 
