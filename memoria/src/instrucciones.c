@@ -34,7 +34,7 @@ int cantidad_instrucciones() {
 }
 
 int espacio_libre() {
-    return 1024;
+    return 4096;
 }
 
 void liberar_memoria() {
