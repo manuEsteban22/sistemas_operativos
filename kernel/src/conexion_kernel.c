@@ -81,8 +81,9 @@ void* manejar_servidor_io(int socket_io){
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a IO");
-                recv(socket_cliente, &io_id, sizeof(int), MSG_WAITALL);
-                log_info(logger, "Conexion de IO ID: %d", io_id);
+                char* nombre_dispositivo;
+                nombre_dispositivo = recibir_mensaje(socket_io);
+                log_info(logger, "Conexion de IO ID: %s", nombre_dispositivo);
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
