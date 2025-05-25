@@ -49,10 +49,8 @@ void liberar_memoria()
     list_destroy_and_destroy_elements(lista_instrucciones, free);
 }
 
-int mandar_instrucciones(int socket_cliente) 
+int mandar_instrucciones(int socket_cliente, int pid, int pc) 
 {
-    int pc = 2;
-    int pid = 0;
     cargar_instrucciones(pid);
 
     int cant = cantidad_instrucciones();
