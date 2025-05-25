@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
     config = iniciar_config();
 
-    socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, "IO");
+    socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, nombre_dispositivo);
     
     //enviar_mensaje(socket_kernel, nombre_dispositivo);
     log_info(logger, "mande el mensaje");
