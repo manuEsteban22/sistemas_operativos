@@ -1,11 +1,4 @@
-#include <conexion_memoria.h>
-#include <instrucciones.h>
-#include <utils/utils.h>
-#include <pthread.h>  // Agregado para hilos
-
-extern t_log* logger;  // Para usar el logger global
-
-void* atender_clientes(void* socket_ptr) {
+void* atender_cpu(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
@@ -46,22 +39,8 @@ void* atender_clientes(void* socket_ptr) {
                 log_info(logger, "Error en el recv: operación desconocida");
                 break;
         }
-    }
-
-    close(socket_cliente);
-    return NULL;
-}
-
-void* manejar_servidor(int socket_servidor) {
-    while (1) {
-        int socket_cliente = esperar_cliente(socket_servidor);
-
-        int* socket_cliente_ptr = malloc(sizeof(int));
-        *socket_cliente_ptr = socket_cliente;
-
-        pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, atender_clientes, socket_cliente_ptr);
-        pthread_detach(hilo_cliente);
-    }
+    }  
+    int pid = lista_get(recibir_paquete(socket_cliente), 0);
+    close(socket_cliente); 
     return NULL;
 }
