@@ -1,24 +1,24 @@
 #include <conexion_io.h>
 
-void handshake_kernel(int socket, char* nombre){
+void handshake_kernel(int socket){
     enviar_handshake(socket);
-    log_info(logger, "envié el handshake (%s)", nombre);
+    log_info(logger, "envié el handshake a kernel");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
-        log_error(logger, "Fallo al recibir OK de kernel (%s)", nombre);
+        log_error(logger, "Fallo al recibir OK de kernel");
         return;
     }
     if(respuesta == OK){
-        log_info(logger, "Recibi el OK de kernel (%s)", nombre);
+        log_info(logger, "Recibi el OK de kernel");
         return;
     }else {
-        log_error(logger, "Fallo en el handshake (%s), recibí %d", nombre, respuesta);
+        log_error(logger, "Fallo en el handshake, recibí %d", respuesta);
         return;
     }
 }
 
-int conectar_kernel(char* ip, char* puerto, char* nombre){
+int conectar_kernel(char* ip, char* puerto, char* nombre_dispositivo){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -36,9 +36,8 @@ int conectar_kernel(char* ip, char* puerto, char* nombre){
     connect(fd_socket, server_info->ai_addr, server_info->ai_addrlen);
     freeaddrinfo(server_info);
     //envio y recibo un handhsake a kernel
-    handshake_kernel(fd_socket, nombre);
-
-    //send(fd_socket, &io_id, sizeof(int), 0);
+    handshake_kernel(fd_socket);
+    enviar_mensaje(fd_socket, nombre_dispositivo);
     return fd_socket;
 }
 
