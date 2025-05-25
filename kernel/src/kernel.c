@@ -27,16 +27,18 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     
-    //inicializar_planificador_lp();
-    /*if(argc < 3){
+    /*
+    if(argc < 3){
         log_error(logger, "faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
     }
     char* archivo_pseudocodigo = argv[1];
     int tamanio_proceso = atoi(argv[2]);
 
-    
+    inicializar_planificador_lp(algoritmo_planificacion);
+
     crear_proceso(tamanio_proceso);
+
     planificador_largo_plazo();
     */
 
@@ -65,7 +67,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
     pthread_detach(thread_interrupt);
 
-    pthread_create(&thread_io, NULL, manejar_servidor, (void*)args_io);
+    pthread_create(&thread_io, NULL, manejar_servidor_io, (void*)args_io);
     pthread_detach(thread_io);
 
     

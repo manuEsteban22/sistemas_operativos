@@ -33,11 +33,11 @@ void* atender_clientes(void* socket_ptr) {
                 log_info(logger, "Llegó un paquete");
                 recibir_paquete(socket_cliente);
                 break;
-            case OCREAD:
-                log_info(logger, "Recibí un read");
+            case OC_READ:
+                log_info(logger, "recibi un read");
                 break;
-            case OCWRITE:
-                log_info(logger, "Recibí un write");
+            case OC_WRITE:
+                log_info(logger, "recibi un write");
                 break;
             case ERROR:
                 log_info(logger, "Recibí un error");

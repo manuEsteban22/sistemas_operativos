@@ -30,9 +30,10 @@ void chequear_algoritmo_planificacion(char* algoritmo_planificacion){
     }
 }
 
-void inicializar_planificador_lp(){
+void inicializar_planificador_lp(char* algoritmo_planificacion){
     printf("Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
+    chequear_algoritmo_planificacion(algoritmo_planificacion);
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
@@ -124,7 +125,7 @@ void planificador_largo_plazo(){
             }
         } else{
             pthread_mutex_unlock(&mutex_susp_ready);
-        }
+            }
 
         pthread_mutex_lock(&mutex_new);
         if (!queue_is_empty(cola_new)) {
