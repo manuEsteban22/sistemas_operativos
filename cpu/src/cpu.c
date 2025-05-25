@@ -9,7 +9,7 @@ char* puerto_kernel_dispatch;
 char* puerto_kernel_interrupt;
 char* ip_memoria;
 char* puerto_memoria;
-int entradas_tlb;
+//int entradas_tlb;
 
 int main(int argc, char* argv[]) {
     int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-    prueba_write(socket_memoria);
+    prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
 

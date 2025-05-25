@@ -77,8 +77,11 @@ int conectar_memoria(char* ip, char* puerto){
     int fd_socket = socket(server_info->ai_family,
                                 server_info->ai_socktype,
                                 server_info->ai_protocol);
-    
-    connect(fd_socket, server_info->ai_addr, server_info->ai_addrlen);
+
+    if (connect(fd_socket, server_info->ai_addr, server_info->ai_addrlen) == -1) {
+        log_error(logger, "Error al conectar con %s", nombre);
+        return -1;
+    }
     freeaddrinfo(server_info);
     //envio y recibo un handhsake a memoria
     handshake_memoria(fd_socket);

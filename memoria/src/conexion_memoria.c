@@ -28,10 +28,10 @@ void* manejar_servidor(int socket){
                 log_info(logger, "llego un paquete");
                 recibir_paquete(socket_cliente);
                 break;
-            case READ:
+            case OCREAD:
                 log_info(logger, "recibi un read");
                 break;
-            case WRITE:
+            case OCWRITE:
                 log_info(logger, "recibi un write");
                 break;
             case ERROR:

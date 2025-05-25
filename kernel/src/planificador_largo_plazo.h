@@ -11,6 +11,7 @@ typedef enum {
 
 extern t_queue* cola_new;
 extern t_queue* cola_ready;
+extern t_queue* cola_susp_ready;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_ready;

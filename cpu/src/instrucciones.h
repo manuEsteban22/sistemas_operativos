@@ -34,4 +34,7 @@ typedef struct {
     int pagina;
 } t_paquete_frame;
 
+void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb);
+
+
 #endif

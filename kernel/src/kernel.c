@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     
-    inicializar_planificador_lp();
+    //inicializar_planificador_lp();
     /*if(argc < 3){
         log_error(logger, "faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;

@@ -33,3 +33,8 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->temporal_estado = temporal_create();
     //borra el cronometro del estado anterior y crea uno nuevo
 }
+
+void borrar_pcb(t_pcb* pcb){
+    temporal_destroy(pcb->temporal_estado);
+    free(pcb);
+}

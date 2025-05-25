@@ -83,7 +83,15 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
     return copia_datos;
 }
 
-void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
+void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch){
+    int tiempo = (int)instruccion->param2;
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SYSCALLIO);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+}
+
+void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb){
     int direccion_fisica;
     int pid = pcb->pid;
     int pc = pcb->pc;
@@ -102,25 +110,30 @@ void execute(t_instruccion* instruccion, int socket_memoria, t_pcb* pcb){
         direccion_fisica = decode(instruccion);
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
         pc += 1;
+        break;
     case GOTO:
-        pc = (int*)instruccion->param1;
+        pc = (int)instruccion->param1;
+        break;
+    case IO:
+        //ejecutar_io();
         break;
     default:
         break;
     }
+    pcb->pc = pc;
 }
 
-void prueba_write(int socket_memoria){
+void prueba_write(int socket_memoria, int socket_kernel_dispatch){
     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
     instruccion->identificador = OCWRITE;
     int* direccion_logica = malloc(sizeof(int));
     *direccion_logica = 128;
     instruccion->param1 = direccion_logica;
-    char* datos = strdup("HolaMundo");
+    char* datos = strdup("prueba");
     instruccion->param2 = datos;
     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
     pcb_prueba->pid = 4;
-    execute(instruccion, socket_memoria, pcb_prueba);
+    execute(instruccion, socket_memoria, socket_kernel_dispatch, pcb_prueba);
     free(direccion_logica);
     free(datos);
     free(instruccion);
