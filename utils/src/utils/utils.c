@@ -169,6 +169,13 @@ t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo){
 	borrar_paquete(paquete);
 }*/
 
+void enviar_mensaje(int socket_cliente, char* mensaje){
+    int cod_op = MENSAJE;
+    send(socket_cliente, &cod_op, sizeof(int), 0);
+    int size = strlen(mensaje) + 1;
+    send(socket_cliente, mensaje, size, 0);
+}
+
 void enviar_handshake(int socket_cliente){
     int cod_op = HANDSHAKE;    
     send(socket_cliente, &cod_op, sizeof(int), 0);

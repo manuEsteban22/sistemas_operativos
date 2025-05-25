@@ -18,7 +18,29 @@ int main(int argc, char* argv[]) {
     char* nombre_dispositivo = argv[1];
     log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
     config = iniciar_config();
+
     conexion_kernel = crear_conexion(ip_kernel, puerto_kernel);
+    
+    enviar_mensaje(conexion_kernel, nombre_dispositivo);
+
+    int cod_op = recibir_operacion(conexion_kernel);
+
+    switch(cod_op) {
+    case SOLICITUD_IO:
+        // Recibir los datos que vienen del Kernel
+        break;
+    default:
+        log_error(logger, "Código de operación desconocido");
+        break;
+    }
+
+    t_list* contenido = recibir_paquete(conexion_kernel);
+
+    int* pid = list_get(contenido, 0);
+    int* tiempo_io = list_get(contenido, 1);
+
+    log_info(logger, "PID %d empezó IO por %d ms", *pid, *tiempo_io);
+    log_info(logger, "PID %d terminó IO", *pid);
 
     return 0;
 }
