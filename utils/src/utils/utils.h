@@ -26,6 +26,7 @@ typedef enum
     OK,
     OCWRITE,
     OCREAD,
+    SYSCALLIO,
     ERROR
 } op_code;
 typedef struct

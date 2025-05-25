@@ -150,3 +150,4 @@ void planificador_largo_plazo(){
     }
     //inicializar_proceso_en_memoria(pcb);
 }
+}
