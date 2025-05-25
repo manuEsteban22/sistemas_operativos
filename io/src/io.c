@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    char* nombre_dispositivo = argv[1];
+    int nombre_dispositivo = atoi (argv[1]);
     logger = iniciar_logger();
     log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
     config = iniciar_config();
