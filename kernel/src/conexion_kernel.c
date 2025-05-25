@@ -55,6 +55,28 @@ void* manejar_servidor_cpu(void* arg){
     return NULL;
 }
 
+
+void handshake_memoria(int socket){
+    enviar_handshake(socket);
+    log_info(logger, "envié el handshake a memoria");
+
+    int respuesta;
+    if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
+        log_error(logger, "Fallo al recibir OK de memoria");
+        return;
+    }
+    if(respuesta == OK){
+        log_info(logger, "Recibi el OK de memoria");
+        return;
+    }else {
+        log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
+        return;
+    }
+
+    return;
+}
+
+
 void* manejar_servidor_io(int socket_io){
 
     int socket_cliente = esperar_cliente(socket_io);
@@ -124,22 +146,15 @@ int conectar_memoria(char* ip, char* puerto){
     //envio y recibo un handhsake a memoria
     handshake_memoria(fd_socket);
     
-    int pid = 0
-    int pc = 2
 
-    t_paquete  paquete_pid_pc = crear_paquete();
+    /*t_paquete  paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, pc, sizeof(int));
     enviar_paquete(paquete_pid_pc, fd_socket);
-    borrar_paquete(paquete_pid_pc);
+    borrar_paquete(paquete_pid_pc);*/
 
     return fd_socket;
 }
-
-
-
-
-
 
 
 

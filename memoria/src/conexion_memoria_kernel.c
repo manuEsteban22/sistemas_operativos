@@ -1,4 +1,9 @@
-void* atender_cpu(void* socket_ptr) {
+#include <conexion_memoria_kernel.h>
+#include <utils/utils.h>
+#include <pthread.h> 
+
+
+void* atender_kernel(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
@@ -42,5 +47,19 @@ void* atender_cpu(void* socket_ptr) {
     }  
     int pid = lista_get(recibir_paquete(socket_cliente), 0);
     close(socket_cliente); 
+    return NULL;
+}
+
+void* manejar_servidor(int socket_servidor) {
+    while (1) {
+        int socket_cliente = esperar_cliente(socket_servidor);
+
+        int* socket_cliente_ptr = malloc(sizeof(int));
+        *socket_cliente_ptr = socket_cliente;
+
+        pthread_t hilo_cliente;
+        pthread_create(&hilo_cliente, NULL, atender_kernel, socket_cliente_ptr);
+        pthread_detach(hilo_cliente);
+    }
     return NULL;
 }
