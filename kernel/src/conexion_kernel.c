@@ -76,12 +76,17 @@ void* manejar_servidor_io(int socket_io){
                 log_info(logger, "termino la conexion con exito");
                 break;
             case HANDSHAKE:
-                int io_id;
                 log_info(logger, "recibi un handshake de io");
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a IO");
                 char* nombre_dispositivo;
+                op_code op;
+                recv(socket_cliente, &op, sizeof(int), MSG_WAITALL);
+                if(op != MENSAJE){
+                    log_error(logger, "No llegó el mensaje de IO");
+                    break;
+                }
                 nombre_dispositivo = recibir_mensaje(socket_cliente);
                 log_info(logger, "Conexion de IO: %s", nombre_dispositivo);
                 break;
