@@ -23,6 +23,7 @@ typedef enum
     CERRADO,
     HANDSHAKE,
     PAQUETE,
+    MENSAJE,
     OK,
     OCWRITE,
     OCREAD,
