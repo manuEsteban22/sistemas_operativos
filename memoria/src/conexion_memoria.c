@@ -52,18 +52,16 @@ void* atender_clientes(void* socket_ptr) {
     return NULL;
 }
 
-void manejar_servidor(int socket_servidor) {
-    while(1) {
-        int* socket_cliente = malloc(sizeof(int));
-        *socket_cliente = esperar_cliente(socket_servidor);
-        if (*socket_cliente < 0) {
-            log_info(logger, "Error aceptando cliente");
-            free(socket_cliente);
-            continue;
-        }
+void* manejar_servidor(int socket_servidor) {
+    while (1) {
+        int socket_cliente = esperar_cliente(socket_servidor);
 
-        pthread_t hilo;
-        pthread_create(&hilo, NULL, atender_clientes, socket_cliente);
-        pthread_detach(hilo);
+        int* socket_cliente_ptr = malloc(sizeof(int));
+        *socket_cliente_ptr = socket_cliente;
+
+        pthread_t hilo_cliente;
+        pthread_create(&hilo_cliente, NULL, atender_cliente, socket_cliente_ptr);
+        pthread_detach(hilo_cliente);
     }
+    return NULL;
 }
