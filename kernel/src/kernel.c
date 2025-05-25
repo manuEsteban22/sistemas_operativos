@@ -21,7 +21,8 @@ int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
-char *algoritmo_planificacion;
+char *algoritmo_planificacion_lp;
+char *algoritmo_planificacion_cp;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
@@ -96,18 +97,22 @@ t_config* iniciar_config(void){
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
-        PROCESOS_MEMORIA = config_get_string_value(nuevo_config, "PROCESOS_MEMORIA");
-        algoritmo_planificacion = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION");
+        PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
+        algoritmo_planificacion_lp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_LARGO_PLAZO");
+        algoritmo_planificacion_cp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_CORTO_PLAZO");
         
-        chequear_algoritmo_planificacion (algoritmo_planificacion);
-        log_info(logger, "no se pudo leer el archivo de config");}
+        chequear_algoritmo_planificacion (algoritmo_planificacion_lp, algoritmo_planificacion_cp);
+
+        log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);
         log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
         log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
         log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
         log_info(logger, "el puerto del server io es: %s", puerto_io);
-        log_info(logger, "algoritmo de planificación: %s", algoritmo_planificacion);
+        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_planificacion_lp);
+        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_planificacion_cp);
         return nuevo_config;
+    }
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){
