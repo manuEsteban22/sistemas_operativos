@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
     nuevo_logger = log_create("memoria.log","LogMem",true,LOG_LEVEL_INFO);
-    log_info(nuevo_logger, "funciona logger memoria :)");
+    log_info(nuevo_logger, "Funciona logger memoria :)");
     return nuevo_logger;
 }
 
@@ -51,8 +51,8 @@ t_config* iniciar_config(void){
     {
         retornar_config(nuevo_config);
     }
-    else{log_info(logger, "no se pudo leer el archivo de config");}
-    log_info(logger, "el puerto: %s", campos_config.puerto_escucha);
+    else{log_info(logger, "No se pudo leer el archivo de config");}
+    log_info(logger, "Puerto: %s", campos_config.puerto_escucha);
     return nuevo_config;
 }
 //cerrar logger, config, etc

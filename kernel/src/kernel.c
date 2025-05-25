@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     */
 
     //Hago la conexion como cliente al servidor memoria
-    socket_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     
     //Inicio los servidores de dispatch, interrupt e I/O
     socket_io = iniciar_servidor(puerto_io);
