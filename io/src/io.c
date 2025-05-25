@@ -10,6 +10,7 @@ char* puerto_kernel;
 
 int main(int argc, char* argv[]) {
     int socket_kernel;
+    logger = iniciar_logger();
 
     if (argc < 2){
         log_error(logger, "Falta el nombre del dispositivo IO");
@@ -17,32 +18,13 @@ int main(int argc, char* argv[]) {
     }
 
     int nombre_dispositivo = atoi (argv[1]);
-    logger = iniciar_logger();
-    log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
+    log_info(logger, "Nombre del dispositivo IO: %d", nombre_dispositivo);
     config = iniciar_config();
 
     socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, "IO", nombre_dispositivo);
     
     enviar_mensaje(socket_kernel, nombre_dispositivo);
-
-    int cod_op = recibir_operacion(socket_kernel);
-
-    switch(cod_op) {
-    case SOLICITUD_IO:
-        // Recibir los datos que vienen del Kernel
-        break;
-    default:
-        log_error(logger, "Código de operación desconocido");
-        break;
-    }
-
-    t_list* contenido = recibir_paquete(conectar_kernel);
-
-    int* pid = list_get(contenido, 0);
-    int* tiempo_io = list_get(contenido, 1);
-
-    log_info(logger, "PID %d empezó IO por %d ms", *pid, *tiempo_io);
-    log_info(logger, "PID %d terminó IO", *pid);
+    atender_solicitudes_io(socket_kernel);
 
     return 0;
 }
