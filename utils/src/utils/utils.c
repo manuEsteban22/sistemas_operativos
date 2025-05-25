@@ -171,15 +171,16 @@ t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo){
 
 void enviar_mensaje(int socket, char* mensaje){
     int cod_op = MENSAJE;
-    send(socket, &cod_op, sizeof(int), 0);
     int size = strlen(mensaje) + 1;
+    send(socket, &cod_op, sizeof(int), 0);
+    send(socket, &size, sizeof(int), 0);
     send(socket, mensaje, size, 0);
 }
 
 char* recibir_mensaje(int socket){
     int size_mensaje;
     recv(socket, &size_mensaje, sizeof(int), MSG_WAITALL);
-    char* mensaje = malloc(size_mensaje + 1);
+    char* mensaje = malloc(size_mensaje);
     recv(socket, mensaje, size_mensaje, MSG_WAITALL);
     return mensaje;
 }

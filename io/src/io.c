@@ -23,7 +23,8 @@ int main(int argc, char* argv[]) {
 
     socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, "IO");
     
-    enviar_mensaje(socket_kernel, nombre_dispositivo);
+    //enviar_mensaje(socket_kernel, nombre_dispositivo);
+    log_info(logger, "mande el mensaje");
     atender_solicitudes_io(socket_kernel);
 
     return 0;
