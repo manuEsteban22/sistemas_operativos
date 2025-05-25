@@ -1,7 +1,7 @@
 #include <conexion_memoria_kernel.h>
 #include <utils/utils.h>
 #include <pthread.h> 
-
+extern t_log* logger;
 
 void* atender_kernel(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
@@ -45,12 +45,12 @@ void* atender_kernel(void* socket_ptr) {
                 break;
         }
     }  
-    int pid = lista_get(recibir_paquete(socket_cliente), 0);
+    int pid = list_get(recibir_paquete(socket_cliente), 0);
     close(socket_cliente); 
     return NULL;
 }
 
-void* manejar_servidor(int socket_servidor) {
+void* manejar_servidor_kernel(int socket_servidor) {
     while (1) {
         int socket_cliente = esperar_cliente(socket_servidor);
 

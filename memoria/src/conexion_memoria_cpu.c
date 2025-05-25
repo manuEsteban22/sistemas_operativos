@@ -3,7 +3,7 @@
 #include <utils/utils.h>
 #include <pthread.h>  // Agregado para hilos
 
-extern t_log* logger;  // Para usar el logger global
+extern t_log* logger;  
 
 void* atender_cpu(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
@@ -47,9 +47,9 @@ void* atender_cpu(void* socket_ptr) {
                 break;
         }
     }
-    lista_paquete = recibir_paquete(socket_cliente);      
-    int pid = lista_get(lista_paquete, 0);
-    int pc = lista_get(lista_paquete, 1);
+    t_paquete* lista_paquete = recibir_paquete(socket_cliente);      
+    int pid = list_get(lista_paquete, 0);
+    int pc = list_get(lista_paquete, 1);
     mandar_instrucciones(socket_cliente, pid, pc);       //recibe de cpu el pid y pc para poder mandarle las intrucciones :)
     close(socket_cliente); 
     return NULL;
@@ -63,7 +63,7 @@ void* manejar_servidor(int socket_servidor) {
         *socket_cliente_ptr = socket_cliente;
 
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, atender_clientes, socket_cliente_ptr);
+        pthread_create(&hilo_cliente, NULL, atender_cpu, socket_cliente_ptr);
         pthread_detach(hilo_cliente);
     }
     return NULL;
