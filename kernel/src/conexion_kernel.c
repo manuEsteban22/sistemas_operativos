@@ -81,8 +81,8 @@ void* manejar_servidor_io(int socket_io){
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a IO");
                 char* nombre_dispositivo;
-                op_code op;
-                recv(socket_cliente, &op, sizeof(int), MSG_WAITALL);
+                op_code op = recibir_operacion(socket_cliente);
+                //recv(socket_cliente, &op, sizeof(int), MSG_WAITALL);
                 if(op != MENSAJE){
                     log_error(logger, "No llegó el mensaje de IO");
                     break;
