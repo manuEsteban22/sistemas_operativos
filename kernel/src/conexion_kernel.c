@@ -41,7 +41,7 @@ void* manejar_servidor_cpu(void* arg){
                 //recibir paquete -> deserializar
                 break;
             case SYSCALL_IO:
-                llamar_a_io();
+                llamar_a_io(socket_cliente);
                 break;
             case ERROR:
                 break;
@@ -55,23 +55,19 @@ void* manejar_servidor_cpu(void* arg){
     return NULL;
 }
 
-void* manejar_servidor_io(void* arg){
-    t_args_hilo* argumentos = (t_args_hilo*) arg;
-    int socket = argumentos->socket;
-    char* nombre_cliente = strdup(argumentos->nombre);
-    free(arg);
+void* manejar_servidor_io(int socket_io){
 
-    int socket_cliente = esperar_cliente(socket);
+    int socket_cliente = esperar_cliente(socket_io);
 
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
         if(codigo_operacion == -1){
-            log_info(logger, "Se cerró la conexion de %s", nombre_cliente);
+            log_info(logger, "Se cerró la conexion de IO");
             break;
         }
 
-        log_info(logger, "[%s] Código de operación recibido: %d", nombre_cliente, codigo_operacion);
+        log_info(logger, "IO Código de operación recibido: %d", codigo_operacion);
 
         switch (codigo_operacion){
             case CERRADO:
@@ -84,7 +80,7 @@ void* manejar_servidor_io(void* arg){
                 log_info(logger, "recibi un handshake de io");
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
-                log_info(logger, "Envie OK a %s", nombre_cliente);
+                log_info(logger, "Envie OK a IO");
                 recv(socket_cliente, &io_id, sizeof(int), MSG_WAITALL);
                 log_info(logger, "Conexion de IO ID: %d", io_id);
                 break;
