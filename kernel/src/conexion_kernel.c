@@ -40,6 +40,9 @@ void* manejar_servidor_cpu(void* arg){
                 //deserializar ()
                 //recibir paquete -> deserializar
                 break;
+            case SYSCALL_IO:
+                llamar_a_io();
+                break;
             case ERROR:
                 break;
             default:

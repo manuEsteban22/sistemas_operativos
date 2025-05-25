@@ -30,6 +30,7 @@ typedef enum
     SYSCALL_INIT,
     SYSCALL_DUMP_MEMORY,
     SYSCALL_EXIT,
+    SOLICITUD_IO,
     ERROR
 } op_code;
 typedef struct

@@ -60,7 +60,7 @@ void* manejar_servidor(int socket_servidor) {
         *socket_cliente_ptr = socket_cliente;
 
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, atender_cliente, socket_cliente_ptr);
+        pthread_create(&hilo_cliente, NULL, atender_clientes, socket_cliente_ptr);
         pthread_detach(hilo_cliente);
     }
     return NULL;
