@@ -21,11 +21,11 @@ int main(int argc, char* argv[]) {
     int cpu_id = atoi(argv[1]);
     logger = iniciar_logger(cpu_id);
     config = iniciar_config();
-    socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
-    socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
+    //socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
+    //ocket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-    prueba_write(socket_memoria, socket_kernel_dispatch);
+    //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
 
@@ -47,7 +47,7 @@ t_config* iniciar_config(void){
         puerto_kernel_interrupt = config_get_string_value(nuevo_config, "PUERTO_KERNEL_INTERRUPT");
         ip_memoria = config_get_string_value(nuevo_config,"IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
-        entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
+        //entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del kernel es: %s", ip_kernel);
