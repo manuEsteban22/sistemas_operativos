@@ -79,7 +79,7 @@ int conectar_memoria(char* ip, char* puerto){
                                 server_info->ai_protocol);
 
     if (connect(fd_socket, server_info->ai_addr, server_info->ai_addrlen) == -1) {
-        log_error(logger, "Error al conectar con %s", nombre);
+        log_error(logger, "Error al conectar con memoria");
         return -1;
     }
     freeaddrinfo(server_info);
