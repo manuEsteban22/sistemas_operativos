@@ -1,7 +1,7 @@
 #include <utils/utils.c>
 #include <instrucciones.h>
 #include <memoria.h>
-#include<conexion_memoria.h>
+#include<conexion_memoria_cpu.h>
 t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
