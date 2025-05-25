@@ -55,7 +55,7 @@ void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccio
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, datos, size_datos);
-    cambiar_opcode_paquete(paquete, OCWRITE);
+    cambiar_opcode_paquete(paquete, OC_WRITE);
     enviar_paquete(paquete, socket_memoria);
     borrar_paquete(paquete);
 
@@ -68,7 +68,7 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
-    cambiar_opcode_paquete(paquete, OCREAD);
+    cambiar_opcode_paquete(paquete, OC_READ);
     enviar_paquete(paquete, socket_memoria);
     borrar_paquete(paquete);
 
@@ -87,8 +87,42 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispa
     int tiempo = (int)instruccion->param2;
 
     t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, SYSCALLIO);
+    cambiar_opcode_paquete(paquete, SYSCALL_IO);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &tiempo, sizeof(int));
+    enviar_paquete(paquete, socket_kernel_dispatch);
+    borrar_paquete(paquete);
+    return;
+}
+
+void init_proc(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch){
+    char* archivo_instrucciones = (char*)instruccion->param1;
+    int tamanio = (int)instruccion->param2;
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SYSCALL_INIT);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &tamanio, sizeof(int));
+    agregar_a_paquete(paquete, archivo_instrucciones, strlen(archivo_instrucciones) + 1);
+    enviar_paquete(paquete, socket_kernel_dispatch);
+    borrar_paquete(paquete);
+    return;
+}
+
+void dump_memory(t_pcb* pcb, int socket_kernel_dispatch){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SYSCALL_DUMP_MEMORY);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    enviar_paquete(paquete, socket_kernel_dispatch);
+    borrar_paquete(paquete);
+}
+
+void exit_syscall(t_pcb* pcb, int socket_kernel_dispatch){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SYSCALL_EXIT);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    enviar_paquete(paquete, socket_kernel_dispatch);
+    borrar_paquete(paquete);
 }
 
 void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb){
@@ -115,17 +149,27 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
         pc = (int)instruccion->param1;
         break;
     case IO:
-        //ejecutar_io();
+        ejecutar_io(instruccion, pcb, socket_kernel_dispatch);
+        break;
+    case INIT_PROC:
+        init_proc(instruccion, pcb, socket_kernel_dispatch);
+        break;
+    case DUMP_MEMORY:
+        dump_memory(pcb, socket_kernel_dispatch);
+        break;
+    case EXIT:
+        exit_syscall(pcb, socket_kernel_dispatch);
         break;
     default:
         break;
     }
     pcb->pc = pc;
+    return;
 }
 
 void prueba_write(int socket_memoria, int socket_kernel_dispatch){
     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-    instruccion->identificador = OCWRITE;
+    instruccion->identificador = OC_WRITE;
     int* direccion_logica = malloc(sizeof(int));
     *direccion_logica = 128;
     instruccion->param1 = direccion_logica;

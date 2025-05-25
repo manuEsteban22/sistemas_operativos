@@ -16,7 +16,6 @@
 #include<pthread.h>
 #include<semaphore.h>
 
-//#include<conexion_cpu.c>
 
 typedef enum
 {
@@ -24,9 +23,12 @@ typedef enum
     HANDSHAKE,
     PAQUETE,
     OK,
-    OCWRITE,
-    OCREAD,
-    SYSCALLIO,
+    OC_WRITE,
+    OC_READ,
+    SYSCALL_IO,
+    SYSCALL_INIT,
+    SYSCALL_DUMP_MEMORY,
+    SYSCALL_EXIT,
     ERROR
 } op_code;
 typedef struct
