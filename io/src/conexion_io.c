@@ -16,8 +16,6 @@ void handshake_kernel(int socket, char* nombre){
         log_error(logger, "Fallo en el handshake (%s), recibí %d", nombre, respuesta);
         return;
     }
-
-    return;
 }
 
 int conectar_kernel(char* ip, char* puerto, char* nombre, int io_id){
@@ -42,4 +40,29 @@ int conectar_kernel(char* ip, char* puerto, char* nombre, int io_id){
 
     send(fd_socket, &io_id, sizeof(int), 0);
     return fd_socket;
+}
+
+void atender_solicitudes_io(int socket_kernel){
+    while (1) {
+    int cod_op = recibir_operacion(socket_kernel);
+    if (cod_op <= 0) break;
+
+        switch(cod_op) {
+            case SOLICITUD_IO: {
+                t_list* contenido = recibir_paquete(socket_kernel);
+                int* pid = list_get(contenido, 0);
+                int* tiempo_io = list_get(contenido, 1);
+
+                log_info(logger, "PID: %d - Inicio de IO - Tiempo: %d", *pid, *tiempo_io);
+                usleep(*tiempo_io * 1000);
+                log_info(logger, "PID: %d - Fin de IO", *pid);
+
+                list_destroy_and_destroy_elements(contenido, free);
+                break;
+            }   
+            default:
+                log_error(logger, "Código de operación desconocido: %d", cod_op);
+                break;
+        }
+    }
 }
