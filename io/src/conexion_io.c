@@ -38,6 +38,7 @@ int conectar_kernel(char* ip, char* puerto, char* nombre_dispositivo){
     //envio y recibo un handhsake a kernel
     handshake_kernel(fd_socket);
     enviar_mensaje(fd_socket, nombre_dispositivo);
+    log_info(logger, "Envié el nombre de dispositivo");
     return fd_socket;
 }
 
