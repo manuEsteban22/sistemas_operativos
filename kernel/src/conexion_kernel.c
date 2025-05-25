@@ -52,7 +52,7 @@ void* manejar_servidor_cpu(void* arg){
     return NULL;
 }
 
-void* manejar_servidor(void* arg){
+void* manejar_servidor_io(void* arg){
     t_args_hilo* argumentos = (t_args_hilo*) arg;
     int socket = argumentos->socket;
     char* nombre_cliente = strdup(argumentos->nombre);
@@ -72,18 +72,23 @@ void* manejar_servidor(void* arg){
 
         switch (codigo_operacion){
             case CERRADO:
-                log_info(logger, "se termino la conexion con exito");
+                //close(socket_cliente);
+                //la conexion sigue abierta pero sin mensajes(?
+                log_info(logger, "termino la conexion con exito");
                 break;
             case HANDSHAKE:
-                log_info(logger, "recibi un handshake");
+                int io_id;
+                log_info(logger, "recibi un handshake de io");
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a %s", nombre_cliente);
-                // chequear que los otros modulos 
+                recv(socket_cliente, &io_id, sizeof(int), MSG_WAITALL);
+                log_info(logger, "Conexion de IO ID: %d", io_id);
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
-                recibir_paquete(socket_cliente);
+                //deserializar ()
+                //recibir paquete -> deserializar
                 break;
             case ERROR:
                 break;
