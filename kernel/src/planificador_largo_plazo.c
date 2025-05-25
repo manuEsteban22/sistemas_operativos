@@ -2,7 +2,8 @@
 #include <commons/collections/list.h>
 
 int procesos_en_memoria = 0;
-t_algoritmo_planificacion algoritmo;
+t_algoritmo_planificacion algoritmo_lp;
+t_algoritmo_planificacion algoritmo_cp;
 pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue* cola_new;
@@ -19,21 +20,30 @@ sem_t sem_procesos_en_memoria;
 
 int pid_global = 0;
 
-void chequear_algoritmo_planificacion(char* algoritmo_planificacion){
-    if (strcmp(algoritmo_planificacion,"FIFO") == 0){
-    algoritmo = FIFO;
-    } else if(strcmp(algoritmo_planificacion,"MENOR_MEMORIA") == 0){
-    algoritmo = MENOR_MEMORIA;
+void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp){
+    if (strcmp(algoritmo_planificacion_lp,"FIFO") == 0){
+    algoritmo_lp = FIFO;
+    } else if(strcmp(algoritmo_planificacion_lp,"MENOR_MEMORIA") == 0){
+    algoritmo_lp = MENOR_MEMORIA;
     } else{
-    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion);
+    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_lp);
+    exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(algoritmo_planificacion_cp,"FIFO") == 0){
+    algoritmo_cp = FIFO;
+    } else if(strcmp(algoritmo_planificacion_cp,"MENOR_MEMORIA") == 0){
+    algoritmo_cp = MENOR_MEMORIA;
+    } else{
+    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_cp);
     exit(EXIT_FAILURE);
     }
 }
 
-void inicializar_planificador_lp(char* algoritmo_planificacion){
+void inicializar_planificador_lp(char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp){
     printf("Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
-    chequear_algoritmo_planificacion(algoritmo_planificacion);
+    chequear_algoritmo_planificacion(algoritmo_planificacion_lp, algoritmo_planificacion_cp);
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
@@ -47,7 +57,7 @@ void crear_proceso(int tamanio_proceso){
 
     pthread_mutex_lock(&mutex_new);
 
-    switch (algoritmo) {
+    switch (algoritmo_lp) {
         case FIFO:
             queue_push(cola_new, pcb);
             break;
