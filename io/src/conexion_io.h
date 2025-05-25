@@ -5,5 +5,6 @@
 
 int conectar_kernel(char* ip, char* puerto, char* nombre);
 void atender_solicitudes_io(int socket_kernel);
+void enviar_finalizacion_io(int socket_kernel, int pid);
 
 #endif
