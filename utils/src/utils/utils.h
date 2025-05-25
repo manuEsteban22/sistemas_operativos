@@ -31,6 +31,7 @@ typedef enum
     SYSCALL_DUMP_MEMORY,
     SYSCALL_EXIT,
     SOLICITUD_IO,
+    FINALIZA_IO,
     ERROR
 } op_code;
 typedef struct
@@ -60,5 +61,7 @@ t_list* deserializar(t_buffer* buffer);
 void enviar_handshake(int socket_cliente);
 t_list* recibir_paquete (int socket_cliente);
 t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo);
+void enviar_mensaje(int socket, char* mensaje);
+char* recibir_mensaje(int socket);
 
 #endif

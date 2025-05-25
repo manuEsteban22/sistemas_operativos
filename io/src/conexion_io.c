@@ -18,7 +18,7 @@ void handshake_kernel(int socket, char* nombre){
     }
 }
 
-int conectar_kernel(char* ip, char* puerto, char* nombre, int io_id){
+int conectar_kernel(char* ip, char* puerto, char* nombre){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -38,7 +38,7 @@ int conectar_kernel(char* ip, char* puerto, char* nombre, int io_id){
     //envio y recibo un handhsake a kernel
     handshake_kernel(fd_socket, nombre);
 
-    send(fd_socket, &io_id, sizeof(int), 0);
+    //send(fd_socket, &io_id, sizeof(int), 0);
     return fd_socket;
 }
 
@@ -56,6 +56,7 @@ void atender_solicitudes_io(int socket_kernel){
                 log_info(logger, "PID: %d - Inicio de IO - Tiempo: %d", *pid, *tiempo_io);
                 usleep(*tiempo_io * 1000);
                 log_info(logger, "PID: %d - Fin de IO", *pid);
+                enviar_finalizacion_io(socket_kernel, *pid);
 
                 list_destroy_and_destroy_elements(contenido, free);
                 break;
@@ -65,4 +66,12 @@ void atender_solicitudes_io(int socket_kernel){
                 break;
         }
     }
+}
+
+void enviar_finalizacion_io(int socket_kernel, int pid){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, FINALIZA_IO);
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    enviar_paquete(paquete, socket_kernel);
+    borrar_paquete(paquete);
 }

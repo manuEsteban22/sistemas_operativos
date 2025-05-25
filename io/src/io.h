@@ -4,8 +4,5 @@
 
 extern t_log* logger;
 
-typedef enum {
-    SOLICITUD_IO,
-} t_solicitudes;
 
 #endif

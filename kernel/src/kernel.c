@@ -54,13 +54,10 @@ int main(int argc, char* argv[]) {
     //Creo argumentos para los hilos
     t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
     t_args_hilo* args_interrupt = malloc(sizeof(t_args_hilo));
-    t_args_hilo* args_io = malloc(sizeof(t_args_hilo));
     args_dispatch->socket = socket_dispatch;
     args_interrupt->socket = socket_interrupt;
-    args_io->socket = socket_io;
     args_dispatch->nombre = "DISPATCH";
     args_interrupt->nombre = "INTERRUPT";
-    args_io->nombre = "IO";
 
     pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
     pthread_detach(thread_dispatch);
@@ -68,7 +65,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
     pthread_detach(thread_interrupt);
 
-    pthread_create(&thread_io, NULL, manejar_servidor_io, (void*)args_io);
+    pthread_create(&thread_io, NULL, manejar_servidor_io, socket_io);
     pthread_detach(thread_io);
 
     

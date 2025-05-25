@@ -17,11 +17,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    int nombre_dispositivo = atoi (argv[1]);
-    log_info(logger, "Nombre del dispositivo IO: %d", nombre_dispositivo);
+    char* nombre_dispositivo = argv[1];
+    log_info(logger, "Nombre del dispositivo IO: %s", nombre_dispositivo);
     config = iniciar_config();
 
-    socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, "IO", nombre_dispositivo);
+    socket_kernel = conectar_kernel(ip_kernel, puerto_kernel, "IO");
     
     enviar_mensaje(socket_kernel, nombre_dispositivo);
     atender_solicitudes_io(socket_kernel);
