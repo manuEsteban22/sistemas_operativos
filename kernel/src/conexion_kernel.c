@@ -77,6 +77,39 @@ void handshake_memoria(int socket){
 }
 
 
+void handshake_io(int socket_dispositivo){
+    log_info(logger, "recibi un handshake de io");
+    op_code respuesta = OK;
+
+    send(socket_dispositivo, &respuesta, sizeof(int),0);
+    log_info(logger, "Envie OK a IO");
+
+    char* nombre_dispositivo;
+    op_code op = recibir_operacion(socket_dispositivo);
+
+
+    if(op != MENSAJE){
+        log_error(logger, "No llegó el mensaje de IO");
+        return;
+    }
+
+    nombre_dispositivo = recibir_mensaje(socket_dispositivo);
+    log_info(logger, "Conexion de IO: %s", nombre_dispositivo);
+
+    t_dispositivo_io* nuevo_io = malloc(sizeof(t_dispositivo_io));
+    nuevo_io->socket_io = socket_dispositivo;
+    nuevo_io->cola_bloqueados = queue_create();
+    nuevo_io->ocupado = false;
+
+    dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
+    free(nombre_dispositivo);
+
+    log_info(logger, "Se registró el dispositivo IO [%s] en el diccionario", nombre_dispositivo);
+
+
+    return;
+}
+
 void* manejar_servidor_io(int socket_io){
 
     int socket_cliente = esperar_cliente(socket_io);
@@ -98,19 +131,7 @@ void* manejar_servidor_io(int socket_io){
                 log_info(logger, "termino la conexion con exito");
                 break;
             case HANDSHAKE:
-                log_info(logger, "recibi un handshake de io");
-                op_code respuesta = OK;
-                send(socket_cliente, &respuesta, sizeof(int),0);
-                log_info(logger, "Envie OK a IO");
-                char* nombre_dispositivo;
-                op_code op = recibir_operacion(socket_cliente);
-                //recv(socket_cliente, &op, sizeof(int), MSG_WAITALL);
-                if(op != MENSAJE){
-                    log_error(logger, "No llegó el mensaje de IO");
-                    break;
-                }
-                nombre_dispositivo = recibir_mensaje(socket_cliente);
-                log_info(logger, "Conexion de IO: %s", nombre_dispositivo);
+                handshake_io(socket_cliente);
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");

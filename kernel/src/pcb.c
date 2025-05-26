@@ -20,6 +20,13 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     return pcb;
 }
 
+t_pcb* obtener_pcb(int pid) {
+    char* pid_str = string_itoa(pid);
+    t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
+    free(pid_str);
+    return pcb;
+}
+
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     uint64_t duracion = temporal_gettime(pcb->temporal_estado);
     pcb->metricas_tiempo[pcb->estado_actual] += duracion;

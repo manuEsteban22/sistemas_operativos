@@ -13,3 +13,18 @@ t_pcb* planificar_proceso_fifo() {
 
     return pcb;
 }
+
+void ejecutar_proceso(t_pcb* pcb, int socket_dispatch){
+    cambiar_estado(pcb, EXEC);
+    int pid = pcb->pid;
+    int pc = pcb->pc;
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_EXEC);
+    agregar_a_paquete(paquete, pid, sizeof(int));
+    agregar_a_paquete(paquete, pc, sizeof(int));
+    enviar_paquete(paquete, socket_dispatch);
+    borrar_paquete(paquete);
+
+    log_info(logger, "envie el proceso PID=%d a CPU - PC=%d", pid, pc);
+}

@@ -2,6 +2,11 @@
 #define SYSCALLS_H_
 #include<utils/utils.h>
 #include<kernel.h>
+#include<pcb.h>
 
+typedef struct {
+    int pid;
+    int tiempo;
+} t_pcb_io;
 
 #endif
