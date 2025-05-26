@@ -13,11 +13,32 @@ t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     t_paquete* paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
-    enviar_paquete(paquete_pid_pc, fd_socket);
+    enviar_paquete(paquete_pid_pc, socket_memoria);
     borrar_paquete(paquete_pid_pc);
 
-    t_instruccion* proxima_instruccion = recibir_paquete(socket_memoria);;// = recibir_instruccion(socket_memoria);
-    return proxima_instruccion;
+    t_list* recibido = recibir_paquete(socket_memoria);
+    if (recibido == NULL || list_size(recibido) == 0) {
+        log_error(logger, "Error al recibir instrucciones de memoria");
+        return NULL;
+    }
+
+    void* elemento = list_get(recibido, 0);
+    if (elemento == NULL) {
+        log_error(logger, "Elemento NULL recibido en list_get");
+        list_destroy_and_destroy_elements(recibido, free);
+        return NULL;
+    }
+
+    char* instruccion_sin_traducir = (char*) elemento;
+    log_info(logger, "Instrucción sin traducir: %s", instruccion_sin_traducir);
+
+
+    //borrar espacios y separar en una instruccion
+    list_destroy_and_destroy_elements(recibido, free);
+
+    t_instruccion* proxima_instruccion;
+    //return proxima_instruccion;
+    return NULL;
 }
 
 bool requiere_traduccion(t_instruccion* instruccion){
@@ -143,6 +164,7 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
     {
     case NOOP:
         //no hace nada
+        log_info(logger, "ejecute un noop");
         pc += 1;
         break;
     case WRITE:
@@ -191,6 +213,13 @@ void prueba_write(int socket_memoria, int socket_kernel_dispatch){
     free(direccion_logica);
     free(datos);
     free(instruccion);
+}
+
+void prueba(int socket){
+    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
+    pcb_prueba->pc = 0;
+    pcb_prueba->pid = 2;
+    fetch(pcb_prueba, socket);
 }
 
 void iniciar_ciclo_de_instrucciones(){

@@ -1,6 +1,7 @@
 #ifndef CPU_H_
 #define CPU_H_
 #include<utils/utils.h>
+#include<instrucciones.h>
 
 extern t_log* logger;
 extern int enradas_tlb;

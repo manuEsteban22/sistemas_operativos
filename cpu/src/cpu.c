@@ -1,4 +1,5 @@
 #include <utils/utils.c>
+#include <cpu.h>
 #include <conexion_cpu.h>
 
 t_log* iniciar_logger();
@@ -22,10 +23,11 @@ int main(int argc, char* argv[]) {
     logger = iniciar_logger(cpu_id);
     config = iniciar_config();
     //socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
-    //ocket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
+    //socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-    //fetch(t_pcb* pcb, socket_memoria);
+    log_info(logger, "anda joya aca");
+    prueba(socket_memoria);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
