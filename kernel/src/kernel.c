@@ -23,11 +23,14 @@ pthread_t thread_dispatch;
 pthread_t thread_interrupt;
 char *algoritmo_planificacion_lp;
 char *algoritmo_planificacion_cp;
+t_dictionary* dispositivos_io;
+t_dictionary* tabla_pcbs;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
-    
+    tabla_pcbs = dictionary_create();
+    dispositivos_io = dictionary_create();
     /*
     if(argc < 3){
         log_error(logger, "faltaron argumentos en la ejecucion");

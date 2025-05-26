@@ -2,6 +2,8 @@
 #define PCB_H_
 #include<utils/utils.h>
 #include<commons/temporal.h>
+#include<kernel.h>
+
 
 typedef enum {
     NEW,
@@ -35,6 +37,7 @@ typedef struct
 
 t_pcb* crear_pcb(int pid, int tamanio_proceso);
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
+void borrar_pcb(t_pcb* pcb);
 
 
 #endif
