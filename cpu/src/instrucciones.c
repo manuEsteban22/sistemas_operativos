@@ -16,6 +16,9 @@ t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     enviar_paquete(paquete_pid_pc, socket_memoria);
     borrar_paquete(paquete_pid_pc);
 
+    if(recibir_operacion(socket_memoria) != PAQUETE){
+        return NULL;
+    }
     t_list* recibido = recibir_paquete(socket_memoria);
     if (recibido == NULL || list_size(recibido) == 0) {
         log_error(logger, "Error al recibir instrucciones de memoria");
@@ -29,7 +32,7 @@ t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
         return NULL;
     }
 
-    char* instruccion_sin_traducir = (char*) elemento;
+    char* instruccion_sin_traducir = strdup((char*)elemento);
     log_info(logger, "Instrucción sin traducir: %s", instruccion_sin_traducir);
 
 
@@ -220,6 +223,7 @@ void prueba(int socket){
     pcb_prueba->pc = 0;
     pcb_prueba->pid = 2;
     fetch(pcb_prueba, socket);
+    free(pcb_prueba);
 }
 
 void iniciar_ciclo_de_instrucciones(){

@@ -35,7 +35,7 @@ void* atender_cpu(void* socket_ptr) {
                 lista_paquete = recibir_paquete(socket_cliente);
                 int pid = *((int*) list_get(lista_paquete, 0));
                 int pc = *((int*) list_get(lista_paquete, 1));
-                log_info(logger, "pid:%i", pid);
+                log_info(logger, "pid:%d, pc:%d", pid, pc);
                 mandar_instrucciones(socket_cliente, pid, pc);      
                 list_destroy_and_destroy_elements(lista_paquete, free);    
                 break;

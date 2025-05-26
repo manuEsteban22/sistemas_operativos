@@ -100,13 +100,20 @@ t_list* deserializar(t_buffer* buffer){
     int offset = 0;
 
     while(offset < size){
+        if (offset + sizeof(int) > size) {
+            printf("Buffer corrupto: no hay suficiente espacio para leer el tamaño del elemento");
+            break;
+        }
         int tamanio_elemento = 0;
-
         memcpy(&tamanio_elemento, stream + offset, sizeof(int));
         offset += sizeof(int);
 
-        void* elemento = malloc(tamanio_elemento);
+        if (offset + tamanio_elemento > size) {
+            printf("Buffer corrupto: no hay suficiente espacio para leer el elemento completo");
+            break;
+        }
 
+        void* elemento = malloc(tamanio_elemento);
         memcpy(elemento, stream + offset, tamanio_elemento);
         offset += tamanio_elemento;
 
