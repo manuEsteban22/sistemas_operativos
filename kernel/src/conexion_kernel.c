@@ -103,6 +103,10 @@ void handshake_io(int socket_dispositivo){
 
     dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
     free(nombre_dispositivo);
+
+    log_info(logger, "Se registró el dispositivo IO [%s] en el diccionario", nombre_dispositivo);
+
+
     return;
 }
 
