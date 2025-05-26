@@ -47,7 +47,8 @@ void* atender_cpu(void* socket_ptr) {
                 break;
         }
     }
-    t_paquete* lista_paquete = recibir_paquete(socket_cliente);      
+    t_list* lista_paquete = list_create();
+    lista_paquete = recibir_paquete(socket_cliente);      
     int pid = list_get(lista_paquete, 0);
     int pc = list_get(lista_paquete, 1);
     mandar_instrucciones(socket_cliente, pid, pc);       //recibe de cpu el pid y pc para poder mandarle las intrucciones :)
