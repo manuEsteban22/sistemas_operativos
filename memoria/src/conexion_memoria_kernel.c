@@ -45,7 +45,6 @@ void* atender_kernel(void* socket_ptr) {
                 break;
         }
     }  
-    int pid = list_get(recibir_paquete(socket_cliente), 0);
     close(socket_cliente); 
     return NULL;
 }

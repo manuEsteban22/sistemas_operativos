@@ -10,10 +10,13 @@ t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     int pc = pcb->pc;
     int pid = pcb->pid;
     
-    send(socket_memoria, &pid, sizeof(int), 0);
-    send(socket_memoria, &pc, sizeof(int), 0);
+    t_paquete* paquete_pid_pc = crear_paquete();
+    agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
+    agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
+    enviar_paquete(paquete_pid_pc, fd_socket);
+    borrar_paquete(paquete_pid_pc);
 
-    t_instruccion* proxima_instruccion;// = recibir_instruccion(socket_memoria);
+    t_instruccion* proxima_instruccion = recibir_paquete(socket_memoria);;// = recibir_instruccion(socket_memoria);
     return proxima_instruccion;
 }
 

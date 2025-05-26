@@ -85,15 +85,18 @@ int conectar_memoria(char* ip, char* puerto){
     freeaddrinfo(server_info);
     //envio y recibo un handhsake a memoria
     handshake_memoria(fd_socket);
-    
-    int pid = 0
-    int pc = 2
+   
+    int pid = 0;
+    int pc = 2;
 
-    t_paquete  paquete_pid_pc = crear_paquete();
-    agregar_a_paquete(paquete_pid_pc, pid, sizeof(int));
-    agregar_a_paquete(paquete_pid_pc, pc, sizeof(int));
+    t_paquete* paquete_pid_pc = crear_paquete();
+    agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
+    agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
     enviar_paquete(paquete_pid_pc, fd_socket);
     borrar_paquete(paquete_pid_pc);
+    
+    t_list* lista_paquete = list_create();
+    lista_paquete = recibir_paquete(fd_socket);
 
     return fd_socket;
 }

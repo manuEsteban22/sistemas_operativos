@@ -203,10 +203,15 @@ void enviar_paquete(t_paquete* paquete, int socket){
     int bytes_a_enviar = paquete->buffer->size + 2*sizeof(int);
     void* stream_a_enviar = serializar(paquete, bytes_a_enviar);
 
-    send(socket, stream_a_enviar, bytes_a_enviar, 0);
+    int resultado = send(socket, stream_a_enviar, bytes_a_enviar, 0);
+    if (resultado == -1) {
+        perror("Error al enviar paquete");  // Te muestra "Broken pipe" u otra causa
+        log_error(logger, "Fallo el send. Probablemente el socket está cerrado.");
+        // Podés cerrar el socket si querés: close(socket);
+    }
+
     free(stream_a_enviar);
 }
-
 int recibir_operacion(int socket_cliente){
     int codigo_operacion;
     int resultado = recv(socket_cliente, &codigo_operacion, sizeof(int), MSG_WAITALL);
