@@ -55,7 +55,7 @@ bool requiere_traduccion(t_instruccion* instruccion){
 
 int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
     if(!requiere_traduccion(instruccion)) return -1;
-    int direccion_logica = (int*)instruccion->param1;
+    int direccion_logica = (*(int*)instruccion->param1);
     int direccion_fisica = direccion_logica;
     return direccion_fisica;
     /*
@@ -90,7 +90,7 @@ void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccio
 }
 
 char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid){
-    int tamanio = ((int*)instruccion->param2);
+    int tamanio = (*(int*)instruccion->param2);
 
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
