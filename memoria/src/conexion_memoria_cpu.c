@@ -55,7 +55,7 @@ void* atender_cpu(void* socket_ptr) {
 
 void* manejar_servidor(int socket_servidor) {
     while (1) {
-        int socket_cliente = esperar_cliente(socket_servidor);
+        int socket_cliente = esperar_cliente(socket_servidor, logger);
 
         int* socket_cliente_ptr = malloc(sizeof(int));
         *socket_cliente_ptr = socket_cliente;
