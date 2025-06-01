@@ -50,9 +50,9 @@ int main(int argc, char* argv[]) {
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     
     //Inicio los servidores de dispatch, interrupt e I/O
-    socket_io = iniciar_servidor(puerto_io);
-    socket_dispatch = iniciar_servidor(puerto_dispatch);
-    socket_interrupt = iniciar_servidor(puerto_interrupt);
+    socket_io = iniciar_servidor(puerto_io, logger);
+    socket_dispatch = iniciar_servidor(puerto_dispatch, logger);
+    socket_interrupt = iniciar_servidor(puerto_interrupt, logger);
 
     //Creo argumentos para los hilos
     t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));

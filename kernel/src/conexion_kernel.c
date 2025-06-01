@@ -8,7 +8,7 @@ void* manejar_servidor_cpu(void* arg){
     char* nombre_cliente = strdup(argumentos->nombre);
     free(arg);
 
-    int socket_cliente = esperar_cliente(socket);
+    int socket_cliente = esperar_cliente(socket, logger);
     
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
@@ -112,7 +112,7 @@ void handshake_io(int socket_dispositivo){
 
 void* manejar_servidor_io(int socket_io){
 
-    int socket_cliente = esperar_cliente(socket_io);
+    int socket_cliente = esperar_cliente(socket_io, logger);
 
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);

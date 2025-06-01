@@ -10,7 +10,7 @@ t_configuracion campos_config;
 int main(int argc, char* argv[]){
     logger = iniciar_logger();
     config = iniciar_config();
-    socket_servidor = iniciar_servidor(campos_config.puerto_escucha);
+    socket_servidor = iniciar_servidor(campos_config.puerto_escucha, logger);
     //manejar_servidor(socket_servidor);
     //esperar_clientes_multiplexado(socket_servidor);
     //esperar_cliente(socket_servidor);

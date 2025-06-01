@@ -40,7 +40,7 @@ void llamar_a_io(socket_cpu){
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
-        enviar_paquete(paquete, io->socket_io);
+        enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
         log_info(logger, "Dispositivo PID %d enviado a IO", pid);
     }

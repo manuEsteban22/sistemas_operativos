@@ -1,6 +1,5 @@
 #include <utils/utils.h>
 
-static t_log* logger;
 int fd_escucha;
 
 void* atender_cliente(void* fd_conexion_ptr, t_log* logger) {

@@ -59,7 +59,7 @@ int mandar_instrucciones(int socket_cliente, int pid, int pc)
         t_paquete* paquete = crear_paquete();
         int tamanio = strlen(instruccion) + 1;
         agregar_a_paquete(paquete, instruccion, tamanio);
-        enviar_paquete(paquete, socket_cliente);
+        enviar_paquete(paquete, socket_cliente, logger);
         borrar_paquete(paquete);
     }
     

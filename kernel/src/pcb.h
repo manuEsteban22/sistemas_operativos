@@ -34,7 +34,7 @@ typedef struct
     int tamanio;
 } t_pcb_cpu;
 
-
+t_pcb* obtener_pcb(int pid);
 t_pcb* crear_pcb(int pid, int tamanio_proceso);
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);

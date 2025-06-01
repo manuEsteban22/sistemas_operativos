@@ -93,7 +93,7 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->tamanio), sizeof(int));
 
-    enviar_paquete(paquete, socket_memoria);
+    enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 
     int respuesta = recibir_operacion(socket_memoria);
