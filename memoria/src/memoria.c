@@ -14,7 +14,7 @@ int main(int argc, char* argv[]){
     //manejar_servidor(socket_servidor);
     //esperar_clientes_multiplexado(socket_servidor);
     //esperar_cliente(socket_servidor);
-    void inicializar_memoria();
+    inicializar_memoria();
     return 0;
 
 }

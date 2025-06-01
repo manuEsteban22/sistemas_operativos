@@ -15,7 +15,6 @@ void inicializar_memoria()
         log_info(logger, "Error al inicializar memoria");
         exit(EXIT_FAILURE);
     }
-
     cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
 
     log_info(logger,"%d",cantidad_marcos);
