@@ -1,9 +1,5 @@
 #include <conexion_memoria_cpu.h>
-#include <instrucciones.h>
-#include <utils/utils.h>
 #include <pthread.h>  // Agregado para hilos
-
-extern t_log* logger;  
 
 void* atender_cpu(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);

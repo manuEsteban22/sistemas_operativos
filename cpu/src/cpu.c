@@ -2,7 +2,7 @@
 #include <cpu.h>
 #include <conexion_cpu.h>
 
-t_log* iniciar_logger();
+t_log* iniciar_logger(int id);
 t_config* iniciar_config();
 t_log* logger;
 t_config* config;

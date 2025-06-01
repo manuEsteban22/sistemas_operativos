@@ -1,5 +1,9 @@
 #ifndef MEMORIA_H_
 #define MEMORIA_H_
+#include <conexion_memoria_cpu.h>
+#include <administracion_memoria.h>
+#include <utils/utils.h>
+#include <instrucciones.h>
 
 extern t_log* logger;
 
@@ -17,6 +21,8 @@ typedef struct
     char* dump_path;
     char* path_instrucciones;
 } t_configuracion;
+
+t_configuracion retornar_config(t_config * config);
 
 extern t_configuracion campos_config;
 #endif
