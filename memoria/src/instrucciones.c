@@ -1,6 +1,5 @@
-#include <utils/utils.h>
+
 #include <instrucciones.h>
-#include <memoria.h>
 #define MAX_LINEA 256
 
 static t_list* lista_instrucciones = NULL;

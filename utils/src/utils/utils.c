@@ -1,9 +1,9 @@
 #include <utils/utils.h>
 
-t_log* logger;
+static t_log* logger;
 int fd_escucha;
 
-void* atender_cliente(void* fd_conexion_ptr) {
+void* atender_cliente(void* fd_conexion_ptr, t_log* logger) {
     int socket_cliente = *((int*)fd_conexion_ptr);
     free(fd_conexion_ptr);
 
@@ -14,7 +14,7 @@ void* atender_cliente(void* fd_conexion_ptr) {
     return NULL;
 }
 
-int iniciar_servidor(char* PUERTO){
+int iniciar_servidor(char* PUERTO, t_log* logger){
     int socket_servidor;
 
     struct addrinfo hints, *server_info;
@@ -42,7 +42,7 @@ int iniciar_servidor(char* PUERTO){
     return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor){
+int esperar_cliente(int socket_servidor, t_log* logger){
     int socket_cliente;
     socket_cliente = accept(socket_servidor, NULL, NULL);
     log_info(logger, "se conecto un cliente");
@@ -206,7 +206,7 @@ void agregar_a_paquete(t_paquete* paquete, void* contenido, int tamanio){
     paquete->buffer->size += tamanio + sizeof(int);
 }
 
-void enviar_paquete(t_paquete* paquete, int socket){
+void enviar_paquete(t_paquete* paquete, int socket, t_log* logger){
     int bytes_a_enviar = paquete->buffer->size + 2*sizeof(int);
     void* stream_a_enviar = serializar(paquete, bytes_a_enviar);
 

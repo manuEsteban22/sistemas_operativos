@@ -1,6 +1,6 @@
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_
-
+#include <memoria.h>
 
 void cargar_instrucciones(int pid);
 char* obtener_instruccion(int pc);
