@@ -6,6 +6,16 @@ entradas_por_tabla
 cantidad_niveles
 */
 
+t_instruccion* leerInstruccion(char* instruccion_raw){
+    t_instruccion* instruccion;
+    char **separado = string_n_split(instruccion_raw, 2, " ");
+    instruccion->param2 = string_array_pop(separado);
+    instruccion->param1 = string_array_pop(separado);
+    instruccion->identificador = string_array_pop(separado);
+    string_array_destroy(separado);
+    return instruccion;
+}
+
 t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     int pc = pcb->pc;
     int pid = pcb->pid;
