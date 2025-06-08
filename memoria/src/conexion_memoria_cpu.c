@@ -1,7 +1,8 @@
 #include <conexion_memoria_cpu.h>
 #include <pthread.h>  // Agregado para hilos
 
-void* atender_cpu(void* socket_ptr) {
+void* atender_cpu(void* socket_ptr) 
+{
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
@@ -47,7 +48,8 @@ void* atender_cpu(void* socket_ptr) {
     return NULL;
 }
 
-void* manejar_servidor(int socket_servidor) {
+void* manejar_servidor(int socket_servidor) 
+{
     while (1) {
         int socket_cliente = esperar_cliente(socket_servidor, logger);
 
@@ -59,6 +61,13 @@ void* manejar_servidor(int socket_servidor) {
         pthread_detach(hilo_cliente);
     }
     return NULL;
+}
+
+void* lanzar_servidor(int socket_servidor)
+{
+    pthread_t hilo_conexion;
+    pthread_create(&hilo_conexion, NULL, manejar_servidor, socket_servidor);
+    pthread_detach(hilo_conexion);
 }
 
 

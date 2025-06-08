@@ -11,10 +11,10 @@ int main(int argc, char* argv[]){
     logger = iniciar_logger();
     config = iniciar_config();
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha, logger);
-    manejar_servidor(socket_servidor);
+    lanzar_servidor(socket_servidor);
     inicializar_memoria();
+    while(1){pause();};
     return 0;
-
 }
 
 t_log* iniciar_logger(void){
