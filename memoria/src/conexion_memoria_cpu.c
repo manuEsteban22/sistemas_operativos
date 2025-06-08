@@ -27,13 +27,7 @@ void* atender_cpu(void* socket_ptr) {
                 break;
             case PAQUETE:
                 log_info(logger, "Llegó un paquete");
-                t_list* lista_paquete = list_create();
-                lista_paquete = recibir_paquete(socket_cliente);
-                int pid = *((int*) list_get(lista_paquete, 0));
-                int pc = *((int*) list_get(lista_paquete, 1));
-                log_info(logger, "pid:%d, pc:%d", pid, pc);
-                mandar_instrucciones(socket_cliente, pid, pc);      
-                list_destroy_and_destroy_elements(lista_paquete, free);    
+                mandar_instrucciones(socket_cliente);         
                 break;
             case OC_READ:
                 log_info(logger, "recibi un read");

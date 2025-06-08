@@ -48,8 +48,15 @@ void liberar_memoria()
     list_destroy_and_destroy_elements(lista_instrucciones, free);
 }
 
-int mandar_instrucciones(int socket_cliente, int pid, int pc) 
+
+int mandar_instrucciones(int socket_cliente) 
 {
+
+    t_list* lista_paquete = list_create();
+    lista_paquete = recibir_paquete(socket_cliente);
+    int pid = *((int*) list_get(lista_paquete, 0));
+    int pc = *((int*) list_get(lista_paquete, 1));
+
     cargar_instrucciones(pid);
 
     int cant = cantidad_instrucciones();
@@ -67,6 +74,7 @@ int mandar_instrucciones(int socket_cliente, int pid, int pc)
     printf("Espacio libre: %d\n", espacio_libre());
 
     liberar_memoria();
+    list_destroy_and_destroy_elements(lista_paquete, free); 
     return 0;
 }
 
