@@ -35,6 +35,8 @@ typedef struct {
     int pagina;
 } t_paquete_frame;
 
+
+t_instruccion* leerInstruccion(char* instruccion_raw);
 //void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb);
 
 
