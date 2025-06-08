@@ -6,12 +6,28 @@ entradas_por_tabla
 cantidad_niveles
 */
 
+
+t_id_instruccion convertir_a_opcode(char* identificador) {
+    if (strcmp(identificador, "NOOP") == 0) return NOOP;
+    if (strcmp(identificador, "WRITE") == 0) return WRITE;
+    if (strcmp(identificador, "READ") == 0) return READ;
+    if (strcmp(identificador, "GOTO") == 0) return GOTO;
+    if (strcmp(identificador, "IO") == 0) return IO;
+    if (strcmp(identificador, "INIT_PROC") == 0) return INIT_PROC;
+    if (strcmp(identificador, "DUMP_MEMORY") == 0) return DUMP_MEMORY;
+    if (strcmp(identificador, "EXIT") == 0) return EXIT;
+
+    log_error(logger, "la instruccion que llego no es valida");
+    return EXIT;
+}
+
 t_instruccion* leerInstruccion(char* instruccion_raw){
     t_instruccion* instruccion;
     char **separado = string_n_split(instruccion_raw, 2, " ");
     instruccion->param2 = string_array_pop(separado);
     instruccion->param1 = string_array_pop(separado);
-    //instruccion->identificador = string_array_pop(separado);
+    instruccion->identificador = convertir_a_opcode(string_array_pop(separado));
+
     string_array_destroy(separado);
     return instruccion;
 }
@@ -231,7 +247,7 @@ void prueba_write(int socket_memoria, int socket_kernel_dispatch){
 void prueba(int socket){
     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
     pcb_prueba->pc = 0;
-    pcb_prueba->pid = 2;
+    pcb_prueba->pid = 0;
     fetch(pcb_prueba, socket);
     free(pcb_prueba);
 }
