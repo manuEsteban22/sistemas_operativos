@@ -5,18 +5,20 @@
 
 
 void inicializar_memoria();
+typedef struct
+{
+    bool presencia;
+    uint32_t marco; 
+    struct tabla_paginas* siguiente_tabla;
+} t_entrada_tabla;
 
-typedef struct {
-    int marco;
-    bool presente;
-    bool modificado;
-    int uso;
-} entrada_pagina;
+typedef struct
+{
+    t_entrada_tabla* entradas;
+}t_tabla_paginas;
 
-typedef struct {
-    int pid;
-    entrada_pagina** tabla_nivel_1;
-    // u otras estructuras según el esquema de paginación
-} proceso_memoria;
+t_tabla_paginas* crear_tabla(int nivel_actual);
+void* creacion_estructuras_administrativas();
+
 
 #endif

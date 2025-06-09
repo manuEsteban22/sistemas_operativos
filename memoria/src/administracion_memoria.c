@@ -28,4 +28,29 @@ void inicializar_memoria()
 }
 
 
+t_tabla_paginas* crear_tabla(int nivel_actual)
+{
+
+    t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
+    tabla->entradas = malloc(sizeof(t_entrada_tabla) * campos_config.entradas_por_tabla);
+
+    for(int i = 0; i < campos_config.entradas_por_tabla; i++)
+    {
+        tabla->entradas[i].presencia = false;
+        tabla->entradas[i].marco = 0;
+        if (nivel_actual < campos_config.cantidad_niveles) {
+            tabla->entradas[i].siguiente_tabla = crear_tabla(nivel_actual + 1);
+        } else {
+            tabla->entradas[i].siguiente_tabla = NULL; // Último nivel
+        }
+    }
+    return tabla;
+}
+
+void* creacion_estructuras_administrativas()
+{
+   inicializar_memoria();
+   crear_tabla(0);
+   return NULL;
+}
 
