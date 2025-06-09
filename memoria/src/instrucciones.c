@@ -49,7 +49,7 @@ void liberar_memoria()
 }
 
 
-int mandar_instrucciones(int socket_cliente) 
+int mandar_instruccion(int socket_cliente) 
 {
 
     t_list* lista_paquete = list_create();
@@ -60,16 +60,21 @@ int mandar_instrucciones(int socket_cliente)
     cargar_instrucciones(pid);
 
     int cant = cantidad_instrucciones();
-    for (; pc < cant; pc++) 
+
+    
+    t_paquete* paquete = crear_paquete();
+
+    if(pc > cant)
     {
-        char* instruccion = obtener_instruccion(pc);
-        t_paquete* paquete = crear_paquete();
-        int tamanio = strlen(instruccion) + 1;
-        agregar_a_paquete(paquete, instruccion, tamanio);
+        cambiar_opcode_paquete(paquete, CERRADO);
         enviar_paquete(paquete, socket_cliente, logger);
-        borrar_paquete(paquete);
     }
     
+    char* instruccion = obtener_instruccion(pc);
+    int tamanio = strlen(instruccion) + 1;
+    agregar_a_paquete(paquete, instruccion, tamanio);
+    enviar_paquete(paquete, socket_cliente, logger);
+    borrar_paquete(paquete);
 
     printf("Espacio libre: %d\n", espacio_libre());
 
@@ -78,3 +83,10 @@ int mandar_instrucciones(int socket_cliente)
     return 0;
 }
 
+int mandar_instrucciones(int socket_cliente) 
+{
+    while(1)
+    {
+        mandar_instruccion(socket_cliente);    
+    }
+}

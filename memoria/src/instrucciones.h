@@ -7,8 +7,8 @@ char* obtener_instruccion(int pc);
 int cantidad_instrucciones();
 int espacio_libre();
 void liberar_memoria();
+int mandar_instruccion(int socket_cliente);
 int mandar_instrucciones(int socket_cliente);
-
 
 
 

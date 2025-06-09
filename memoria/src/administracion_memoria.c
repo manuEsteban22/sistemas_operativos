@@ -26,3 +26,6 @@ void inicializar_memoria()
 
     log_info(logger,"Memoria de usuario inicializada con %d marcos de %db cada uno",cantidad_marcos, campos_config.tam_pagina);
 }
+
+
+

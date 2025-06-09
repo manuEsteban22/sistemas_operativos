@@ -3,7 +3,8 @@
 
 #include <memoria.h>
 
-void* manejar_servidor(int socket_servidor);
+void* manejar_servidor(void* socket_cliente_ptr);
 void* atender_cpu(void* socket_ptr);
+void* lanzar_servidor(int socket_servidor);
 
 #endif
