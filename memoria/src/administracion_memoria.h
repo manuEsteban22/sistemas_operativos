@@ -5,17 +5,22 @@
 
 
 void inicializar_memoria();
-typedef struct
-{
+
+typedef struct t_tabla_paginas t_tabla_paginas;
+
+typedef struct{
+
     bool presencia;
     uint32_t marco; 
-    struct tabla_paginas* siguiente_tabla;
+    t_tabla_paginas* siguiente_tabla;
+
 } t_entrada_tabla;
 
-typedef struct
-{
+struct t_tabla_paginas{
+
     t_entrada_tabla* entradas;
-}t_tabla_paginas;
+
+};
 
 t_tabla_paginas* crear_tabla(int nivel_actual);
 void* creacion_estructuras_administrativas();

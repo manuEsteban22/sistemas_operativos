@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
     config = iniciar_config();
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha, logger);
     lanzar_servidor(socket_servidor);
-    creacion_estructuras_administrativas();
+    //creacion_estructuras_administrativas();
     while(1){pause();};
     return 0;
 }

@@ -50,10 +50,10 @@ void* atender_cpu(void* socket_ptr)
 
 void* manejar_servidor(void* socket_ptr) 
 {
-    
+    int socket_servidor = *((int*)socket_ptr);
+    free(socket_ptr);
     while (1) {
-        int socket_servidor = *((int*)socket_ptr);
-        free(socket_ptr);
+        
 
         int socket_cliente = esperar_cliente(socket_servidor, logger);
 

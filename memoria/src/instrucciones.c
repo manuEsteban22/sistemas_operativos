@@ -72,6 +72,7 @@ int mandar_instruccion(int socket_cliente)
     
     char* instruccion = obtener_instruccion(pc);
     int tamanio = strlen(instruccion) + 1;
+    log_info(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s”", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
