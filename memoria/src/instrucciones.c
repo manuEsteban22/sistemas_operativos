@@ -64,15 +64,15 @@ int mandar_instruccion(int socket_cliente)
     
     t_paquete* paquete = crear_paquete();
 
-    if(pc > cant)
+    /*if(pc > cant)
     {
         cambiar_opcode_paquete(paquete, CERRADO);
         enviar_paquete(paquete, socket_cliente, logger);
-    }
+    }*/
     
     char* instruccion = obtener_instruccion(pc);
     int tamanio = strlen(instruccion) + 1;
-    log_info(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s”", pid, pc, instruccion);
+    log_info(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
