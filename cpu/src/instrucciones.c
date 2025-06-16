@@ -1,13 +1,14 @@
 #include<instrucciones.h>
 
-/*cpu recibe de memoria como parte del handshake:
+/*
+cpu recibe de memoria como parte del handshake:
 tamaño_pagina
 entradas_por_tabla
 cantidad_niveles
 */
 
-
 t_id_instruccion convertir_a_opcode(char* identificador) {
+//recibo un string con la instruccion y devuelvo a cual corresponde con su OPCODE
     if (strcmp(identificador, "NOOP") == 0) return NOOP;
     if (strcmp(identificador, "WRITE") == 0) return WRITE;
     if (strcmp(identificador, "READ") == 0) return READ;
@@ -22,20 +23,35 @@ t_id_instruccion convertir_a_opcode(char* identificador) {
 }
 
 t_instruccion* leerInstruccion(char* instruccion_raw){
-    t_instruccion* instruccion;
-    char **separado = string_n_split(instruccion_raw, 2, " ");
-    instruccion->param2 = string_array_pop(separado);
-    instruccion->param1 = string_array_pop(separado);
-    instruccion->identificador = convertir_a_opcode(string_array_pop(separado));
+//separo toda la linea de la instruccion en 3 variables que van dentro de un t_instruccion
+    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+    instruccion->param1 = NULL;
+    instruccion->param2 = NULL;
+
+    char **separado = string_split(instruccion_raw, " ");
+
+    int cant_param = 0;
+    while(separado[cant_param] != NULL) cant_param++;
+    
+    instruccion->identificador = convertir_a_opcode(separado[0]);
+    
+    if (cant_param > 1){
+        instruccion->param1 = strdup(separado[1]);
+    }
+    if (cant_param > 2){
+        instruccion->param2 = strdup(separado[2]);
+    }
 
     string_array_destroy(separado);
+    free(instruccion_raw);
     return instruccion;
 }
 
 t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
     int pc = pcb->pc;
     int pid = pcb->pid;
-    
+    t_instruccion* proxima_instruccion;
+
     t_paquete* paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
@@ -60,14 +76,14 @@ t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
 
     char* instruccion_sin_traducir = strdup((char*)elemento);
     log_info(logger, "Instrucción sin traducir: %s", instruccion_sin_traducir);
+    proxima_instruccion = leerInstruccion(instruccion_sin_traducir);
 
-
+    log_info(logger, "Instruccion: %d, param1: %s, param2: %s", proxima_instruccion->identificador, proxima_instruccion->param1, proxima_instruccion->param2);
     //borrar espacios y separar en una instruccion
     list_destroy_and_destroy_elements(recibido, free);
 
-    t_instruccion* proxima_instruccion;
     //return proxima_instruccion;
-    return NULL;
+    return proxima_instruccion;
 }
 
 bool requiere_traduccion(t_instruccion* instruccion){
@@ -245,13 +261,17 @@ void prueba_write(int socket_memoria, int socket_kernel_dispatch){
 }
 
 void prueba(int socket){
+    t_instruccion* prox;
     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
     pcb_prueba->pc = 0;
     pcb_prueba->pid = 0;
-    fetch(pcb_prueba, socket);
+    prox = fetch(pcb_prueba, socket);
+    //execute()
     free(pcb_prueba);
+    free(prox);
 }
 
 void iniciar_ciclo_de_instrucciones(){
+    //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
 
 }
