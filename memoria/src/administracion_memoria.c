@@ -20,8 +20,8 @@ void inicializar_memoria()
 
     cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);             //(reserva) crea array de bools para marcar cada marco
-    memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos);      // los pone a todos en false
+    bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);            
+    memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos); 
 
 
     log_info(logger,"Memoria de usuario inicializada con %d marcos de %db cada uno",cantidad_marcos, campos_config.tam_pagina);
@@ -45,7 +45,7 @@ t_tabla_paginas* crear_tabla(int nivel_actual)
         }
     }
     return tabla;
-}
+} 
 
 void* creacion_estructuras_administrativas()
 {
