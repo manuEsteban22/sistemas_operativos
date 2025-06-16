@@ -6,7 +6,8 @@
 
 extern t_list* tlb;
 
-void prueba(int socket);
+void prueba(int socket_memoria, int socket_kernel_dispatch);
+void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch);
 typedef enum {
     NOOP,
     WRITE,

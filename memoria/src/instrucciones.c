@@ -84,10 +84,10 @@ int mandar_instruccion(int socket_cliente)
     return 0;
 }
 
-int mandar_instrucciones(int socket_cliente) 
-{
-    while(1)
-    {
-        mandar_instruccion(socket_cliente);    
-    }
-}
+// int mandar_instrucciones(int socket_cliente) 
+// {
+//     while(1)
+//     {
+//         mandar_instruccion(socket_cliente);    
+//     }
+// }

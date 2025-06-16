@@ -223,6 +223,7 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
         pc += 1;
         break;
     case GOTO:
+        log_info(logger, "ejecute un GOTO");
         pc = (int)instruccion->param1;
         break;
     case IO:
@@ -260,18 +261,33 @@ void prueba_write(int socket_memoria, int socket_kernel_dispatch){
     free(instruccion);
 }
 
-void prueba(int socket){
+void prueba(int socket_memoria, int socket_kernel_dispatch){
     t_instruccion* prox;
     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
     pcb_prueba->pc = 0;
-    pcb_prueba->pid = 0;
-    prox = fetch(pcb_prueba, socket);
-    //execute()
+    pcb_prueba->pid = 1;
+    prox = fetch(pcb_prueba, socket_memoria);
+    execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
     free(pcb_prueba);
     free(prox);
 }
 
-void iniciar_ciclo_de_instrucciones(){
+void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch){
     //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
+    bool leyo_exit = false;
+    t_instruccion* prox;
+    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
+    //valores de prueba, despues hay que recibirlos por dispatch del kernel
+    pcb_prueba->pc = 0;
+    pcb_prueba->pid = 1;
 
+    while(!leyo_exit){
+        prox = fetch(pcb_prueba, socket_memoria);
+        if(prox->identificador == EXIT){
+            leyo_exit = true;
+        }
+        execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
+    }
+    free(pcb_prueba);
+    free(prox);
 }

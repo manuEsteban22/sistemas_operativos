@@ -28,7 +28,7 @@ void* atender_cpu(void* socket_ptr)
                 break;
             case PAQUETE:
                 log_info(logger, "Llegó un paquete");
-                mandar_instrucciones(socket_cliente);         
+                mandar_instruccion(socket_cliente);         
                 break;
             case OC_READ:
                 log_info(logger, "recibi un read");

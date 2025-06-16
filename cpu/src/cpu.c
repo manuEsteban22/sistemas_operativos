@@ -27,7 +27,8 @@ int main(int argc, char* argv[]) {
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     log_info(logger, "anda joya aca");
-    prueba(socket_memoria);
+    //prueba(socket_memoria, socket_kernel_dispatch);
+    iniciar_ciclo_de_instrucciones(socket_memoria, socket_kernel_dispatch);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
