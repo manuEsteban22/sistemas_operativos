@@ -26,7 +26,5 @@ t_config* iniciar_config(void){
     {
         retornar_config(nuevo_config);
     }
-    else{log_info(logger, "No se pudo leer el archivo de config");}
-    log_info(logger, "Puerto: %s", campos_config.puerto_escucha);
     return nuevo_config;
 }

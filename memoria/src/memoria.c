@@ -8,8 +8,8 @@ char* puerto;
 
 
 int main(int argc, char* argv[]){
-    logger = iniciar_logger();
     config = iniciar_config();
+    logger = iniciar_logger();
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha, logger);
     lanzar_servidor(socket_servidor);
     //creacion_estructuras_administrativas();
