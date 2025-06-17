@@ -21,9 +21,9 @@ extern sem_t sem_procesos_en_memoria;
 
 extern int pid_global;
 
-void inicializar_planificador_lp(char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp);
+void inicializar_planificador_lp(char* algoritmo_planificacion_lp);
 bool enviar_pedido_memoria(t_pcb* pcb);
-void chequear_algoritmo_planificacion (char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp);
+void chequear_algoritmo_planificacion (char* algoritmo_planificacion_lp);
 void planificador_largo_plazo();
 void crear_proceso(int tamanio_proceso);
 

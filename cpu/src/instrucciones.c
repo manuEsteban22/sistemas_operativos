@@ -210,17 +210,14 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
     case NOOP:
         //no hace nada
         log_info(logger, "ejecute un noop");
-        pc += 1;
         break;
     case WRITE:
         direccion_fisica = decode(instruccion);
         ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
-        pc += 1;
         break;
     case READ:
         direccion_fisica = decode(instruccion);
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
-        pc += 1;
         break;
     case GOTO:
         log_info(logger, "ejecute un GOTO");
@@ -285,8 +282,10 @@ void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispat
         prox = fetch(pcb_prueba, socket_memoria);
         if(prox->identificador == EXIT){
             leyo_exit = true;
+            log_info(logger, "lei un exit");
         }
         execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
+        pcb_prueba->pc++;
     }
     free(pcb_prueba);
     free(prox);

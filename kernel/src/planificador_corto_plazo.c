@@ -1,4 +1,7 @@
 #include <planificador_corto_plazo.h>
+#include <planificador_largo_plazo.h>
+
+t_algoritmo_planificacion algoritmo_cp;
 
 t_pcb* planificar_proceso_fifo() {
     pthread_mutex_lock(&mutex_ready);

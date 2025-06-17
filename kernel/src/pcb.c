@@ -20,6 +20,7 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     return pcb;
 }
 
+//para ver a que pcb esta asignado dicho pid
 t_pcb* obtener_pcb(int pid) {
     char* pid_str = string_itoa(pid);
     t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
