@@ -17,6 +17,10 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     }
 
     pcb->metricas_estado[NEW]++;//sumo 1 a las veces que pasó por estado NEW
+
+    pcb->estimacion_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
+    pcb->rafaga_real_anterior = 0.0;
+
     return pcb;
 }
 

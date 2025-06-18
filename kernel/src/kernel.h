@@ -5,6 +5,7 @@
 
 
 extern t_log* logger;
+extern t_config* config;
 extern int PROCESOS_MEMORIA;
 extern int socket_memoria;
 extern int socket_io;

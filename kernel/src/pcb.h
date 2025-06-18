@@ -25,6 +25,8 @@ typedef struct
     t_estado_proceso estado_actual;
     t_temporal* temporal_estado;
     int tamanio;
+    double estimacion_rafaga;
+    double rafaga_real_anterior;
 } t_pcb;
 
 typedef struct
