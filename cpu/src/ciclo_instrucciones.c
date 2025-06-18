@@ -157,7 +157,7 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
 }
 
 void check_interrupt(t_pcb* pcb, int socket_kernel_interrupt){
-
+    
 }
 
 

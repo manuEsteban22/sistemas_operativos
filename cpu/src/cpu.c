@@ -22,8 +22,8 @@ int main(int argc, char* argv[]) {
     int cpu_id = atoi(argv[1]);
     logger = iniciar_logger(cpu_id);
     config = iniciar_config();
-    //socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
-    //socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
+    socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
+    socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     log_info(logger, "anda joya aca");

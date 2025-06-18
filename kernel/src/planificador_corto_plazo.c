@@ -9,11 +9,11 @@ t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo) {
     if (strcmp(algoritmo, "SJF_SIN_DESALOJO") == 0) return SJF_SIN_DESALOJO;
     if (strcmp(algoritmo, "SJF_CON_DESALOJO") == 0) return SJF_CON_DESALOJO;
 
-    log_error(logger, "Algoritmo inválido: %s", algoritmo_str);
+    log_error(logger, "Algoritmo inválido: %s", algoritmo);
     exit(EXIT_FAILURE);
 }
 
-algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
+//algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
 
 t_pcb* planificador_corto_plazo() {
     pthread_mutex_lock(&mutex_ready);
@@ -27,7 +27,7 @@ t_pcb* planificador_corto_plazo() {
 
     switch (algoritmo_cp){
         case FIFO:
-            pcb = queue_pop(cola_read);
+            pcb = queue_pop(cola_ready);
             break;
         case SJF_SIN_DESALOJO:
 

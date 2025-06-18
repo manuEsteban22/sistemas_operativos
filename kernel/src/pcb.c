@@ -29,7 +29,7 @@ t_pcb* obtener_pcb(int pid) {
 }
 
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
-    uint64_t duracion = temporal_gettime(pcb->temporal_estado);
+    int duracion = temporal_gettime(pcb->temporal_estado);
     pcb->metricas_tiempo[pcb->estado_actual] += duracion;
     //devuelve el tiempo que tomó el cronometro y lo suma a la metrica de tiempo del estado actual
 

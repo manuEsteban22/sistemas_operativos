@@ -61,6 +61,8 @@ int main(int argc, char* argv[]) {
     args_interrupt->socket = socket_interrupt;
     args_dispatch->nombre = "DISPATCH";
     args_interrupt->nombre = "INTERRUPT";
+    int* ptr_io = malloc(sizeof(int));
+    ptr_io = socket_io;
 
     pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
     pthread_detach(thread_dispatch);
@@ -68,7 +70,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
     pthread_detach(thread_interrupt);
 
-    pthread_create(&thread_io, NULL, manejar_servidor_io, socket_io);
+    pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
 
     
