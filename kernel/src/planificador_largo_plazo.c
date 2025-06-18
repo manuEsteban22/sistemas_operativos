@@ -3,7 +3,6 @@
 
 int procesos_en_memoria = 0;
 t_algoritmo_planificacion algoritmo_lp;
-t_algoritmo_planificacion algoritmo_cp;
 pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue* cola_new;
@@ -20,7 +19,7 @@ sem_t sem_procesos_en_memoria;
 
 int pid_global = 0;
 
-void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp){
+void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp){
     if (strcmp(algoritmo_planificacion_lp,"FIFO") == 0){
     algoritmo_lp = FIFO;
     } else if(strcmp(algoritmo_planificacion_lp,"MENOR_MEMORIA") == 0){
@@ -30,20 +29,20 @@ void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp, char* al
     exit(EXIT_FAILURE);
     }
 
-    if (strcmp(algoritmo_planificacion_cp,"FIFO") == 0){
-    algoritmo_cp = FIFO;
-    } else if(strcmp(algoritmo_planificacion_cp,"MENOR_MEMORIA") == 0){
-    algoritmo_cp = MENOR_MEMORIA;
-    } else{
-    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_cp);
-    exit(EXIT_FAILURE);
-    }
+    // if (strcmp(algoritmo_planificacion_cp,"FIFO") == 0){
+    // algoritmo_cp = FIFO;
+    // } else if(strcmp(algoritmo_planificacion_cp,"MENOR_MEMORIA") == 0){
+    // algoritmo_cp = MENOR_MEMORIA;
+    // } else{
+    // log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_cp);
+    // exit(EXIT_FAILURE);
+    // }
 }
 
-void inicializar_planificador_lp(char* algoritmo_planificacion_lp, char* algoritmo_planificacion_cp){
+void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
     printf("Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
-    chequear_algoritmo_planificacion(algoritmo_planificacion_lp, algoritmo_planificacion_cp);
+    chequear_algoritmo_planificacion(algoritmo_planificacion_lp);
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
@@ -62,16 +61,43 @@ void crear_proceso(int tamanio_proceso){
 
     switch (algoritmo_lp) {
         case FIFO:
-            queue_push(cola_new, pcb);
+            queue_push(cola_new, pcb);;
             break;
         case MENOR_MEMORIA:
-            // aca iria la funcion de ordenar por menor memoria
+            insertar_en_orden_por_memoria(cola_new, pcb);
             break;
     }
 
     pthread_mutex_unlock(&mutex_new);
     sem_post(&sem_procesos_en_new);
 }
+
+void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo) {
+    t_list* lista_aux = list_create();
+    bool insertado = false;
+
+    while (!queue_is_empty(cola)){
+        t_pcb* actual = queue_pop(cola);
+
+        if (!insertado && nuevo->tamanio < actual->tamanio){
+            list_add(lista_aux, nuevo); 
+            insertado = true;
+        }
+        list_add(lista_aux, actual);
+    }
+
+    if (!insertado){
+        list_add(lista_aux, nuevo); 
+    }
+
+    for (int i = 0; i < list_size(lista_aux); i++){
+        t_pcb* pcb = list_get(lista_aux, i);
+        queue_push(cola, pcb);
+    }
+
+    list_destroy(lista_aux);
+}
+
 
 void finalizar_proceso(t_pcb* pcb) {
     //enviar_finalizacion_a_memoria(pcb->pid);

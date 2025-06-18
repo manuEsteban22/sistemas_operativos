@@ -101,7 +101,6 @@ t_config* iniciar_config(void){
         algoritmo_planificacion_lp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_LARGO_PLAZO");
         algoritmo_planificacion_cp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_CORTO_PLAZO");
         
-        chequear_algoritmo_planificacion (algoritmo_planificacion_lp, algoritmo_planificacion_cp);
 
         log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);

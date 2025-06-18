@@ -1,6 +1,21 @@
 #include <planificador_corto_plazo.h>
+#include <planificador_largo_plazo.h>
 
-t_pcb* planificar_proceso_fifo() {
+t_algoritmo_planificacion algoritmo_cp;
+
+t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo) {
+    if (strcmp(algoritmo, "FIFO") == 0) return FIFO;
+    if (strcmp(algoritmo, "MENOR_MEMORIA") == 0) return MENOR_MEMORIA;
+    if (strcmp(algoritmo, "SJF_SIN_DESALOJO") == 0) return SJF_SIN_DESALOJO;
+    if (strcmp(algoritmo, "SJF_CON_DESALOJO") == 0) return SJF_CON_DESALOJO;
+
+    log_error(logger, "Algoritmo inválido: %s", algoritmo_str);
+    exit(EXIT_FAILURE);
+}
+
+algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
+
+t_pcb* planificador_corto_plazo() {
     pthread_mutex_lock(&mutex_ready);
 
     if (queue_is_empty(cola_ready)) {
@@ -8,11 +23,26 @@ t_pcb* planificar_proceso_fifo() {
         return NULL;
     }
 
-    t_pcb* pcb = queue_pop(cola_ready);
+    t_pcb* pcb = NULL;
+
+    switch (algoritmo_cp){
+        case FIFO:
+            pcb = queue_pop(cola_read);
+            break;
+        case SJF_SIN_DESALOJO:
+
+            break;
+        case SJF_CON_DESALOJO:
+            break;
+    }
+    
     pthread_mutex_unlock(&mutex_ready);
+    
 
     return pcb;
 }
+
+
 
 void ejecutar_proceso(t_pcb* pcb, int socket_dispatch){
     cambiar_estado(pcb, EXEC);
