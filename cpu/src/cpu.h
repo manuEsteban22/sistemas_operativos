@@ -1,10 +1,6 @@
 #ifndef CPU_H_
 #define CPU_H_
 #include<utils/utils.h>
-#include<instrucciones.h>
-
-extern t_log* logger;
-extern int enradas_tlb;
 
 typedef struct
 {
@@ -13,5 +9,12 @@ typedef struct
     int tamanio;
     //t_list* instrucciones;
 } t_pcb;
+
+
+#include<ciclo_instrucciones.h>
+
+extern t_log* logger;
+extern int enradas_tlb;
+
 
 #endif

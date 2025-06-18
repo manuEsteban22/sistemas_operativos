@@ -1,44 +1,16 @@
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_
+#include<ciclo_instrucciones.h>
 #include<utils/utils.h>
 #include<cpu.h>
 #include<conexion_cpu.h>
 
-extern t_list* tlb;
 
-void prueba(int socket_memoria, int socket_kernel_dispatch);
-void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch);
-typedef enum {
-    NOOP,
-    WRITE,
-    READ,
-    GOTO,
-    IO,
-    INIT_PROC,
-    DUMP_MEMORY,
-    EXIT
-} t_id_instruccion;
-
-typedef struct {
-    t_id_instruccion identificador;
-    void* param1;
-    void* param2;
-} t_instruccion;
-
-
-typedef struct {
-    int pagina;
-    int marco;
-} t_entrada_tlb;
-
-typedef struct {
-    int pid;
-    int pagina;
-} t_paquete_frame;
-
-
-t_instruccion* leerInstruccion(char* instruccion_raw);
-//void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb);
-
+void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid);
+char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid);
+void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch);
+void init_proc(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch);
+void dump_memory(t_pcb* pcb, int socket_kernel_dispatch);
+void exit_syscall(t_pcb* pcb, int socket_kernel_dispatch);
 
 #endif
