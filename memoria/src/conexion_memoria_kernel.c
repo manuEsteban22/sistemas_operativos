@@ -3,21 +3,25 @@
 #include <pthread.h> 
 extern t_log* logger;
 
-void* atender_kernel(void* socket_ptr) {
+void* atender_kernel(void* socket_ptr) 
+{
     int socket_cliente = *((int*)socket_ptr);
     free(socket_ptr);
 
-    while(1) {
+    while(1) 
+    {
         int codigo_operacion = recibir_operacion(socket_cliente);
 
-        if (codigo_operacion <= 0) {
+        if (codigo_operacion <= 0) 
+        {
             log_info(logger, "Se cerró la conexión o error");
             break;
         }
 
         log_info(logger, "Código de operación recibido: %d", codigo_operacion);
 
-        switch (codigo_operacion) {
+        switch (codigo_operacion) 
+        {
             case CERRADO:
                 log_info(logger, "Se terminó la conexión con éxito");
                 break;
@@ -49,8 +53,10 @@ void* atender_kernel(void* socket_ptr) {
     return NULL;
 }
 
-void* manejar_servidor_kernel(int socket_servidor) {
-    while (1) {
+void* manejar_servidor_kernel(int socket_servidor) 
+{
+    while (1) 
+    {
         int socket_cliente = esperar_cliente(socket_servidor, logger);
 
         int* socket_cliente_ptr = malloc(sizeof(int));
@@ -61,4 +67,27 @@ void* manejar_servidor_kernel(int socket_servidor) {
         pthread_detach(hilo_cliente);
     }
     return NULL;
+}
+
+void* inicializar_proceso(int tam_proceso, int pid+)
+{
+
+int pags_necesarias = tam_proceso / campos_config.tam_pagina;
+
+
+}
+
+void* suspender_proceso()
+{
+
+}
+
+void* des_suspender_proceso()
+{
+
+}
+
+void* finalizar_proceso()
+{
+
 }
