@@ -69,7 +69,7 @@ void* manejar_servidor_kernel(int socket_servidor)
     return NULL;
 }
 
-void* inicializar_proceso(int tam_proceso, int pid+)
+void* inicializar_proceso(int tam_proceso, int pid)
 {
 
 int pags_necesarias = tam_proceso / campos_config.tam_pagina;
