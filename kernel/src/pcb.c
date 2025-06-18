@@ -28,11 +28,20 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
 t_pcb* obtener_pcb(int pid) {
     char* pid_str = string_itoa(pid);
     t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
+    if (pcb == NULL) {
+        log_error(logger, "Error para obtener PCB NULL");
+        return;
+    }
     free(pid_str);
     return pcb;
 }
 
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
+    if (pcb == NULL) {
+        log_error(logger, "Error en cambio de estado PCB NULL");
+        return;
+    }
+
     int duracion = temporal_gettime(pcb->temporal_estado);
     pcb->metricas_tiempo[pcb->estado_actual] += duracion;
     //devuelve el tiempo que tomó el cronometro y lo suma a la metrica de tiempo del estado actual
@@ -47,6 +56,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
 }
 
 void borrar_pcb(t_pcb* pcb){
+    if (pcb == NULL) return;
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
 }

@@ -38,7 +38,7 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
 //le dice a kernel que envie el dispositivo a io, formato [pid][tam_disp][disp][tiempo]
 void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch){
     char* dispositivo = (char*)instruccion->param1;
-    int tiempo = *(int*)instruccion->param2;
+    int tiempo = atoi(instruccion->param2);
     
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_IO);
