@@ -72,6 +72,6 @@ void enviar_finalizacion_io(int socket_kernel, int pid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, FINALIZA_IO);
     agregar_a_paquete(paquete, &pid, sizeof(int));
-    enviar_paquete(paquete, socket_kernel);
+    enviar_paquete(paquete, socket_kernel, logger);
     borrar_paquete(paquete);
 }

@@ -101,12 +101,11 @@ void handshake_io(int socket_dispositivo){
     nuevo_io->cola_bloqueados = queue_create();
     nuevo_io->ocupado = false;
 
-    dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
-    free(nombre_dispositivo);
+    dictionary_put(dispositivos_io, strdup(nombre_dispositivo), nuevo_io);
 
     log_info(logger, "Se registró el dispositivo IO [%s] en el diccionario", nombre_dispositivo);
 
-
+    free(nombre_dispositivo);
     return;
 }
 
