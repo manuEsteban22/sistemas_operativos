@@ -6,7 +6,9 @@
 
 typedef enum {
     FIFO,
-    MENOR_MEMORIA
+    MENOR_MEMORIA,
+    SJF_SIN_DESALOJO,
+    SJF_CON_DESALOJO
 } t_algoritmo_planificacion;
 
 extern t_queue* cola_new;
