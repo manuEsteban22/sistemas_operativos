@@ -34,6 +34,9 @@ t_pcb* planificador_corto_plazo(){
             pcb = planificar_sjf_sin_desalojo(cola_ready);
             break;
         case SJF_CON_DESALOJO:
+            //pcb = planificar_sjf_con_desalojo(cola_ready);
+            // probablemente despues de cada proceso hay que actualizar la
+            // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
     }
     
@@ -70,11 +73,6 @@ t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
 
     list_destroy(lista_aux);
     return pcb_menor;    
-}
-
-double calculo_estimacion (t_pcb* actual, t_config* config){
-    double alpha = config_get_double_value(config, "ALPHA");
-    double estimacion = (alpha * pcb->rafaga_real_anterior) + ((1 - alpha) * pcb->estimacion_rafaga);
 }
 
 void ejecutar_proceso(t_pcb* pcb, int socket_dispatch){

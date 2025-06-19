@@ -73,8 +73,6 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
 
-    
-
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
         pause();
