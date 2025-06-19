@@ -16,6 +16,7 @@ typedef struct
     char* log_level;
     char* dump_path;
     char* path_instrucciones;
+    int cantidad_marcos_swap;
 } t_configuracion;
 
 
