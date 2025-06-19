@@ -116,6 +116,7 @@ void finalizar_proceso(t_pcb* pcb) {
 
 bool enviar_pedido_memoria(t_pcb* pcb) {
     t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_INIT);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->tamanio), sizeof(int));
 

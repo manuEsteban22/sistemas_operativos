@@ -74,4 +74,5 @@ void enviar_finalizacion_io(int socket_kernel, int pid){
     agregar_a_paquete(paquete, &pid, sizeof(int));
     enviar_paquete(paquete, socket_kernel, logger);
     borrar_paquete(paquete);
+    log_info(logger, "mandé que finalizo io");
 }

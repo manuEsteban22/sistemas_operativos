@@ -3,6 +3,7 @@
 #include<utils/utils.h>
 #include<kernel.h>
 #include<syscalls.h>
+#include<planificador_largo_plazo.h>//por las colas nomas
 
 void* manejar_servidor_cpu(void* arg);
 void* manejar_servidor_io(int socket_io);

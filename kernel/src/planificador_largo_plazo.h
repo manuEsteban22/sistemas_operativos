@@ -11,6 +11,7 @@ typedef enum {
     SJF_CON_DESALOJO
 } t_algoritmo_planificacion;
 
+//hacer un archivo aparte para las colas
 extern t_queue* cola_new;
 extern t_queue* cola_ready;
 extern t_queue* cola_susp_ready;

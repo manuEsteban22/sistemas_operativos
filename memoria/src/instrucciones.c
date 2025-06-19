@@ -71,6 +71,14 @@ int mandar_instruccion(int socket_cliente)
     }*/
     
     char* instruccion = obtener_instruccion(pc);
+
+    if (instruccion == NULL) {
+    log_error(logger, "No se encontró la instrucción en la posición PC=%d", pc);
+    liberar_memoria();
+    list_destroy_and_destroy_elements(lista_paquete, free);
+    return -1;
+}
+
     int tamanio = strlen(instruccion) + 1;
     log_trace(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);

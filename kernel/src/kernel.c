@@ -74,6 +74,12 @@ int main(int argc, char* argv[]) {
     pthread_detach(thread_io);
 
     
+    inicializar_planificador_lp("FIFO");
+    crear_proceso(256);
+
+    pthread_t thread_planificador_lp;
+    pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);
+    pthread_detach(thread_planificador_lp);
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
@@ -85,7 +91,7 @@ int main(int argc, char* argv[]) {
 
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
-    nuevo_logger = log_create("kernel.log","LogKernel",true,LOG_LEVEL_INFO);
+    nuevo_logger = log_create("kernel.log","LogKernel",true,LOG_LEVEL_TRACE);
     log_info(nuevo_logger, "funciona logger kernel :)");
     return nuevo_logger;
 }

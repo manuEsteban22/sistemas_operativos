@@ -60,3 +60,21 @@ void borrar_pcb(t_pcb* pcb){
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
 }
+
+void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
+    if (pcb == NULL) {
+        // devolver el valor inicial de la estimacion o un error (?)
+        return;
+    }
+
+    int rafaga_real = temporal_gettime(pcb->temporal_estado);
+    pcb->rafaga_real_anterior = rafaga_real;
+
+    double alpha = config_get_double_value(config, "ALPHA");
+
+    double nueva_estimacion = (alpha * rafaga_real) + ((1 - alpha) * pcb->estimacion_rafaga);
+    pcb->estimacion_rafaga = nueva_estimacion;
+
+    temporal_destroy(pcb->temporal_estado);
+    pcb->temporal_estado = temporal_create();
+}

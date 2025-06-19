@@ -34,6 +34,9 @@ t_pcb* planificador_corto_plazo(){
             pcb = planificar_sjf_sin_desalojo(cola_ready);
             break;
         case SJF_CON_DESALOJO:
+            //pcb = planificar_sjf_con_desalojo(cola_ready);
+            // probablemente despues de cada proceso hay que actualizar la
+            // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
     }
     
