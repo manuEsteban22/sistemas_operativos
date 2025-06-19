@@ -137,6 +137,27 @@ void* manejar_servidor_io(int socket_io){
                 //deserializar ()
                 //recibir paquete -> deserializar
                 break;
+            case FINALIZA_IO:
+                t_list* recibido = recibir_paquete(socket_cliente);
+                int* pid = list_get(recibido, 0);
+                log_trace(logger, "Recibi finalizacion de io - pid %d", *pid);
+                t_pcb* pcb = obtener_pcb(*pid);
+
+                if (pcb == NULL) {
+                        log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
+                        list_destroy_and_destroy_elements(recibido, free);
+                        break;
+                    }
+
+                if(pcb->estado_actual==SUSP_BLOCKED){
+                    cambiar_estado(pcb, SUSP_READY);
+                    queue_push(cola_susp_ready, pcb);
+                }else if(pcb->estado_actual == BLOCKED){
+                    cambiar_estado(pcb, READY);
+                    queue_push(cola_ready, pcb);
+                }
+                list_destroy_and_destroy_elements(recibido, free);
+                break;
             case ERROR:
                 break;
             default:

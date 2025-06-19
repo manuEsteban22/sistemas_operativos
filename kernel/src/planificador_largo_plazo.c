@@ -116,6 +116,7 @@ void finalizar_proceso(t_pcb* pcb) {
 
 bool enviar_pedido_memoria(t_pcb* pcb) {
     t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_INIT);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->tamanio), sizeof(int));
 
@@ -133,13 +134,12 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
     }
 }
 
-void planificador_largo_plazo(int pid, int tamanio){
+void planificador_largo_plazo(){
     while(1){
         //chequeo que haya procesos en new y que haya espacio en memoria con dos wait
         sem_wait(&sem_procesos_en_new);
         sem_wait(&sem_procesos_en_memoria);
         t_pcb* pcb = NULL;
-        pcb = crear_pcb(pid, tamanio);
 
         pthread_mutex_lock(&mutex_susp_ready);
         if(!queue_is_empty(cola_susp_ready)){

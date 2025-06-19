@@ -35,6 +35,17 @@ void* atender_kernel(void* socket_ptr)
                 log_info(logger, "Llegó un paquete");
                 recibir_paquete(socket_cliente);
                 break;
+            case OC_INIT:
+                log_info(logger, "llego una peticion de crear un nuevo proceso");
+                t_list* recibido = recibir_paquete(socket_cliente);
+                int* pid = list_get(recibido, 0);
+                int* tamanio = list_get(recibido, 1);
+                log_info(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
+                if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
+                send(socket_cliente, OK, sizeof(int), 0);
+                }
+                list_destroy_and_destroy_elements(recibido, free);
+                break;
             case OC_READ:
                 log_info(logger, "recibi un read");
                 break;
