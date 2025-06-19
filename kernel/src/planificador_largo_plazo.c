@@ -59,9 +59,9 @@ void crear_proceso(int tamanio_proceso){
 
     pthread_mutex_lock(&mutex_new);
 
-    switch (algoritmo_lp) {
+    switch (algoritmo_lp){
         case FIFO:
-            queue_push(cola_new, pcb);;
+            queue_push(cola_new, pcb);
             break;
         case MENOR_MEMORIA:
             insertar_en_orden_por_memoria(cola_new, pcb);
@@ -140,6 +140,7 @@ void planificador_largo_plazo(){
         sem_wait(&sem_procesos_en_new);
         sem_wait(&sem_procesos_en_memoria);
         t_pcb* pcb = NULL;
+        //pcb = crear_pcb(pid, tamanio);
 
         pthread_mutex_lock(&mutex_susp_ready);
         if(!queue_is_empty(cola_susp_ready)){
@@ -183,12 +184,12 @@ void planificador_largo_plazo(){
             pthread_mutex_unlock(&mutex_new);
             sem_post(&sem_procesos_en_new);
             sem_post(&sem_procesos_en_memoria);
-        }
-    } else{
+            }
+        } else{
         pthread_mutex_unlock(&mutex_new);
         sem_post(&sem_procesos_en_new);
         sem_post(&sem_procesos_en_memoria);
-    }
+        }
     //inicializar_proceso_en_memoria(pcb);
 }
 }

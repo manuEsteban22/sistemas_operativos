@@ -7,5 +7,6 @@
 #include <pcb.h>
 
 t_pcb* planificador_corto_plazo ();
+t_pcb* planificar_sjf_sin_desalojo(t_queue* cola);
 
 #endif

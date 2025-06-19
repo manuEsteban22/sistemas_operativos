@@ -25,6 +25,8 @@ typedef struct
     t_estado_proceso estado_actual;
     t_temporal* temporal_estado;
     int tamanio;
+    double estimacion_rafaga;
+    double rafaga_real_anterior;
 } t_pcb;
 
 typedef struct
@@ -38,6 +40,6 @@ t_pcb* obtener_pcb(int pid);
 t_pcb* crear_pcb(int pid, int tamanio_proceso);
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);
-
+void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config);
 
 #endif

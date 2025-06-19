@@ -17,6 +17,10 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     }
 
     pcb->metricas_estado[NEW]++;//sumo 1 a las veces que pasó por estado NEW
+
+    pcb->estimacion_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
+    pcb->rafaga_real_anterior = 0.0;
+
     return pcb;
 }
 
@@ -55,4 +59,22 @@ void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
+}
+
+void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
+    if (pcb == NULL) {
+        // devolver el valor inicial de la estimacion o un error (?)
+        return;
+    }
+
+    int rafaga_real = temporal_gettime(pcb->temporal_estado);
+    pcb->rafaga_real_anterior = rafaga_real;
+
+    double alpha = config_get_double_value(config, "ALPHA");
+
+    double nueva_estimacion = (alpha * rafaga_real) + ((1 - alpha) * pcb->estimacion_rafaga);
+    pcb->estimacion_rafaga = nueva_estimacion;
+
+    temporal_destroy(pcb->temporal_estado);
+    pcb->temporal_estado = temporal_create();
 }
