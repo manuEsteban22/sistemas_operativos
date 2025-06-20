@@ -50,6 +50,10 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->metricas_estado[nuevo_estado]++;
     //cambia el estado del pcb y suma 1 a la metrica de estado del estado nuevo
 
+     if (nuevo_estado == READY && config_get_string_value(config, "ALGORITMO_CORTO_PLAZO") == SJF_CON_DESALOJO) {
+    chequear_sjf_con_desalojo(pcb);
+    }
+
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
     //borra el cronometro del estado anterior y crea uno nuevo
@@ -78,3 +82,34 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
 }
+
+void chequear_sjf_con_desalojo(t_pcb* nuevo) {
+    if (config_get_string_value(config, "ALGORITMO_CORTO_PLAZO") != SJF_CON_DESALOJO){
+        return;
+    }
+        
+
+    // if (!hay_proceso_en_exec()){
+    //     return;
+    // }
+
+    //t_pcb* ejecutando = obtener_proceso_en_ejecucion();
+
+    // if (nuevo->estimacion_rafaga < ejecutando->estimacion_rafaga) {
+    //     enviar_interrupcion_a_cpu();
+    //     // y hay que replanificar
+    // }
+}
+
+
+// bool hay_proceso_en_exec(){
+//     bool hay_exec = false;
+    
+//     void buscar_exec(char* key, void* pcb){
+//         if (((t_pcb*) pcb)->estado_actual == EXEC)
+//             hay_exec = true;
+//     }
+
+//     dictionary_iterator(tabla_pcbs, buscar_exec);
+//     return hay_exec;
+// }

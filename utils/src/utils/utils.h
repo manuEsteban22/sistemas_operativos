@@ -28,6 +28,7 @@ typedef enum
     OC_READ,
     OC_EXEC,
     OC_INIT,
+    OC_INTERRUPT,
     SYSCALL_IO,
     SYSCALL_INIT,
     SYSCALL_DUMP_MEMORY,

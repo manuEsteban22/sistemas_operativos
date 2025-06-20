@@ -202,7 +202,12 @@ int conectar_memoria(char* ip, char* puerto){
     return fd_socket;
 }
 
-
+void enviar_interrupcion_a_cpu() {
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_INTERRUPCION);
+    enviar_paquete(paquete, socket_interrupt, logger);
+    borrar_paquete(paquete);
+}
 
 
 //por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept
