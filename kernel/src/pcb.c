@@ -1,5 +1,5 @@
 #include<pcb.h>
-
+#include<planificador_corto_plazo.h>
 
 t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
