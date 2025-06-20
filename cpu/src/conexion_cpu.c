@@ -88,4 +88,3 @@ int conectar_memoria(char* ip, char* puerto){
 
     return fd_socket;
 }
-

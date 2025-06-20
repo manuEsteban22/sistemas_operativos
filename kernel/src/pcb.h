@@ -42,4 +42,6 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);
 void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config);
 
+#include<planificador_largo_plazo.h>
+
 #endif

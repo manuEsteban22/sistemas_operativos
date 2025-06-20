@@ -9,6 +9,8 @@ extern t_config* config;
 extern int PROCESOS_MEMORIA;
 extern int socket_memoria;
 extern int socket_io;
+extern int socket_interrupt;
+extern int socket_dispatch;
 extern t_dictionary* dispositivos_io;
 extern t_dictionary* tabla_pcbs;
 

@@ -156,8 +156,19 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
     return;
 }
 
-void check_interrupt(t_pcb* pcb, int socket_kernel_interrupt){
-    
+void check_interrupt(t_pcb* pcb, int socket_kernel_interrupt, int socket_kernel_dispatch){
+    int opcode;
+    int recibido = recv(socket_kernel_interrupt, &opcode, sizeof(int), MSG_DONTWAIT);
+
+    if(recibido > 0 && opcode == OC_INTERRUPT){
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, OC_INTERRUPT);
+        agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+        agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
+        enviar_paquete(paquete, socket_kernel_dispatch, logger);
+        borrar_paquete(paquete);
+    }
+    return;
 }
 
 
@@ -177,7 +188,7 @@ void prueba_write(int socket_memoria, int socket_kernel_dispatch){
     free(instruccion);
 }
 
-void prueba(int socket_memoria, int socket_kernel_dispatch){
+void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
     t_instruccion* prox;
     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
     pcb_prueba->pc = 0;
@@ -188,7 +199,7 @@ void prueba(int socket_memoria, int socket_kernel_dispatch){
     free(prox);
 }
 
-void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch){
+void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
     //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
     bool leyo_exit = false;
     t_instruccion* prox;
@@ -205,7 +216,11 @@ void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispat
         }
         execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
         pcb_prueba->pc++;
+
+        if(!leyo_exit){
+            check_interrupt(pcb_prueba,socket_kernel_interrupt, socket_kernel_dispatch);
+        }
+        free(prox);
     }
     free(pcb_prueba);
-    free(prox);
 }

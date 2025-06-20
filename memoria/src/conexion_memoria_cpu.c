@@ -64,11 +64,10 @@ void* atender_cpu(void* socket_ptr)
 
 void* manejar_servidor(void* socket_ptr) 
 {
+    //por cada accept esta funcion tira un hilo
     int socket_servidor = *((int*)socket_ptr);
     free(socket_ptr);
     while (1) {
-        
-
         int socket_cliente = esperar_cliente(socket_servidor, logger);
 
         int* socket_cliente_ptr = malloc(sizeof(int));
@@ -83,6 +82,7 @@ void* manejar_servidor(void* socket_ptr)
 
 void* lanzar_servidor(int socket_servidor)
 {
+    //este es el hilo main que lanza todas las conexiones
     pthread_t hilo_conexion;
 
     int* socket_ptr = malloc(sizeof(int));

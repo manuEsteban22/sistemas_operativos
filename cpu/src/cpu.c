@@ -26,9 +26,10 @@ int main(int argc, char* argv[]) {
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-    log_info(logger, "anda joya aca");
+
+
     //prueba(socket_memoria, socket_kernel_dispatch);
-    iniciar_ciclo_de_instrucciones(socket_memoria, socket_kernel_dispatch);
+    iniciar_ciclo_de_instrucciones(socket_memoria, socket_kernel_dispatch, socket_kernel_interrupt);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
