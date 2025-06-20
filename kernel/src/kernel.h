@@ -11,8 +11,11 @@ extern int socket_memoria;
 extern int socket_io;
 extern int socket_interrupt;
 extern int socket_dispatch;
-extern t_dictionary* dispositivos_io;
-extern t_dictionary* tabla_pcbs;
+extern t_dictionary* dispositivos_io; //
+extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
+extern t_dictionary* tabla_exec; // tiene pcb -> cpuid
+extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
+extern pthread_mutex_t mutex_exec;
 
 
 typedef struct

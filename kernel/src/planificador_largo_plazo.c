@@ -137,12 +137,13 @@ void planificador_largo_plazo(){
         t_pcb* pcb = NULL;
         //pcb = crear_pcb(pid, tamanio);
 
+        log_trace(logger, "aca arranco el plani lp");
         pthread_mutex_lock(&mutex_susp_ready);
         if(!queue_is_empty(cola_susp_ready)){
 
             pcb = queue_peek(cola_susp_ready);
 
-            if(enviar_pedido_memoria(pcb)){
+            if(true/*enviar_pedido_memoria(pcb)*/){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
@@ -165,9 +166,9 @@ void planificador_largo_plazo(){
 
         pthread_mutex_lock(&mutex_new);
         if (!queue_is_empty(cola_new)) {
-
+        log_trace(logger, " plp hay procesos en new");
         pcb = queue_peek(cola_new);
-        if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
+        if(true/*enviar_pedido_memoria(pcb)*/){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
             queue_pop (cola_new);
             pthread_mutex_unlock(&mutex_new);
             cambiar_estado(pcb, READY);
@@ -181,6 +182,7 @@ void planificador_largo_plazo(){
             sem_post(&sem_procesos_en_memoria);
             }
         } else{
+        log_trace(logger, "la cola de new esta vacia");
         pthread_mutex_unlock(&mutex_new);
         sem_post(&sem_procesos_en_new);
         sem_post(&sem_procesos_en_memoria);

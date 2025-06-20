@@ -30,7 +30,6 @@ t_pcb* obtener_pcb(int pid) {
     t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
     if (pcb == NULL) {
         log_error(logger, "Error para obtener PCB NULL");
-        return;
     }
     free(pid_str);
     return pcb;

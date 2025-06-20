@@ -32,8 +32,19 @@ void* manejar_servidor_cpu(void* arg){
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a %s", nombre_cliente);
+
                 recv(socket_cliente, &cpu_id, sizeof(int), MSG_WAITALL);
                 log_info(logger, "Conexion de CPU ID: %d", cpu_id);
+
+                if (strcmp(nombre_cliente, "DISPATCH") == 0) {
+                    int* socket_dispatch_ptr = malloc(sizeof(int));
+                    *socket_dispatch_ptr = socket;
+
+                    char* cpu_id_str = string_itoa(cpu_id);
+                    dictionary_put(tabla_dispatch, cpu_id_str, socket_dispatch_ptr);
+                    log_info(logger, "Socket DISPATCH guardado: %d", socket);
+                    free(cpu_id_str);
+                }
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");

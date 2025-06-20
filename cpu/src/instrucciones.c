@@ -44,13 +44,14 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispa
     cambiar_opcode_paquete(paquete, SYSCALL_IO);
 
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
-
+    
     int size_dispositivo = strlen(dispositivo) + 1;
     agregar_a_paquete(paquete, &size_dispositivo, sizeof(int));
     agregar_a_paquete(paquete, dispositivo, size_dispositivo);
     agregar_a_paquete(paquete, &tiempo, sizeof(int));
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);
+    log_trace(logger, "envié instruccion io en pid: %d", pcb->pid);
     return;
 }
 

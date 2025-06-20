@@ -14,19 +14,25 @@ t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
     exit(EXIT_FAILURE);
 }
 
+
+void inicializar_planificador_cp(char* algoritmo_planificacion_cp){
+    parsear_algoritmo_cp(algoritmo_planificacion_cp);
+}
+
 //algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
 
 t_pcb* planificador_corto_plazo(){
     pthread_mutex_lock(&mutex_ready);
 
     if (queue_is_empty(cola_ready)){
+        log_trace(logger, "la cola de ready estaba vacia");
         pthread_mutex_unlock(&mutex_ready);
         return NULL;
     }
 
     t_pcb* pcb = NULL;
 
-    switch(algoritmo_cp){
+    /*switch(algoritmo_cp){
         case FIFO:
             pcb = queue_pop(cola_ready);
             break;
@@ -38,10 +44,10 @@ t_pcb* planificador_corto_plazo(){
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
-    }
-    
+    }*/
+    pcb = queue_pop(cola_ready);//borrar
     pthread_mutex_unlock(&mutex_ready);
-
+    log_trace(logger, "pcp saco un proceso de ready");
     return pcb;
 }
 
@@ -75,17 +81,59 @@ t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
     return pcb_menor;    
 }
 
-void ejecutar_proceso(t_pcb* pcb, int socket_dispatch){
+void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     cambiar_estado(pcb, EXEC);
-    int pid = pcb->pid;
-    int pc = pcb->pc;
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_EXEC);
-    agregar_a_paquete(paquete, pid, sizeof(int));
-    agregar_a_paquete(paquete, pc, sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
     enviar_paquete(paquete, socket_dispatch, logger);
     borrar_paquete(paquete);
 
-    log_info(logger, "envie el proceso PID=%d a CPU - PC=%d", pid, pc);
+    char* key = string_itoa(cpu_id);
+    pthread_mutex_lock(&mutex_exec);
+    dictionary_put(tabla_exec, key, pcb);
+    pthread_mutex_unlock(&mutex_exec);
+    free(key);
+
+    log_info(logger, "envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
+}
+
+void* planificador_corto_plazo_loop(int socket_dispatch) {
+    log_trace(logger, "arranque a correr pcp");
+    while (1) {
+
+        if (queue_is_empty(cola_ready)) {
+            log_trace(logger, "la cola de ready esta vacia");
+            sleep(1);
+            continue;
+        }
+
+        t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
+        if (pcb == NULL) {
+            log_trace(logger, "el pcb que agarro de ready es null");
+            sleep(1);  // opcional, evitás un busy-wait innecesario
+            continue;
+        }else{
+            log_trace(logger, "aca anda el pcp");
+        }
+
+        // Buscás un CPU disponible — por ahora podés hardcodear socket_dispatch y cpu_id si solo tenés uno
+        int cpu_id = 123;  // o algo que identifique a tu CPU
+        char* cpu_id_str = string_itoa(cpu_id);
+        int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, cpu_id_str);
+        free(cpu_id_str);
+        if (socket_dispatch_ptr == NULL) {
+            log_error(logger, "No se encontró el socket dispatch para CPU %d", cpu_id);
+            continue;
+        }
+        //log_trace(logger, "la cpu corresponde al socket: %d segun pcp", *socket_dispatch_ptr);
+        
+
+        
+        ejecutar_proceso(pcb, *socket_dispatch_ptr, cpu_id);
+        log_trace(logger, "termino una vuelta pcp");
+    }
+    return NULL;
 }

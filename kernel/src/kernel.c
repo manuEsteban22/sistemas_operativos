@@ -3,6 +3,7 @@
 #include <conexion_kernel.h>
 #include <planificador_largo_plazo.h>
 #include <kernel.h>
+#include <planificador_corto_plazo.h>
 
 t_log* iniciar_logger();
 t_config* iniciar_config();
@@ -25,12 +26,19 @@ char *algoritmo_planificacion_lp;
 char *algoritmo_planificacion_cp;
 t_dictionary* dispositivos_io;
 t_dictionary* tabla_pcbs;
+t_dictionary* tabla_exec;
+pthread_mutex_t mutex_exec = PTHREAD_MUTEX_INITIALIZER;
+t_dictionary* tabla_dispatch;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     tabla_pcbs = dictionary_create();
     dispositivos_io = dictionary_create();
+    tabla_exec = dictionary_create();
+    tabla_dispatch = dictionary_create();
+
+
     /*
     if(argc < 3){
         log_error(logger, "faltaron argumentos en la ejecucion");
@@ -63,6 +71,9 @@ int main(int argc, char* argv[]) {
     args_interrupt->nombre = "INTERRUPT";
     int* ptr_io = malloc(sizeof(int));
     ptr_io = socket_io;
+    int* ptr_dispatch = malloc(sizeof(int));
+    ptr_dispatch = socket_dispatch;
+
 
     pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
     pthread_detach(thread_dispatch);
@@ -75,11 +86,35 @@ int main(int argc, char* argv[]) {
 
     
     inicializar_planificador_lp("FIFO");
+    inicializar_planificador_cp("FIFO");
     crear_proceso(256);
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(thread_planificador_lp);
+
+    pthread_t thread_planificador_cp;
+    pthread_create(&thread_planificador_cp, NULL, (void*)planificador_corto_plazo_loop, ptr_dispatch);
+    pthread_detach(thread_planificador_cp);
+
+
+    //t_pcb* pcb = planificador_corto_plazo();
+
+    //asdkjfjaslkdjflkj
+    // if (pcb != NULL) {
+    // int cpu_id = 123;  // HARDCODEADO solo por ahora
+    // char* id = string_itoa(cpu_id);
+    // int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, id);
+    // if (socket_dispatch_ptr != NULL) {
+    //     ejecutar_proceso(pcb, *socket_dispatch_ptr, cpu_id);
+    // } else {
+    //     log_error(logger, "No se encontró el socket dispatch para CPU ID %d", cpu_id);
+    // }
+    // free(id);
+    // } else {
+    //     log_info(logger, "No hay procesos en READY");
+    // }
+    //aksjdflaksdjflkasdj
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){

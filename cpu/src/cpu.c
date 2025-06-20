@@ -29,7 +29,8 @@ int main(int argc, char* argv[]) {
 
 
     //prueba(socket_memoria, socket_kernel_dispatch);
-    iniciar_ciclo_de_instrucciones(socket_memoria, socket_kernel_dispatch, socket_kernel_interrupt);
+    t_pcb* pcb = esperar_procesos(socket_kernel_dispatch);
+    iniciar_ciclo_de_instrucciones(pcb, socket_memoria, socket_kernel_dispatch, socket_kernel_interrupt);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
