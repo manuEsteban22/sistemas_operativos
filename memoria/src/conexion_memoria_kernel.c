@@ -12,7 +12,7 @@ void* atender_kernel(void* socket_ptr)
     {
         int codigo_operacion = recibir_operacion(socket_cliente);
 
-        if (codigo_operacion <= 0) 
+        if (codigo_operacion < 0) 
         {
             log_info(logger, "Se cerró la conexión o error");
             break;

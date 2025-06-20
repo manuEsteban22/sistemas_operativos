@@ -28,15 +28,6 @@ void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp){
     log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_lp);
     exit(EXIT_FAILURE);
     }
-
-    // if (strcmp(algoritmo_planificacion_cp,"FIFO") == 0){
-    // algoritmo_cp = FIFO;
-    // } else if(strcmp(algoritmo_planificacion_cp,"MENOR_MEMORIA") == 0){
-    // algoritmo_cp = MENOR_MEMORIA;
-    // } else{
-    // log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_cp);
-    // exit(EXIT_FAILURE);
-    // }
 }
 
 void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
@@ -52,7 +43,8 @@ void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
 void crear_proceso(int tamanio_proceso){
-    t_pcb* pcb = crear_pcb(pid_global++, tamanio_proceso);
+    pid_global++;
+    t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
     char* pid_str = string_itoa(pcb->pid);
     dictionary_put(tabla_pcbs, pid_str, pcb);
     free(pid_str);
@@ -62,13 +54,16 @@ void crear_proceso(int tamanio_proceso){
     switch (algoritmo_lp){
         case FIFO:
             queue_push(cola_new, pcb);
+            pthread_mutex_unlock(&mutex_new);
             break;
         case MENOR_MEMORIA:
             insertar_en_orden_por_memoria(cola_new, pcb);
+            pthread_mutex_unlock(&mutex_new);
+            break;
+        case SJF_SIN_DESALOJO:
+            pthread_mutex_unlock(&mutex_new);   
             break;
     }
-
-    pthread_mutex_unlock(&mutex_new);
     sem_post(&sem_procesos_en_new);
 }
 
