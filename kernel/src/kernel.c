@@ -112,8 +112,13 @@ t_log* iniciar_logger(void){
 }
 
 t_config* iniciar_config(void){
-    t_config* nuevo_config;
-    nuevo_config = config_create("kernel.config");
+    t_config* nuevo_config = config_create("kernel.config");
+
+    if (nuevo_config == NULL) {
+        log_error(logger, "No se pudo abrir el archivo de configuración kernel.config");
+        exit(EXIT_FAILURE);
+    }
+    
     if(config_has_property(nuevo_config, "IP_MEMORIA")){
         ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
@@ -134,7 +139,11 @@ t_config* iniciar_config(void){
         log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_planificacion_lp);
         log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_planificacion_cp);
         return nuevo_config;
-    }
+    }   else {
+            log_error(logger, "Falta IP_MEMORIA en el config");
+            config_destroy(nuevo_config);
+            exit(EXIT_FAILURE);
+        }
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){
