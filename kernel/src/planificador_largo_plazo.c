@@ -15,6 +15,7 @@ pthread_mutex_t mutex_susp_ready = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t sem_procesos_en_new;
 sem_t sem_procesos_en_memoria;
+sem_t sem_procesos_ready;
 //procesos en memoria se refiere a la cantidad de procesos permitidos en memoria simultaneamente
 
 int pid_global = 0;
@@ -39,6 +40,7 @@ void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
     cola_susp_ready = queue_create();
     sem_init(&sem_procesos_en_new, 0, 0);
     sem_init(&sem_procesos_en_memoria, 0, PROCESOS_MEMORIA);
+    sem_init(&sem_procesos_ready, 0, 0);
 }
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
@@ -151,6 +153,7 @@ void planificador_largo_plazo(){
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
+                sem_post(&sem_procesos_ready);
                 pthread_mutex_unlock(&mutex_ready);
                 continue;
             }
@@ -176,6 +179,7 @@ void planificador_largo_plazo(){
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, pcb);
             pthread_mutex_unlock(&mutex_ready);
+            sem_post(&sem_procesos_ready);
         } else{
             pthread_mutex_unlock(&mutex_new);
             sem_post(&sem_procesos_en_new);

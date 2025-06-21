@@ -97,25 +97,6 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_planificador_cp, NULL, (void*)planificador_corto_plazo_loop, ptr_dispatch);
     pthread_detach(thread_planificador_cp);
 
-
-    //t_pcb* pcb = planificador_corto_plazo();
-
-    //asdkjfjaslkdjflkj
-    // if (pcb != NULL) {
-    // int cpu_id = 123;  // HARDCODEADO solo por ahora
-    // char* id = string_itoa(cpu_id);
-    // int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, id);
-    // if (socket_dispatch_ptr != NULL) {
-    //     ejecutar_proceso(pcb, *socket_dispatch_ptr, cpu_id);
-    // } else {
-    //     log_error(logger, "No se encontró el socket dispatch para CPU ID %d", cpu_id);
-    // }
-    // free(id);
-    // } else {
-    //     log_info(logger, "No hay procesos en READY");
-    // }
-    //aksjdflaksdjflkasdj
-
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
         pause();
@@ -145,7 +126,7 @@ t_config* iniciar_config(void){
         algoritmo_planificacion_cp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_CORTO_PLAZO");
         
 
-        log_info(logger, "no se pudo leer el archivo de config");
+        //log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);
         log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
         log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);

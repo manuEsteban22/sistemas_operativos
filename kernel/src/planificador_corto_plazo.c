@@ -103,13 +103,7 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
 void* planificador_corto_plazo_loop(int socket_dispatch) {
     log_trace(logger, "arranque a correr pcp");
     while (1) {
-
-        if (queue_is_empty(cola_ready)) {
-            log_trace(logger, "la cola de ready esta vacia");
-            sleep(1);
-            continue;
-        }
-
+        sem_wait(&sem_procesos_ready);
         t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
         if (pcb == NULL) {
             log_trace(logger, "el pcb que agarro de ready es null");

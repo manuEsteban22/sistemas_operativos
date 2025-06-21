@@ -4,14 +4,16 @@ void llamar_a_io(int socket_cpu) {
     t_list* campos = recibir_paquete(socket_cpu);
 
     char* pid_raw = list_get(campos, 0);
-    //char* size_disp_raw = list_get(campos, 1);
-    char* dispositivo = list_get(campos, 2);
-    char* tiempo_raw = list_get(campos, 3);
+    char* pc_raw = list_get(campos, 1);
+    //char* size_disp_raw = list_get(campos, 2);
+    char* dispositivo = list_get(campos, 3);
+    char* tiempo_raw = list_get(campos, 4);
 
     int pid = *(int*)pid_raw;
+    int pc = *(int*)pc_raw;
     int tiempo = *(int*)tiempo_raw;
 
-    log_info(logger, "recibi syscall IO - PID %d - Dispositivo [%s] - Tiempo %d", pid, dispositivo, tiempo);
+    log_info(logger, "recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
 
@@ -25,6 +27,7 @@ void llamar_a_io(int socket_cpu) {
     }
 
     t_pcb* pcb = obtener_pcb(pid);
+    pcb->pc = pc;
     cambiar_estado(pcb, BLOCKED);
 
     if(io->ocupado) {

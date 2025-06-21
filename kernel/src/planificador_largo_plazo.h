@@ -21,6 +21,7 @@ extern pthread_mutex_t mutex_ready;
 
 extern sem_t sem_procesos_en_new;
 extern sem_t sem_procesos_en_memoria;
+extern sem_t sem_procesos_ready;
 
 extern int pid_global;
 

@@ -145,8 +145,6 @@ void* manejar_servidor_io(int socket_io){
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
-                //deserializar ()
-                //recibir paquete -> deserializar
                 break;
             case FINALIZA_IO:
                 t_list* recibido = recibir_paquete(socket_cliente);
@@ -166,6 +164,7 @@ void* manejar_servidor_io(int socket_io){
                 }else if(pcb->estado_actual == BLOCKED){
                     cambiar_estado(pcb, READY);
                     queue_push(cola_ready, pcb);
+                    sem_post(&sem_procesos_ready);
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
