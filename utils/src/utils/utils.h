@@ -35,6 +35,8 @@ typedef enum
     SYSCALL_EXIT,
     SOLICITUD_IO,
     FINALIZA_IO,
+    OC_FRAME,
+    OC_PAG,
     ERROR
 } op_code;
 typedef struct

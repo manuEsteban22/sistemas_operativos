@@ -19,6 +19,7 @@ typedef struct {
 
 typedef struct{
     int pagina;
+    int marco;
     void* contenido;
     bool modificado;
     bool usado;

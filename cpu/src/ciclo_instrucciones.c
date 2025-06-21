@@ -87,26 +87,13 @@ bool requiere_traduccion(t_instruccion* instruccion){
     }
 }
 
-int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
+int decode(t_instruccion* instruccion, t_pcb* pcb, int socket_memoria){
     if(!requiere_traduccion(instruccion)) return -1;
     int direccion_logica = (*(int*)instruccion->param1);
-    int direccion_fisica = direccion_logica;
+    int direccion_fisica = traducir_direccion(pcb, direccion_logica, socket_memoria);
+
+    log_info(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
     return direccion_fisica;
-    /*
-    int nro_pagina = direccion_logica / tamanio_pagina;
-    int desplazamiento = direccion_logica % tamanio_pagina;
-    int marco;
-
-    if(entradas_tlb > 0 && esta_en_tlb(nro_pagina, &marco)){
-        log_info(logger,"PID: %d - TLB HIT - Pagina: %d", pcb->pid, nro_pagina);
-        return 
-    } else{
-        log_info(logger,"PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
-        pedir_frame(pcb, nro_pagina, marco, socket_memoria);
-    }
-
-    int direccion_fisica = marco * tamanio_pagina + desplazamiento;
-    log_info(logger, "Dirección fisica %d", direccion_fisica);*/
 }
 
 void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb){
@@ -120,12 +107,12 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
         pcb->pc++;
         break;
     case WRITE:
-        direccion_fisica = decode(instruccion);
+        direccion_fisica = decode(instruccion, pcb, socket_memoria);
         ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
         pcb->pc++;
         break;
     case READ:
-        direccion_fisica = decode(instruccion);
+        direccion_fisica = decode(instruccion, pcb, socket_memoria);
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
         pcb->pc++;
         break;
