@@ -44,7 +44,7 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispa
     cambiar_opcode_paquete(paquete, SYSCALL_IO);
 
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
-    agregar_a_paquete(paquete, &(pcb->pc) + 1, sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
 
     int size_dispositivo = strlen(dispositivo) + 1;
     agregar_a_paquete(paquete, &size_dispositivo, sizeof(int));

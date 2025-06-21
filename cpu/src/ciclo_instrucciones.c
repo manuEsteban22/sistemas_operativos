@@ -118,41 +118,49 @@ int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
 void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb){
     int direccion_fisica;
     int pid = pcb->pid;
-    int pc = pcb->pc;
     switch (instruccion->identificador)
     {
     case NOOP:
         //no hace nada
         log_info(logger, "ejecute un noop");
+        pcb->pc++;
         break;
     case WRITE:
         direccion_fisica = decode(instruccion);
         ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
+        pcb->pc++;
         break;
     case READ:
         direccion_fisica = decode(instruccion);
         ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
+        pcb->pc++;
         break;
     case GOTO:
         log_info(logger, "ejecute un GOTO");
-        pc = (int)instruccion->param1;
+        pcb->pc = (int)instruccion->param1;
+        //pcb->pc = atoi(instruccion->param1);
         break;
     case IO:
+        pcb->pc++;
         ejecutar_io(instruccion, pcb, socket_kernel_dispatch);
         break;
     case INIT_PROC:
         init_proc(instruccion, pcb, socket_kernel_dispatch);
+        pcb->pc++;
         break;
     case DUMP_MEMORY:
         dump_memory(pcb, socket_kernel_dispatch);
+        pcb->pc++;
         break;
     case EXIT:
+        log_info(logger, "ejecute un EXIT");
         exit_syscall(pcb, socket_kernel_dispatch);
         break;
     default:
+        log_error(logger, "instruccion desconocida");
+        pcb->pc++;
         break;
     }
-    pcb->pc = pc;
     return;
 }
 
@@ -212,7 +220,6 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int socket_memoria, int socket_k
             log_info(logger, "lei un exit");
         }
         execute(prox, socket_memoria, socket_kernel_dispatch, pcb);
-        pcb->pc++;
 
         if(!leyo_exit){
             check_interrupt(pcb,socket_kernel_interrupt, socket_kernel_dispatch);
