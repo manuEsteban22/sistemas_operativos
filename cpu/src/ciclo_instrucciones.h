@@ -24,21 +24,10 @@ typedef struct {
     void* param2;
 } t_instruccion;
 
-
-typedef struct {
-    int pagina;
-    int marco;
-} t_entrada_tlb;
-
-typedef struct {
-    int pid;
-    int pagina;
-} t_paquete_frame;
-
 #include<instrucciones.h>
 
 
-void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt);
+//void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt);
 void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt);
 t_instruccion* leerInstruccion(char* instruccion_raw);
 //void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb);

@@ -1,11 +1,5 @@
 #include<ciclo_instrucciones.h>
 
-/*
-cpu recibe de memoria como parte del handshake:
-tamaño_pagina
-entradas_por_tabla
-cantidad_niveles
-*/
 
 t_id_instruccion convertir_a_opcode(char* identificador) {
 //recibo un string con la instruccion y devuelvo a cual corresponde con su OPCODE

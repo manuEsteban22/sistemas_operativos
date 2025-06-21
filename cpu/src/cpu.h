@@ -15,7 +15,14 @@ typedef struct
 #include<procesos.h>
 
 extern t_log* logger;
-extern int enradas_tlb;
+extern int entradas_tlb;
+extern char* reemplazo_tlb;
+extern int entradas_cache;
+extern char* reemplazo_cache;
+extern int retardo_cache;
+extern int entradas_por_tabla;
+extern int tam_pagina;
+extern int cant_niveles;
 
 
 #endif

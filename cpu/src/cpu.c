@@ -11,7 +11,14 @@ char* puerto_kernel_dispatch;
 char* puerto_kernel_interrupt;
 char* ip_memoria;
 char* puerto_memoria;
-//int entradas_tlb;
+int entradas_tlb;
+char* reemplazo_tlb;
+int entradas_cache;
+char* reemplazo_cache;
+int retardo_cache;
+int entradas_por_tabla = 4;//estas estan hardcodeadas pero vienen del handshake
+int tam_pagina = 64;
+int cant_niveles = 3;
 
 int main(int argc, char* argv[]) {
     int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
@@ -53,7 +60,11 @@ t_config* iniciar_config(void){
         puerto_kernel_interrupt = config_get_string_value(nuevo_config, "PUERTO_KERNEL_INTERRUPT");
         ip_memoria = config_get_string_value(nuevo_config,"IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
-        //entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
+        entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
+        reemplazo_tlb = config_get_string_value(nuevo_config, "REEMPLAZO_TLB");
+        entradas_cache = config_get_int_value(nuevo_config, "ENTRADAS_CACHE");
+        reemplazo_cache = config_get_string_value(nuevo_config,"REEMPLAZO_CACHE");
+        retardo_cache = config_get_int_value(nuevo_config, "RETARDO_CACHE");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del kernel es: %s", ip_kernel);

@@ -45,8 +45,8 @@ void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
 void crear_proceso(int tamanio_proceso){
-    pid_global++;
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
+    pid_global++;
     char* pid_str = string_itoa(pcb->pid);
     dictionary_put(tabla_pcbs, pid_str, pcb);
     free(pid_str);
