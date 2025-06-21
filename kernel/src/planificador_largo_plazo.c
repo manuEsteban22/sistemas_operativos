@@ -53,7 +53,7 @@ void crear_proceso(int tamanio_proceso){
 
     pthread_mutex_lock(&mutex_new);
 
-    switch (algoritmo_lp){
+    switch(config_get_int_value(config, "ALGORITMO_INGRESO_A_READY")){
         case FIFO:
             queue_push(cola_new, pcb);
             pthread_mutex_unlock(&mutex_new);
@@ -63,13 +63,24 @@ void crear_proceso(int tamanio_proceso){
             pthread_mutex_unlock(&mutex_new);
             break;
         case SJF_SIN_DESALOJO:
-            pthread_mutex_unlock(&mutex_new);   
+            log_warning(logger, "no se usa sjf sin desalojo en planificador largo plazo");
+            pthread_mutex_unlock(&mutex_new); 
+            exit(EXIT_FAILURE);
             break;
+        case SJF_CON_DESALOJO:
+            log_warning(logger, "no se usa sjf con desalojo en planificador largo plazo");
+            pthread_mutex_unlock(&mutex_new);   
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            log_warning(logger, "No hay un algoritmo adecuado en planificador largo plazo");
+            pthread_mutex_unlock(&mutex_new);  
+            exit(EXIT_FAILURE);
     }
     sem_post(&sem_procesos_en_new);
 }
 
-void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo) {
+void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
     t_list* lista_aux = list_create();
     bool insertado = false;
 
@@ -96,7 +107,7 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo) {
 }
 
 
-void finalizar_proceso(t_pcb* pcb) {
+void finalizar_proceso(t_pcb* pcb){
     //enviar_finalizacion_a_memoria(pcb->pid);
     
     pthread_mutex_lock(&mutex_procesos_en_memoria);
