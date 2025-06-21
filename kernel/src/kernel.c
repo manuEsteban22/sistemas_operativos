@@ -120,7 +120,7 @@ t_config* iniciar_config(void){
     }
     
     if(config_has_property(nuevo_config, "IP_MEMORIA")){
-        ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
+        // ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA"); no anda
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
