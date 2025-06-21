@@ -38,11 +38,11 @@ void* manejar_servidor_cpu(void* arg){
 
                 if (strcmp(nombre_cliente, "DISPATCH") == 0) {
                     int* socket_dispatch_ptr = malloc(sizeof(int));
-                    *socket_dispatch_ptr = socket;
+                    *socket_dispatch_ptr = socket_cliente;
 
                     char* cpu_id_str = string_itoa(cpu_id);
                     dictionary_put(tabla_dispatch, cpu_id_str, socket_dispatch_ptr);
-                    log_info(logger, "Socket DISPATCH guardado: %d", socket);
+                    log_info(logger, "Socket DISPATCH guardado: %d", socket_cliente);
                     free(cpu_id_str);
                 }
                 break;
