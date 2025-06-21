@@ -1,6 +1,6 @@
 #ifndef MEMORIA_H_
 #define MEMORIA_H_
-#include <conexion_memoria_cpu.h>
+#include <conexiones_memoria.h>
 #include <administracion_memoria.h>
 #include <utils/utils.h>
 #include <instrucciones.h>

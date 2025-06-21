@@ -12,7 +12,7 @@ void* atender_kernel(void* socket_ptr)
     {
         int codigo_operacion = recibir_operacion(socket_cliente);
 
-        if (codigo_operacion < 0) 
+        if (codigo_operacion <= 0) 
         {
             log_info(logger, "Se cerró la conexión o error");
             break;
@@ -34,17 +34,6 @@ void* atender_kernel(void* socket_ptr)
             case PAQUETE:
                 log_info(logger, "Llegó un paquete");
                 recibir_paquete(socket_cliente);
-                break;
-            case OC_INIT:
-                log_info(logger, "llego una peticion de crear un nuevo proceso");
-                t_list* recibido = recibir_paquete(socket_cliente);
-                int* pid = list_get(recibido, 0);
-                int* tamanio = list_get(recibido, 1);
-                log_info(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
-                if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
-                send(socket_cliente, OK, sizeof(int), 0);
-                }
-                list_destroy_and_destroy_elements(recibido, free);
                 break;
             case OC_READ:
                 log_info(logger, "recibi un read");
@@ -80,25 +69,37 @@ void* manejar_servidor_kernel(int socket_servidor)
     return NULL;
 }
 
-void* inicializar_proceso(int tam_proceso, int pid)
-{
+// void* inicializar_proceso(int tam_proceso, int pid)
+// {
 
-int pags_necesarias = tam_proceso / campos_config.tam_pagina;
+// int pags_necesarias = tam_proceso / campos_config.tam_pagina;
 
 
-}
 
-void* suspender_proceso()
-{
+// }
 
-}
+// void* suspender_proceso()
+// {
 
-void* des_suspender_proceso()
-{
+// }
 
-}
+// void* des_suspender_proceso()
+// {
 
-void* finalizar_proceso()
-{
+// }
 
-}
+// void* finalizar_proceso()
+// {
+
+// }
+
+// int buscar_marco_libre() 
+// {
+//     for (int i = 0; i < cantidad_marcos_totales; i++) {
+//         if (!bitarray_test_bit(bitmap_marcos, i)) {
+//             bitarray_set_bit(bitmap_marcos, i);
+//             return i;
+//         }
+//     }
+//     return -1;
+// }
