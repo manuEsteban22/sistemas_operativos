@@ -84,9 +84,8 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
 
-    
-    inicializar_planificador_lp("FIFO");
-    inicializar_planificador_cp("FIFO");
+    inicializar_planificador_lp(config_get_string_value(config, "ALGORITMO_INGRESO_A_READY"));
+    inicializar_planificador_cp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"));
     crear_proceso(256);
 
     pthread_t thread_planificador_lp;
