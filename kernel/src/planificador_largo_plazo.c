@@ -2,7 +2,7 @@
 #include <commons/collections/list.h>
 
 int procesos_en_memoria = 0;
-t_algoritmo_planificacion algoritmo_lp;
+t_algoritmo_planificacion enum_algoritmo_lp;
 pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue* cola_new;
@@ -20,21 +20,21 @@ sem_t sem_procesos_ready;
 
 int pid_global = 0;
 
-void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp){
-    if (strcmp(algoritmo_planificacion_lp,"FIFO") == 0){
-    algoritmo_lp = FIFO;
-    } else if(strcmp(algoritmo_planificacion_lp,"MENOR_MEMORIA") == 0){
-    algoritmo_lp = MENOR_MEMORIA;
+void chequear_algoritmo_planificacion(char* algoritmo_largo_plazo){
+    if (strcmp(algoritmo_largo_plazo,"FIFO") == 0){
+    enum_algoritmo_lp = FIFO;
+    } else if(strcmp(algoritmo_largo_plazo,"MENOR_MEMORIA") == 0){
+    enum_algoritmo_lp = MENOR_MEMORIA;
     } else{
-    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_lp);
+    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_largo_plazo);
     exit(EXIT_FAILURE);
     }
 }
 
-void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
+void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     printf("Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
-    chequear_algoritmo_planificacion(algoritmo_planificacion_lp);
+    chequear_algoritmo_planificacion(algoritmo_largo_plazo);
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
@@ -53,30 +53,26 @@ void crear_proceso(int tamanio_proceso){
 
     pthread_mutex_lock(&mutex_new);
 
-    switch(config_get_int_value(config, "ALGORITMO_INGRESO_A_READY")){
+    switch(enum_algoritmo_lp){
         case FIFO:
             queue_push(cola_new, pcb);
-            pthread_mutex_unlock(&mutex_new);
             break;
         case MENOR_MEMORIA:
             insertar_en_orden_por_memoria(cola_new, pcb);
-            pthread_mutex_unlock(&mutex_new);
             break;
         case SJF_SIN_DESALOJO:
             log_warning(logger, "no se usa sjf sin desalojo en planificador largo plazo");
-            pthread_mutex_unlock(&mutex_new); 
             exit(EXIT_FAILURE);
             break;
         case SJF_CON_DESALOJO:
             log_warning(logger, "no se usa sjf con desalojo en planificador largo plazo");
-            pthread_mutex_unlock(&mutex_new);   
             exit(EXIT_FAILURE);
             break;
         default:
             log_warning(logger, "No hay un algoritmo adecuado en planificador largo plazo");
-            pthread_mutex_unlock(&mutex_new);  
             exit(EXIT_FAILURE);
     }
+    pthread_mutex_unlock(&mutex_new);
     sem_post(&sem_procesos_en_new);
 }
 

@@ -22,8 +22,8 @@ int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
-char *algoritmo_planificacion_lp;
-char *algoritmo_planificacion_cp;
+char *algoritmo_largo_plazo;
+char *algoritmo_corto_plazo;
 t_dictionary* dispositivos_io;
 t_dictionary* tabla_pcbs;
 t_dictionary* tabla_exec;
@@ -83,9 +83,9 @@ int main(int argc, char* argv[]) {
 
     pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
-
-    inicializar_planificador_lp(config_get_string_value(config, "ALGORITMO_INGRESO_A_READY"));
-    inicializar_planificador_cp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"));
+    
+    inicializar_planificador_lp(algoritmo_largo_plazo);
+    inicializar_planificador_cp(algoritmo_corto_plazo);
     crear_proceso(256);
 
     pthread_t thread_planificador_lp;
@@ -120,15 +120,14 @@ t_config* iniciar_config(void){
     }
     
     if(config_has_property(nuevo_config, "IP_MEMORIA")){
-        // ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA"); no anda
+        ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
         PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
-        algoritmo_planificacion_lp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_LARGO_PLAZO");
-        algoritmo_planificacion_cp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_CORTO_PLAZO");
-        
+        algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
+        algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
 
         //log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);
@@ -136,8 +135,8 @@ t_config* iniciar_config(void){
         log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
         log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
         log_info(logger, "el puerto del server io es: %s", puerto_io);
-        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_planificacion_lp);
-        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_planificacion_cp);
+        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
+        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
         return nuevo_config;
     }   else {
             log_error(logger, "Falta IP_MEMORIA en el config");

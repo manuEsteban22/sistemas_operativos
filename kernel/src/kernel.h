@@ -16,6 +16,8 @@ extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
 extern t_dictionary* tabla_exec; // tiene pcb -> cpuid
 extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
 extern pthread_mutex_t mutex_exec;
+extern char* algoritmo_largo_plazo;
+extern char* algoritmo_corto_plazo;
 
 
 typedef struct
