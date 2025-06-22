@@ -12,10 +12,10 @@ typedef struct {
     int marco;
 } t_entrada_tlb;
 
-typedef struct {
-    int pid;
-    int pagina;
-} t_paquete_frame;
+// typedef struct {
+//     int pid;
+//     int pagina;
+// } t_paquete_frame;
 
 typedef struct{
     int pagina;

@@ -6,8 +6,8 @@
 #include<conexion_cpu.h>
 
 
-void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid);
-char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, int pid);
+void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, t_pcb* pcb);
+char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, t_pcb* pcb);
 void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch);
 void init_proc(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch);
 void dump_memory(t_pcb* pcb, int socket_kernel_dispatch);

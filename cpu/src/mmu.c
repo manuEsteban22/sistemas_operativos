@@ -17,11 +17,11 @@ int traducir_direccion(t_pcb* pcb, int direccion_logica, int socket_memoria){
     int desplazamiento = direccion_logica % tam_pagina;
     int marco = -1;
 
-    if(entradas_cache > 0 && esta_en_cache(nro_pagina, &marco)){
-        log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, nro_pagina);
-        usleep(retardo_cache);
-        return marco * tam_pagina + desplazamiento;
-    }
+    // if(entradas_cache > 0 && esta_en_cache(nro_pagina, &marco)){
+    //     log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, nro_pagina);
+    //     usleep(retardo_cache);
+    //     return marco * tam_pagina + desplazamiento;
+    // }
 
     if(entradas_tlb > 0 && esta_en_tlb(nro_pagina, &marco)){
         log_info(logger, "PID: %d - TLB HIT - Pagina: %d", pcb->pid, nro_pagina);

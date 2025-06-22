@@ -30,10 +30,22 @@ t_instruccion* leerInstruccion(char* instruccion_raw){
     instruccion->identificador = convertir_a_opcode(separado[0]);
     
     if (cant_param > 1){
+        if(instruccion->identificador == WRITE || instruccion->identificador == READ){
+            int* dir = malloc(sizeof(int));
+            *dir = atoi(separado[1]);
+            instruccion->param1 = dir;
+        }else{
         instruccion->param1 = strdup(separado[1]);
+        }
     }
     if (cant_param > 2){
+        if(instruccion->identificador == READ){
+            int* tam = malloc(sizeof(int));
+            *tam = atoi(separado[2]);
+            instruccion->param2 = tam;
+        }else{
         instruccion->param2 = strdup(separado[2]);
+        }
     }
 
     string_array_destroy(separado);
@@ -89,7 +101,12 @@ bool requiere_traduccion(t_instruccion* instruccion){
 
 int decode(t_instruccion* instruccion, t_pcb* pcb, int socket_memoria){
     if(!requiere_traduccion(instruccion)) return -1;
-    int direccion_logica = (*(int*)instruccion->param1);
+
+    if(instruccion->param1 == NULL){
+        log_error(logger, "Error en el decode, parametro de direccion es NULL");
+    }
+    int direccion_logica = *(int*)instruccion->param1;
+    log_trace(logger, "PID: %d - Dirección lógica a traducir: %d", pcb->pid, direccion_logica);
     int direccion_fisica = traducir_direccion(pcb, direccion_logica, socket_memoria);
 
     log_info(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
@@ -108,12 +125,16 @@ void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_d
         break;
     case WRITE:
         direccion_fisica = decode(instruccion, pcb, socket_memoria);
-        ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
+        ejecutar_write(instruccion, socket_memoria, direccion_fisica, pcb);
+        free(instruccion->param1);
+        free(instruccion->param2);
         pcb->pc++;
         break;
     case READ:
         direccion_fisica = decode(instruccion, pcb, socket_memoria);
-        ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
+        char* datos = ejecutar_read(instruccion, socket_memoria, direccion_fisica, pcb);
+        log_info(logger, "el read leyo: %s", datos);
+        free(datos);
         pcb->pc++;
         break;
     case GOTO:

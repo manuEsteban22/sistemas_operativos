@@ -57,7 +57,7 @@ bool esta_en_cache(int pagina, int* marco, t_pcb* pcb){
         t_entrada_cache* entrada = list_get(cache, i);
         if (entrada->pagina == pagina) {
             *marco = entrada->marco;
-            
+            entrada->usado = true;
             log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, pagina);
             return true;
         }
@@ -95,17 +95,31 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
 }
 
 int encontrar_victima_cache() {
+    int puntero_clock = 0;
     
-    //fifo
+    if(strcmp(reemplazo_cache, "CLOCK") == 0 || strcmp(reemplazo_cache, "CLOCK-M") == 0) {
+        for(int i = 0; i < list_size(cache); i++) {
+            t_entrada_cache* entrada = list_get(cache, puntero_clock);
+            if(!entrada->usado) {
+                int victima = puntero_clock;
+                puntero_clock = (puntero_clock + 1) % entradas_cache;
+                return victima;
+            }
+            entrada->usado = false;
+            puntero_clock = (puntero_clock + 1) % entradas_cache;
+        }
+    }
+
+    //default a fifo
     return 0;
 }
 int pedir_frame(t_pcb* pcb, int nro_pagina, int socket_memoria){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
-    t_paquete_frame* contenido;
-    contenido->pagina = nro_pagina;
-    contenido->pid = pcb->pid;
-    agregar_a_paquete(paquete, &contenido, sizeof(t_paquete_frame));
+
+
+    agregar_a_paquete(paquete, nro_pagina, sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 

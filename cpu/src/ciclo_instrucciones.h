@@ -3,7 +3,7 @@
 #include<utils/utils.h>
 #include<cpu.h>
 #include<conexion_cpu.h>
-
+#include<mmu.h>
 
 extern t_list* tlb;
 
