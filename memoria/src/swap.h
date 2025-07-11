@@ -1,8 +1,10 @@
 #ifndef SWAP_H_
 #define SWAP_H_
 #include <stdio.h>
-#include <commons/log.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <commons/collections/list.h>
+#include <string.h>
 #include <config_memoria.h>
 
 void inicializar_swap();
