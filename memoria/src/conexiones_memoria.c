@@ -1,4 +1,4 @@
-#include <conexion_memoria_cpu.h>
+#include <conexiones_memoria.h>
 #include <pthread.h>  // Agregado para hilos
 
 void* atender_cpu(void* socket_ptr) 
@@ -26,6 +26,7 @@ void* atender_cpu(void* socket_ptr)
                 send(socket_cliente, &respuesta, sizeof(int), 0);
                 log_info(logger, "Envié OK");
                 break;
+//-------------- ESTO PERTENECE A CPU -------------------------------                
             case PAQUETE:
                 log_info(logger, "Llegó un paquete");
                 mandar_instruccion(socket_cliente);         
@@ -36,6 +37,10 @@ void* atender_cpu(void* socket_ptr)
             case OC_WRITE:
                 log_info(logger, "recibi un write");
                 break;
+            case OC_FRAME:
+                mandar_frame(socket_cliente);
+                log_info(logger, "mande el frame");
+//-------------------------------------------------------------------
             
 //-------------- ESTO PERTENECE A KERNEL -------------------------------
             case OC_INIT:
@@ -49,7 +54,7 @@ void* atender_cpu(void* socket_ptr)
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
-// --------------ESTO PERTENECE A KERNEL------------------------------
+// ----------------------------------------------------------------------
             case ERROR:
                 log_info(logger, "Recibí un error");
                 break;

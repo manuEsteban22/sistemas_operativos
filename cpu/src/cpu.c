@@ -11,10 +11,19 @@ char* puerto_kernel_dispatch;
 char* puerto_kernel_interrupt;
 char* ip_memoria;
 char* puerto_memoria;
-//int entradas_tlb;
+int entradas_tlb;
+char* reemplazo_tlb;
+int entradas_cache;
+char* reemplazo_cache;
+int retardo_cache;
+int entradas_por_tabla = 4;//estas estan hardcodeadas pero vienen del handshake
+int tam_pagina = 64;
+int cant_niveles = 3;
+int socket_kernel_dispatch = -1;
+int socket_kernel_interrupt = -1;
+int socket_memoria = -1;
 
 int main(int argc, char* argv[]) {
-    int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
     if(argc < 2){
         log_error(logger, "faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
@@ -26,10 +35,11 @@ int main(int argc, char* argv[]) {
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-
+    inicializar_tlb();
 
     //prueba(socket_memoria, socket_kernel_dispatch);
-    iniciar_ciclo_de_instrucciones(socket_memoria, socket_kernel_dispatch, socket_kernel_interrupt);
+    t_pcb* pcb = esperar_procesos();
+    iniciar_ciclo_de_instrucciones(pcb);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
@@ -37,7 +47,7 @@ int main(int argc, char* argv[]) {
 t_log* iniciar_logger(int id){
     t_log* nuevo_logger;
     char* log_file = string_from_format("cpu%d.log", id);
-    nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_INFO);
+    nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_TRACE);
     log_info(nuevo_logger, "funciona logger cpu :)");
     free(log_file);
     return nuevo_logger;
@@ -52,7 +62,11 @@ t_config* iniciar_config(void){
         puerto_kernel_interrupt = config_get_string_value(nuevo_config, "PUERTO_KERNEL_INTERRUPT");
         ip_memoria = config_get_string_value(nuevo_config,"IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
-        //entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
+        entradas_tlb = config_get_int_value(nuevo_config, "ENTRADAS_TLB");
+        reemplazo_tlb = config_get_string_value(nuevo_config, "REEMPLAZO_TLB");
+        entradas_cache = config_get_int_value(nuevo_config, "ENTRADAS_CACHE");
+        reemplazo_cache = config_get_string_value(nuevo_config,"REEMPLAZO_CACHE");
+        retardo_cache = config_get_int_value(nuevo_config, "RETARDO_CACHE");
     }
     else{log_info(logger, "no se pudo leer el archivo de config");}
     log_info(logger, "la ip del kernel es: %s", ip_kernel);

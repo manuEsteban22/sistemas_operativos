@@ -1,6 +1,6 @@
 #include <swap.h>
+#include <memoria.h>
 
-t_log* logger;
 bool* bitmap_marcos_swap;
 
 void inicializar_swap(){
@@ -13,8 +13,6 @@ void inicializar_swap(){
 
     fseek(archivo_swap, 0, SEEK_END);
     long tamanio_archivo = ftell(archivo_swap);
-
-    campos_config.cantidad_marcos_swap = config_get_int_value(config, "CANTIDAD_MARCOS_SWAP");
 
     int tamanio_esperado = campos_config.cantidad_marcos_swap * campos_config.tam_pagina;
 

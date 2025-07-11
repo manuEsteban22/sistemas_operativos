@@ -1,11 +1,5 @@
 #include<ciclo_instrucciones.h>
 
-/*
-cpu recibe de memoria como parte del handshake:
-tamaño_pagina
-entradas_por_tabla
-cantidad_niveles
-*/
 
 t_id_instruccion convertir_a_opcode(char* identificador) {
 //recibo un string con la instruccion y devuelvo a cual corresponde con su OPCODE
@@ -36,10 +30,22 @@ t_instruccion* leerInstruccion(char* instruccion_raw){
     instruccion->identificador = convertir_a_opcode(separado[0]);
     
     if (cant_param > 1){
+        if(instruccion->identificador == WRITE || instruccion->identificador == READ){
+            int* dir = malloc(sizeof(int));
+            *dir = atoi(separado[1]);
+            instruccion->param1 = dir;
+        }else{
         instruccion->param1 = strdup(separado[1]);
+        }
     }
     if (cant_param > 2){
+        if(instruccion->identificador == READ){
+            int* tam = malloc(sizeof(int));
+            *tam = atoi(separado[2]);
+            instruccion->param2 = tam;
+        }else{
         instruccion->param2 = strdup(separado[2]);
+        }
     }
 
     string_array_destroy(separado);
@@ -47,7 +53,7 @@ t_instruccion* leerInstruccion(char* instruccion_raw){
     return instruccion;
 }
 
-t_instruccion* fetch(t_pcb* pcb, int socket_memoria){
+t_instruccion* fetch(t_pcb* pcb){
     int pc = pcb->pc;
     int pid = pcb->pid;
     t_instruccion* proxima_instruccion;
@@ -93,70 +99,77 @@ bool requiere_traduccion(t_instruccion* instruccion){
     }
 }
 
-int decode(t_instruccion* instruccion/*, t_pcb* pcb, int socket_memoria*/){
+int decode(t_instruccion* instruccion, t_pcb* pcb){
     if(!requiere_traduccion(instruccion)) return -1;
-    int direccion_logica = (*(int*)instruccion->param1);
-    int direccion_fisica = direccion_logica;
-    return direccion_fisica;
-    /*
-    int nro_pagina = direccion_logica / tamanio_pagina;
-    int desplazamiento = direccion_logica % tamanio_pagina;
-    int marco;
 
-    if(entradas_tlb > 0 && esta_en_tlb(nro_pagina, &marco)){
-        log_info(logger,"PID: %d - TLB HIT - Pagina: %d", pcb->pid, nro_pagina);
-        return 
-    } else{
-        log_info(logger,"PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
-        pedir_frame(pcb, nro_pagina, marco, socket_memoria);
+    if(instruccion->param1 == NULL){
+        log_error(logger, "Error en el decode, parametro de direccion es NULL");
     }
+    int direccion_logica = *(int*)instruccion->param1;
+    log_trace(logger, "PID: %d - Dirección lógica a traducir: %d", pcb->pid, direccion_logica);
+    int direccion_fisica = traducir_direccion(pcb, direccion_logica);
 
-    int direccion_fisica = marco * tamanio_pagina + desplazamiento;
-    log_info(logger, "Dirección fisica %d", direccion_fisica);*/
+    log_info(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
+    return direccion_fisica;
 }
 
-void execute(t_instruccion* instruccion, int socket_memoria, int socket_kernel_dispatch, t_pcb* pcb){
+void execute(t_instruccion* instruccion, t_pcb* pcb){
     int direccion_fisica;
     int pid = pcb->pid;
-    int pc = pcb->pc;
     switch (instruccion->identificador)
     {
     case NOOP:
         //no hace nada
         log_info(logger, "ejecute un noop");
+        pcb->pc++;
         break;
     case WRITE:
-        direccion_fisica = decode(instruccion);
-        ejecutar_write(instruccion, socket_memoria, direccion_fisica, pid);
+        log_info(logger, "estoy por ejecutar write");
+        direccion_fisica = decode(instruccion, pcb);
+        log_info(logger, "ya decodie");
+        ejecutar_write(instruccion, direccion_fisica, pcb);
+        log_info(logger, "ya ejecute write");
+        free(instruccion->param1);
+        free(instruccion->param2);
+        pcb->pc++;
         break;
     case READ:
-        direccion_fisica = decode(instruccion);
-        ejecutar_read(instruccion, socket_memoria, direccion_fisica, pid);
+        direccion_fisica = decode(instruccion, pcb);
+        char* datos = ejecutar_read(instruccion, direccion_fisica, pcb);
+        log_info(logger, "el read leyo: %s", datos);
+        free(datos);
+        pcb->pc++;
         break;
     case GOTO:
         log_info(logger, "ejecute un GOTO");
-        pc = (int)instruccion->param1;
+        pcb->pc = (int)instruccion->param1;
+        //pcb->pc = atoi(instruccion->param1);
         break;
     case IO:
-        ejecutar_io(instruccion, pcb, socket_kernel_dispatch);
+        pcb->pc++;
+        ejecutar_io(instruccion, pcb);
         break;
     case INIT_PROC:
-        init_proc(instruccion, pcb, socket_kernel_dispatch);
+        init_proc(instruccion, pcb);
+        pcb->pc++;
         break;
     case DUMP_MEMORY:
-        dump_memory(pcb, socket_kernel_dispatch);
+        dump_memory(pcb);
+        pcb->pc++;
         break;
     case EXIT:
-        exit_syscall(pcb, socket_kernel_dispatch);
+        log_info(logger, "ejecute un EXIT");
+        exit_syscall(pcb);
         break;
     default:
+        log_error(logger, "instruccion desconocida");
+        pcb->pc++;
         break;
     }
-    pcb->pc = pc;
     return;
 }
 
-void check_interrupt(t_pcb* pcb, int socket_kernel_interrupt, int socket_kernel_dispatch){
+bool check_interrupt(t_pcb* pcb){
     int opcode;
     int recibido = recv(socket_kernel_interrupt, &opcode, sizeof(int), MSG_DONTWAIT);
 
@@ -167,60 +180,59 @@ void check_interrupt(t_pcb* pcb, int socket_kernel_interrupt, int socket_kernel_
         agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
         enviar_paquete(paquete, socket_kernel_dispatch, logger);
         borrar_paquete(paquete);
+        return true;
     }
-    return;
+    return false;
 }
 
 
-void prueba_write(int socket_memoria, int socket_kernel_dispatch){
-    t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-    instruccion->identificador = OC_WRITE;
-    int* direccion_logica = malloc(sizeof(int));
-    *direccion_logica = 128;
-    instruccion->param1 = direccion_logica;
-    char* datos = strdup("prueba");
-    instruccion->param2 = datos;
-    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-    pcb_prueba->pid = 4;
-    execute(instruccion, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-    free(direccion_logica);
-    free(datos);
-    free(instruccion);
-}
+// void prueba_write(int socket_memoria, int socket_kernel_dispatch){
+//     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+//     instruccion->identificador = OC_WRITE;
+//     int* direccion_logica = malloc(sizeof(int));
+//     *direccion_logica = 128;
+//     instruccion->param1 = direccion_logica;
+//     char* datos = strdup("prueba");
+//     instruccion->param2 = datos;
+//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
+//     pcb_prueba->pid = 4;
+//     execute(instruccion, socket_memoria, socket_kernel_dispatch, pcb_prueba);
+//     free(direccion_logica);
+//     free(datos);
+//     free(instruccion);
+// }
 
-void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
-    t_instruccion* prox;
-    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-    pcb_prueba->pc = 0;
-    pcb_prueba->pid = 1;
-    prox = fetch(pcb_prueba, socket_memoria);
-    execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-    free(pcb_prueba);
-    free(prox);
-}
+// void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
+//     t_instruccion* prox;
+//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
+//     pcb_prueba->pc = 0;
+//     pcb_prueba->pid = 1;
+//     prox = fetch(pcb_prueba, socket_memoria);
+//     execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
+//     free(pcb_prueba);
+//     free(prox);
+// }
 
-void iniciar_ciclo_de_instrucciones(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
+void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
+
     //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
-    bool leyo_exit = false;
+    bool proceso_en_running = true;
+    bool hay_interrupcion = false;
     t_instruccion* prox;
-    t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-    //valores de prueba, despues hay que recibirlos por dispatch del kernel
-    pcb_prueba->pc = 0;
-    pcb_prueba->pid = 1;
 
-    while(!leyo_exit){
-        prox = fetch(pcb_prueba, socket_memoria);
+    while(proceso_en_running){
+        prox = fetch(pcb);
         if(prox->identificador == EXIT){
-            leyo_exit = true;
+            proceso_en_running = false;
             log_info(logger, "lei un exit");
         }
-        execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-        pcb_prueba->pc++;
+        execute(prox, pcb);
 
-        if(!leyo_exit){
-            check_interrupt(pcb_prueba,socket_kernel_interrupt, socket_kernel_dispatch);
+        if(proceso_en_running){
+            hay_interrupcion = check_interrupt(pcb);
+            proceso_en_running = !hay_interrupcion;
         }
         free(prox);
     }
-    free(pcb_prueba);
+    free(pcb);
 }

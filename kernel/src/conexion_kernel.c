@@ -32,8 +32,19 @@ void* manejar_servidor_cpu(void* arg){
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
                 log_info(logger, "Envie OK a %s", nombre_cliente);
+
                 recv(socket_cliente, &cpu_id, sizeof(int), MSG_WAITALL);
                 log_info(logger, "Conexion de CPU ID: %d", cpu_id);
+
+                if (strcmp(nombre_cliente, "DISPATCH") == 0) {
+                    int* socket_dispatch_ptr = malloc(sizeof(int));
+                    *socket_dispatch_ptr = socket_cliente;
+
+                    char* cpu_id_str = string_itoa(cpu_id);
+                    dictionary_put(tabla_dispatch, cpu_id_str, socket_dispatch_ptr);
+                    log_info(logger, "Socket DISPATCH guardado: %d", socket_cliente);
+                    free(cpu_id_str);
+                }
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
@@ -134,8 +145,6 @@ void* manejar_servidor_io(int socket_io){
                 break;
             case PAQUETE:
                 log_info(logger, "llego un paquete");
-                //deserializar ()
-                //recibir paquete -> deserializar
                 break;
             case FINALIZA_IO:
                 t_list* recibido = recibir_paquete(socket_cliente);
@@ -155,6 +164,7 @@ void* manejar_servidor_io(int socket_io){
                 }else if(pcb->estado_actual == BLOCKED){
                     cambiar_estado(pcb, READY);
                     queue_push(cola_ready, pcb);
+                    sem_post(&sem_procesos_ready);
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;

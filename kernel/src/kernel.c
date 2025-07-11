@@ -3,6 +3,7 @@
 #include <conexion_kernel.h>
 #include <planificador_largo_plazo.h>
 #include <kernel.h>
+#include <planificador_corto_plazo.h>
 
 t_log* iniciar_logger();
 t_config* iniciar_config();
@@ -21,16 +22,23 @@ int socket_memoria;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
-char *algoritmo_planificacion_lp;
-char *algoritmo_planificacion_cp;
+char *algoritmo_largo_plazo;
+char *algoritmo_corto_plazo;
 t_dictionary* dispositivos_io;
 t_dictionary* tabla_pcbs;
+t_dictionary* tabla_exec;
+pthread_mutex_t mutex_exec = PTHREAD_MUTEX_INITIALIZER;
+t_dictionary* tabla_dispatch;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
     config = iniciar_config();
     tabla_pcbs = dictionary_create();
     dispositivos_io = dictionary_create();
+    tabla_exec = dictionary_create();
+    tabla_dispatch = dictionary_create();
+
+
     /*
     if(argc < 3){
         log_error(logger, "faltaron argumentos en la ejecucion");
@@ -63,6 +71,9 @@ int main(int argc, char* argv[]) {
     args_interrupt->nombre = "INTERRUPT";
     int* ptr_io = malloc(sizeof(int));
     ptr_io = socket_io;
+    int* ptr_dispatch = malloc(sizeof(int));
+    ptr_dispatch = socket_dispatch;
+
 
     pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
     pthread_detach(thread_dispatch);
@@ -72,14 +83,18 @@ int main(int argc, char* argv[]) {
 
     pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
-
     
-    inicializar_planificador_lp("FIFO");
+    inicializar_planificador_lp(algoritmo_largo_plazo);
+    inicializar_planificador_cp(algoritmo_corto_plazo);
     crear_proceso(256);
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(thread_planificador_lp);
+
+    pthread_t thread_planificador_cp;
+    pthread_create(&thread_planificador_cp, NULL, (void*)planificador_corto_plazo_loop, ptr_dispatch);
+    pthread_detach(thread_planificador_cp);
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
@@ -97,8 +112,13 @@ t_log* iniciar_logger(void){
 }
 
 t_config* iniciar_config(void){
-    t_config* nuevo_config;
-    nuevo_config = config_create("kernel.config");
+    t_config* nuevo_config = config_create("kernel.config");
+
+    if (nuevo_config == NULL) {
+        log_error(logger, "No se pudo abrir el archivo de configuración kernel.config");
+        exit(EXIT_FAILURE);
+    }
+    
     if(config_has_property(nuevo_config, "IP_MEMORIA")){
         ip_memoria = config_get_string_value(nuevo_config, "IP_MEMORIA");
         puerto_memoria = config_get_string_value(nuevo_config, "PUERTO_MEMORIA");
@@ -106,20 +126,23 @@ t_config* iniciar_config(void){
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
         PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
-        algoritmo_planificacion_lp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_LARGO_PLAZO");
-        algoritmo_planificacion_cp = config_get_string_value(nuevo_config, "ALGORITMO_PLANIFICACION_CORTO_PLAZO");
-        
+        algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
+        algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
 
-        log_info(logger, "no se pudo leer el archivo de config");
+        //log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);
         log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
         log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
         log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
         log_info(logger, "el puerto del server io es: %s", puerto_io);
-        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_planificacion_lp);
-        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_planificacion_cp);
+        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
+        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
         return nuevo_config;
-    }
+    }   else {
+            log_error(logger, "Falta IP_MEMORIA en el config");
+            config_destroy(nuevo_config);
+            exit(EXIT_FAILURE);
+        }
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){

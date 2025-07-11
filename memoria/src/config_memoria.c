@@ -16,6 +16,7 @@ t_configuracion retornar_config(t_config * config){
     campos_config.log_level = config_get_string_value(config, "LOG_LEVEL");
     campos_config.dump_path = config_get_string_value(config, "DUMP_PATH");
     campos_config.path_instrucciones = config_get_string_value(config, "PATH_INSTRUCCIONES");
+    campos_config.cantidad_marcos_swap = config_get_int_value(config,"CANTIDAD_MARCOS_SWAP");
     return campos_config;
 }
 

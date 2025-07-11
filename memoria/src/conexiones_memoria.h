@@ -1,5 +1,5 @@
-#ifndef CONEXION_MEMORIA_CPU_H_
-#define CONEXION_MEMORIA_CPU_H_
+#ifndef CONEXIONES_MEMORIA_H_
+#define CONEXIONES_MEMORIA_H_
 
 #include <memoria.h>
 

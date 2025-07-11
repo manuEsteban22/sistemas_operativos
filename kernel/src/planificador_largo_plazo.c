@@ -2,7 +2,7 @@
 #include <commons/collections/list.h>
 
 int procesos_en_memoria = 0;
-t_algoritmo_planificacion algoritmo_lp;
+t_algoritmo_planificacion enum_algoritmo_lp;
 pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue* cola_new;
@@ -15,59 +15,68 @@ pthread_mutex_t mutex_susp_ready = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t sem_procesos_en_new;
 sem_t sem_procesos_en_memoria;
+sem_t sem_procesos_ready;
 //procesos en memoria se refiere a la cantidad de procesos permitidos en memoria simultaneamente
 
 int pid_global = 0;
 
-void chequear_algoritmo_planificacion(char* algoritmo_planificacion_lp){
-    if (strcmp(algoritmo_planificacion_lp,"FIFO") == 0){
-    algoritmo_lp = FIFO;
-    } else if(strcmp(algoritmo_planificacion_lp,"MENOR_MEMORIA") == 0){
-    algoritmo_lp = MENOR_MEMORIA;
+void chequear_algoritmo_planificacion(char* algoritmo_largo_plazo){
+    if (strcmp(algoritmo_largo_plazo,"FIFO") == 0){
+    enum_algoritmo_lp = FIFO;
+    } else if(strcmp(algoritmo_largo_plazo,"MENOR_MEMORIA") == 0){
+    enum_algoritmo_lp = MENOR_MEMORIA;
     } else{
-    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_planificacion_lp);
+    log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_largo_plazo);
     exit(EXIT_FAILURE);
     }
 }
 
-void inicializar_planificador_lp(char* algoritmo_planificacion_lp){
+void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     printf("Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
-    chequear_algoritmo_planificacion(algoritmo_planificacion_lp);
+    chequear_algoritmo_planificacion(algoritmo_largo_plazo);
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
     sem_init(&sem_procesos_en_new, 0, 0);
     sem_init(&sem_procesos_en_memoria, 0, PROCESOS_MEMORIA);
+    sem_init(&sem_procesos_ready, 0, 0);
 }
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
 void crear_proceso(int tamanio_proceso){
-    pid_global++;
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
+    pid_global++;
     char* pid_str = string_itoa(pcb->pid);
     dictionary_put(tabla_pcbs, pid_str, pcb);
     free(pid_str);
 
     pthread_mutex_lock(&mutex_new);
 
-    switch (algoritmo_lp){
+    switch(enum_algoritmo_lp){
         case FIFO:
             queue_push(cola_new, pcb);
-            pthread_mutex_unlock(&mutex_new);
             break;
         case MENOR_MEMORIA:
             insertar_en_orden_por_memoria(cola_new, pcb);
-            pthread_mutex_unlock(&mutex_new);
             break;
         case SJF_SIN_DESALOJO:
-            pthread_mutex_unlock(&mutex_new);   
+            log_warning(logger, "no se usa sjf sin desalojo en planificador largo plazo");
+            exit(EXIT_FAILURE);
             break;
+        case SJF_CON_DESALOJO:
+            log_warning(logger, "no se usa sjf con desalojo en planificador largo plazo");
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            log_warning(logger, "No hay un algoritmo adecuado en planificador largo plazo");
+            exit(EXIT_FAILURE);
     }
+    pthread_mutex_unlock(&mutex_new);
     sem_post(&sem_procesos_en_new);
 }
 
-void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo) {
+void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
     t_list* lista_aux = list_create();
     bool insertado = false;
 
@@ -94,7 +103,7 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo) {
 }
 
 
-void finalizar_proceso(t_pcb* pcb) {
+void finalizar_proceso(t_pcb* pcb){
     //enviar_finalizacion_a_memoria(pcb->pid);
     
     pthread_mutex_lock(&mutex_procesos_en_memoria);
@@ -137,12 +146,13 @@ void planificador_largo_plazo(){
         t_pcb* pcb = NULL;
         //pcb = crear_pcb(pid, tamanio);
 
+        log_trace(logger, "aca arranco el plani lp");
         pthread_mutex_lock(&mutex_susp_ready);
         if(!queue_is_empty(cola_susp_ready)){
 
             pcb = queue_peek(cola_susp_ready);
 
-            if(enviar_pedido_memoria(pcb)){
+            if(true/*enviar_pedido_memoria(pcb)*/){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
@@ -150,6 +160,7 @@ void planificador_largo_plazo(){
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
+                sem_post(&sem_procesos_ready);
                 pthread_mutex_unlock(&mutex_ready);
                 continue;
             }
@@ -165,9 +176,9 @@ void planificador_largo_plazo(){
 
         pthread_mutex_lock(&mutex_new);
         if (!queue_is_empty(cola_new)) {
-
+        log_trace(logger, " plp hay procesos en new");
         pcb = queue_peek(cola_new);
-        if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
+        if(true/*enviar_pedido_memoria(pcb)*/){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
             queue_pop (cola_new);
             pthread_mutex_unlock(&mutex_new);
             cambiar_estado(pcb, READY);
@@ -175,12 +186,14 @@ void planificador_largo_plazo(){
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, pcb);
             pthread_mutex_unlock(&mutex_ready);
+            sem_post(&sem_procesos_ready);
         } else{
             pthread_mutex_unlock(&mutex_new);
             sem_post(&sem_procesos_en_new);
             sem_post(&sem_procesos_en_memoria);
             }
         } else{
+        log_trace(logger, "la cola de new esta vacia");
         pthread_mutex_unlock(&mutex_new);
         sem_post(&sem_procesos_en_new);
         sem_post(&sem_procesos_en_memoria);
