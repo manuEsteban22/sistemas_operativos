@@ -77,7 +77,7 @@ int mandar_instruccion(int socket_cliente)
     liberar_memoria();
     list_destroy_and_destroy_elements(lista_paquete, free);
     return -1;
-}
+    }
 
     int tamanio = strlen(instruccion) + 1;
     log_trace(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
@@ -90,6 +90,22 @@ int mandar_instruccion(int socket_cliente)
     liberar_memoria();
     list_destroy_and_destroy_elements(lista_paquete, free); 
     return 0;
+}
+
+int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el frame
+    t_list* lista_paquete = list_create();
+    lista_paquete = recibir_paquete(socket_cliente);
+
+    int pid = *((int*) list_get(lista_paquete, 0));
+    int nro_pagina = *((int*) list_get(lista_paquete, 1));
+
+    //Aca tuca y manu tienen que hacer algo para ver a que frame corresponde esa pagina
+    int marco = 2;//esto borrenlo claramente
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_FRAME);
+    agregar_a_paquete(paquete,&marco,sizeof(int));
+    enviar_paquete(paquete, socket_cliente, logger);
+    borrar_paquete(paquete);
 }
 
 // int mandar_instrucciones(int socket_cliente) 

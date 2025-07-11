@@ -146,8 +146,8 @@ int encontrar_victima_cache() {
 int pedir_frame(t_pcb* pcb, int nro_pagina){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
-    agregar_a_paquete(paquete, &nro_pagina, sizeof(int));
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &nro_pagina, sizeof(int));
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
     log_trace(logger, "## Se envio el paquete para preguntar frame a memoria");
@@ -159,7 +159,7 @@ int pedir_frame(t_pcb* pcb, int nro_pagina){
     }
 
     t_list* recibido = recibir_paquete(socket_memoria);
-    int* marco = list_get(recibido, 0);
+    int marco = *((int*)list_get(recibido, 0));
 
     list_destroy_and_destroy_elements(recibido, free);
 

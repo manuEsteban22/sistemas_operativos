@@ -37,6 +37,9 @@ void* atender_cpu(void* socket_ptr)
             case OC_WRITE:
                 log_info(logger, "recibi un write");
                 break;
+            case OC_FRAME:
+                mandar_frame(socket_cliente);
+                log_info(logger, "mande el frame");
 //-------------------------------------------------------------------
             
 //-------------- ESTO PERTENECE A KERNEL -------------------------------
