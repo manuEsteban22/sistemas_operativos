@@ -40,6 +40,7 @@ void* atender_cpu(void* socket_ptr)
             case OC_FRAME:
                 mandar_frame(socket_cliente);
                 log_info(logger, "mande el frame");
+                break;
 //-------------------------------------------------------------------
             
 //-------------- ESTO PERTENECE A KERNEL -------------------------------
