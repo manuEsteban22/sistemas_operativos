@@ -19,9 +19,11 @@ int retardo_cache;
 int entradas_por_tabla = 4;//estas estan hardcodeadas pero vienen del handshake
 int tam_pagina = 64;
 int cant_niveles = 3;
+int socket_kernel_dispatch = -1;
+int socket_kernel_interrupt = -1;
+int socket_memoria = -1;
 
 int main(int argc, char* argv[]) {
-    int socket_kernel_dispatch, socket_kernel_interrupt, socket_memoria;
     if(argc < 2){
         log_error(logger, "faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
@@ -36,8 +38,8 @@ int main(int argc, char* argv[]) {
 
 
     //prueba(socket_memoria, socket_kernel_dispatch);
-    t_pcb* pcb = esperar_procesos(socket_kernel_dispatch);
-    iniciar_ciclo_de_instrucciones(pcb, socket_memoria, socket_kernel_dispatch, socket_kernel_interrupt);
+    t_pcb* pcb = esperar_procesos();
+    iniciar_ciclo_de_instrucciones(pcb);
     //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }

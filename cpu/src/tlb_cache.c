@@ -4,7 +4,7 @@ t_list* tlb;
 t_list* cache;
 
 
-void escribir_pagina_en_memoria(int marco, void* contenido, int socket_memoria) {
+void escribir_pagina_en_memoria(int marco, void* contenido) {
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG);
     
@@ -15,15 +15,15 @@ void escribir_pagina_en_memoria(int marco, void* contenido, int socket_memoria) 
 }
 
 
-bool esta_en_tlb(int pagina, int* marco){
+int esta_en_tlb(int pagina){
+    int marco = -1;
     for(int i=0;i < list_size(tlb);i++){
         t_entrada_tlb* entrada = list_get(tlb, i);
         if(entrada->pagina == pagina){
-            *marco = entrada->marco;
-            return true;
+            marco = entrada->marco;
         }
     }
-    return false;
+    return marco;
 }
 
 void actualizar_tlb(int pagina, int marco) {
@@ -67,7 +67,7 @@ bool esta_en_cache(int pagina, int* marco, t_pcb* pcb){
     return false;
 }
 
-void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb, int socket_memoria) {
+void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb) {
     t_entrada_cache* nueva_entrada = malloc(sizeof(t_entrada_cache));
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
@@ -81,7 +81,7 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
         
         t_entrada_cache* victima = list_get(cache, indice_victima);
         if (victima->modificado) {
-            escribir_pagina_en_memoria(victima->marco, victima->contenido, socket_memoria);
+            escribir_pagina_en_memoria(victima->marco, victima->contenido);
             log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
         }
         
@@ -113,7 +113,7 @@ int encontrar_victima_cache() {
     //default a fifo
     return 0;
 }
-int pedir_frame(t_pcb* pcb, int nro_pagina, int socket_memoria){
+int pedir_frame(t_pcb* pcb, int nro_pagina){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
 

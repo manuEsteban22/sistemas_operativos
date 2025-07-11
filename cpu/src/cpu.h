@@ -23,6 +23,8 @@ extern int retardo_cache;
 extern int entradas_por_tabla;
 extern int tam_pagina;
 extern int cant_niveles;
-
+extern int socket_kernel_dispatch;
+extern int socket_memoria;
+extern int socket_kernel_interrupt;
 
 #endif

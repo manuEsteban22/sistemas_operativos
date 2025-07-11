@@ -1,6 +1,6 @@
 #include <procesos.h>
 
-t_pcb* esperar_procesos(int socket_kernel_dispatch){
+t_pcb* esperar_procesos(){
     int opcode = recibir_operacion(socket_kernel_dispatch);
     if(opcode != OC_EXEC){
         log_error(logger, "No recibi exec: %d", opcode);

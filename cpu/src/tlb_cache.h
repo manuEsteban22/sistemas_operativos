@@ -25,7 +25,7 @@ typedef struct{
     bool usado;
 } t_entrada_cache;
 
-bool esta_en_tlb(int pagina, int* marco);
-int pedir_frame(t_pcb* pcb, int nro_pagina, int socket_memoria);
+int esta_en_tlb(int pagina);
+int pedir_frame(t_pcb* pcb, int nro_pagina);
 
 #endif

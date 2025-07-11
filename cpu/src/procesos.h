@@ -4,6 +4,6 @@
 #include<utils/utils.h>
 #include<cpu.h>
 
-t_pcb* esperar_procesos(int socket_kernel_dispatch);
+t_pcb* esperar_procesos();
 
 #endif

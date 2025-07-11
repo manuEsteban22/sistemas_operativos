@@ -1,7 +1,7 @@
 #include <instrucciones.h>
 
 
-void escribir_en_cache(int direccion_fisica, char* datos, t_pcb* pcb, int socket_memoria) {
+void escribir_en_cache(int direccion_fisica, char* datos, t_pcb* pcb) {
     int nro_pagina = direccion_fisica / tam_pagina;
     int desplazamiento = direccion_fisica % tam_pagina;
     int marco;
@@ -44,11 +44,11 @@ char* leer_de_cache(int direccion_fisica, int tamanio, t_pcb* pcb) {
     return NULL;
 }
 
-void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, t_pcb* pcb){
+void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     char* datos = (char*)instruccion->param2;
     int size_datos = strlen(datos);
 
-    escribir_en_cache(direccion_fisica, datos, pcb, socket_memoria);
+    escribir_en_cache(direccion_fisica, datos, pcb);
 
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
@@ -60,7 +60,7 @@ void ejecutar_write(t_instruccion* instruccion, int socket_memoria, int direccio
     log_info(logger, "PID: %d - Accion: ESCRIBIR - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
 }
 
-char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccion_fisica, t_pcb* pcb){
+char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     int tamanio = (*(int*)instruccion->param2);
 
     char* lectura_cache = leer_de_cache(direccion_fisica, tamanio, pcb);
@@ -80,8 +80,8 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
     char* datos = list_get(contenido, 0);
 
     int nro_pagina = direccion_fisica / tam_pagina;
-    int marco = traducir_direccion(pcb, direccion_fisica, socket_memoria) / tam_pagina;
-    actualizar_cache(nro_pagina,marco,datos,false,pcb,socket_memoria);
+    int marco = traducir_direccion(pcb, direccion_fisica) / tam_pagina;
+    actualizar_cache(nro_pagina,marco,datos,false,pcb);
 
     log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
 
@@ -93,7 +93,7 @@ char* ejecutar_read(t_instruccion* instruccion, int socket_memoria, int direccio
 }
 
 //le dice a kernel que envie el dispositivo a io, formato [pid][tam_disp][disp][tiempo]
-void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch){
+void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb){
     char* dispositivo = (char*)instruccion->param1;
     int tiempo = atoi(instruccion->param2);
 
@@ -114,7 +114,7 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispa
     return;
 }
 
-void init_proc(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatch){
+void init_proc(t_instruccion* instruccion, t_pcb* pcb){
     char* archivo_instrucciones = (char*)instruccion->param1;
     int tamanio = (int)instruccion->param2;
 
@@ -128,7 +128,7 @@ void init_proc(t_instruccion* instruccion, t_pcb* pcb, int socket_kernel_dispatc
     return;
 }
 
-void dump_memory(t_pcb* pcb, int socket_kernel_dispatch){
+void dump_memory(t_pcb* pcb){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_DUMP_MEMORY);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
@@ -136,7 +136,7 @@ void dump_memory(t_pcb* pcb, int socket_kernel_dispatch){
     borrar_paquete(paquete);
 }
 
-void exit_syscall(t_pcb* pcb, int socket_kernel_dispatch){
+void exit_syscall(t_pcb* pcb){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_EXIT);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
