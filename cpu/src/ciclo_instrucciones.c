@@ -124,8 +124,11 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
         pcb->pc++;
         break;
     case WRITE:
+        log_info(logger, "estoy por ejecutar write");
         direccion_fisica = decode(instruccion, pcb);
+        log_info(logger, "ya decodie");
         ejecutar_write(instruccion, direccion_fisica, pcb);
+        log_info(logger, "ya ejecute write");
         free(instruccion->param1);
         free(instruccion->param2);
         pcb->pc++;

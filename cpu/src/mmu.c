@@ -14,9 +14,9 @@ int calcular_entrada_nivel(int direccion_logica, int nivel, int entradas_por_tab
 
 int traducir_direccion(t_pcb* pcb, int direccion_logica){
     int nro_pagina = direccion_logica / tam_pagina;
-
+    log_trace(logger, "nada 1");
     int marco = esta_en_tlb(nro_pagina);
-
+    log_trace(logger, "nada 2");
     if(marco == -1){ //TLB MISS
         log_info(logger, "PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
         marco = pedir_frame(pcb, nro_pagina);

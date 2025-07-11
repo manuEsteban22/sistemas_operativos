@@ -10,6 +10,7 @@ extern t_list* cache;
 typedef struct {
     int pagina;
     int marco;
+    int ultimo_acceso;
 } t_entrada_tlb;
 
 // typedef struct {
@@ -25,6 +26,7 @@ typedef struct{
     bool usado;
 } t_entrada_cache;
 
+void inicializar_tlb();
 int esta_en_tlb(int pagina);
 int pedir_frame(t_pcb* pcb, int nro_pagina);
 

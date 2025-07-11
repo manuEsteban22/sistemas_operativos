@@ -45,10 +45,15 @@ char* leer_de_cache(int direccion_fisica, int tamanio, t_pcb* pcb) {
 }
 
 void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
-    char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos);
+    if(instruccion == NULL || pcb == NULL || instruccion->param2 == NULL){
+        log_error(logger,"## Error en la instruccion o el pcb");
+        return;
+    }
 
-    escribir_en_cache(direccion_fisica, datos, pcb);
+    char* datos = (char*)instruccion->param2;
+    int size_datos = strlen(datos) + 1;
+
+    //escribir_en_cache(direccion_fisica, datos, pcb);
 
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));

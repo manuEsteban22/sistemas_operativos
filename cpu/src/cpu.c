@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
-
+    inicializar_tlb();
 
     //prueba(socket_memoria, socket_kernel_dispatch);
     t_pcb* pcb = esperar_procesos();
@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 t_log* iniciar_logger(int id){
     t_log* nuevo_logger;
     char* log_file = string_from_format("cpu%d.log", id);
-    nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_INFO);
+    nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_TRACE);
     log_info(nuevo_logger, "funciona logger cpu :)");
     free(log_file);
     return nuevo_logger;
