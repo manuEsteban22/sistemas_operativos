@@ -126,12 +126,13 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
 
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
-
+    log_trace(logger,"Estoy esperando respuesta de espacio disponible");
     int respuesta = recibir_operacion(socket_memoria);
     if (respuesta == OK) {
         pthread_mutex_lock(&mutex_procesos_en_memoria);
         procesos_en_memoria++;
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
+        log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
         return false;
@@ -152,7 +153,7 @@ void planificador_largo_plazo(){
 
             pcb = queue_peek(cola_susp_ready);
 
-            if(true/*enviar_pedido_memoria(pcb)*/){
+            if(enviar_pedido_memoria(pcb)){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
@@ -176,9 +177,9 @@ void planificador_largo_plazo(){
 
         pthread_mutex_lock(&mutex_new);
         if (!queue_is_empty(cola_new)) {
-        log_trace(logger, " plp hay procesos en new");
+        log_trace(logger, "plp hay procesos en new");
         pcb = queue_peek(cola_new);
-        if(true/*enviar_pedido_memoria(pcb)*/){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
+        if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
             queue_pop (cola_new);
             pthread_mutex_unlock(&mutex_new);
             cambiar_estado(pcb, READY);
