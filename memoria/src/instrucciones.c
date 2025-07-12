@@ -108,6 +108,18 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     borrar_paquete(paquete);
 }
 
+int ejecutar_write(int socket_cliente){
+    t_list* recibido = list_create();
+    recibido = recibir_paquete(socket_cliente);
+    int direccion_fisica = list_get(recibido, 0);
+    char* datos = list_get(recibido, 1);
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OK);
+    enviar_paquete(paquete, socket_cliente, logger);
+    borrar_paquete(paquete);
+}
+
 // int mandar_instrucciones(int socket_cliente) 
 // {
 //     while(1)

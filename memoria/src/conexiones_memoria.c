@@ -7,8 +7,8 @@ void* atender_cpu(void* socket_ptr)
     free(socket_ptr);
 
     while(1) {
+        log_trace(logger, "espero un opcode");
         int codigo_operacion = recibir_operacion(socket_cliente);
-
         if (codigo_operacion <= 0) {
             log_info(logger, "Se cerró la conexión o error");
             break;
@@ -36,6 +36,7 @@ void* atender_cpu(void* socket_ptr)
                 break;
             case OC_WRITE:
                 log_info(logger, "recibi un write");
+                ejecutar_write(socket_cliente);
                 break;
             case OC_FRAME:
                 mandar_frame(socket_cliente);

@@ -57,10 +57,13 @@ t_instruccion* fetch(t_pcb* pcb){
     int pc = pcb->pc;
     int pid = pcb->pid;
     t_instruccion* proxima_instruccion;
-
+    
+    log_trace(logger, "el pid es %d y el pc %d", pcb->pid, pcb->pc);
     t_paquete* paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
+    log_trace(logger, "socket memoria: %d", socket_memoria);
+    cambiar_opcode_paquete(paquete_pid_pc, PAQUETE);
     enviar_paquete(paquete_pid_pc, socket_memoria, logger);
     borrar_paquete(paquete_pid_pc);
 
@@ -219,7 +222,13 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
     t_instruccion* prox;
 
     while(proceso_en_running){
+        log_warning(logger, "pc = %d", pcb->pc);
         prox = fetch(pcb);
+        if(prox == NULL){
+            log_error(logger, "Error en el fetch en pc=%d", pcb->pc);
+            proceso_en_running = false;
+            return;
+        }
         if(prox->identificador == EXIT){
             proceso_en_running = false;
             log_info(logger, "lei un exit");
