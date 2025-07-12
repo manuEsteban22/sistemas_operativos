@@ -26,11 +26,13 @@ void llamar_a_io(int socket_cpu) {
         return;
     }
 
+    pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
     cambiar_estado(pcb, BLOCKED);
     asignar_timer_blocked(pcb);
-
+    queue_push(cola_blocked, pcb);
+    pthread_mutex_unlock(&mutex_blocked);
 
 
     if(io->ocupado) {
