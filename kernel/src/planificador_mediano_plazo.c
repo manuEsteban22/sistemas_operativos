@@ -2,6 +2,7 @@
 
 
 void planificador_mediano_plazo(){
+    int estado_anterior;
     log_trace(logger, "arranque a correr plani mediano plazo");
     while(1){
         
@@ -15,7 +16,11 @@ void planificador_mediano_plazo(){
 
             if (tiempo_bloqueado >= tiempo_suspension){
                 queue_pop(cola_blocked); 
-                cambiar_estado(pcb, SUSP_BLOCKED);
+
+                estado_anterior = pcb->estado_actual;
+                cambiar_estado(pcb, SUSP_READY);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
                 pthread_mutex_lock(&mutex_susp_blocked);
                 queue_push(cola_susp_blocked, pcb);
