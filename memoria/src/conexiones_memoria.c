@@ -1,32 +1,16 @@
 #include <conexiones_memoria.h>
-#include <pthread.h>  // Agregado para hilos
+#include <pthread.h>
 
-void* atender_cpu(void* socket_ptr) 
-{
-    int socket_cliente = *((int*)socket_ptr);
-    free(socket_ptr);
-
+// Función para manejar conexiones PERSISTENTES de CPU
+void manejar_conexion_cpu(int socket_cliente) {
     while(1) {
-        log_trace(logger, "espero un opcode");
         int codigo_operacion = recibir_operacion(socket_cliente);
         if (codigo_operacion <= 0) {
-            log_info(logger, "Se cerró la conexión o error");
+            log_info(logger, "CPU desconectada");
             break;
         }
 
-        log_info(logger, "Código de operación recibido: %d", codigo_operacion);
-
-        switch (codigo_operacion) {
-            case CERRADO:
-                log_info(logger, "Se terminó la conexión con éxito");
-                break;
-            case HANDSHAKE:
-                log_info(logger, "Recibí un handshake");
-                op_code respuesta = OK;
-                send(socket_cliente, &respuesta, sizeof(int), 0);
-                log_info(logger, "Envié OK");
-                break;
-//-------------- ESTO PERTENECE A CPU -------------------------------                
+        switch(codigo_operacion) {
             case PAQUETE:
                 log_info(logger, "Llegó un paquete");
                 mandar_instruccion(socket_cliente);         
@@ -43,35 +27,77 @@ void* atender_cpu(void* socket_ptr)
                 mandar_frame(socket_cliente);
                 log_info(logger, "mande el frame");
                 break;
-//-------------------------------------------------------------------
-            
-//-------------- ESTO PERTENECE A KERNEL -------------------------------
-            case OC_INIT:
-                log_info(logger, "llego una peticion de crear un nuevo proceso");
-                t_list* recibido = recibir_paquete(socket_cliente);
-                int* pid = list_get(recibido, 0);
-                int* tamanio = list_get(recibido, 1);
-                log_info(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
-                if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
-                    log_trace(logger, "Hay suficiente memoria, se manda el OK");
-                    t_paquete* paquete = crear_paquete();
-                    cambiar_opcode_paquete(paquete, OK);
-                    enviar_paquete(paquete, socket_cliente, logger);
-                    borrar_paquete(paquete);
-                }
-                list_destroy_and_destroy_elements(recibido, free);
-                break;
-// ----------------------------------------------------------------------
-            case ERROR:
-                log_info(logger, "Recibí un error");
-                break;
             default:
-                log_info(logger, "Error en el recv: operación desconocida");
-                break;
+                log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
         }
     }
-    close(socket_cliente); 
-    return NULL;
+    close(socket_cliente);
+}
+
+// Función para manejar conexiones EFÍMERAS de Kernel
+void manejar_conexion_kernel(int socket_cliente) {
+    int codigo_operacion = recibir_operacion(socket_cliente);
+    
+    switch(codigo_operacion) {
+        case OC_INIT:
+            log_trace(logger, "Llego una peticion de crear un nuevo proceso");
+            t_list* recibido = recibir_paquete(socket_cliente);
+            int* pid = list_get(recibido, 0);
+            int* tamanio = list_get(recibido, 1);
+            log_trace(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
+            if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
+                log_trace(logger, "Hay suficiente memoria, se manda el OK");
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, OK);
+                enviar_paquete(paquete, socket_cliente, logger);
+                borrar_paquete(paquete);
+            }
+            list_destroy_and_destroy_elements(recibido, free);
+            break;
+        case SOLICITUD_DUMP_MEMORY:
+            log_trace(logger, "Se recibio solicitud de hacer un memory dump");
+            dumpear_memoria();
+            break;
+        default:
+            log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
+            break;
+    }
+}
+
+void* manejar_conexiones_memoria(void* socket_ptr) {
+    int socket_cliente = *((int*)socket_ptr);
+    free(socket_ptr);
+
+    int codigo_operacion = recibir_operacion(socket_cliente);
+    
+    if (codigo_operacion == HANDSHAKE_CPU_MEMORIA) {
+        log_trace(logger, "Recibi el handshake de una CPU");
+        op_code respuesta = OK;//temporal hasta que agregue lo de mandar tam_pag
+        send(socket_cliente, &respuesta, sizeof(int), 0);
+        
+        int* socket_cpu = malloc(sizeof(int));
+        *socket_cpu = socket_cliente;
+        
+        pthread_t hilo_cpu;
+        pthread_create(&hilo_cpu, NULL, (void*)manejar_conexion_cpu, socket_cpu);
+        pthread_detach(hilo_cpu);
+        
+        return NULL;
+    }
+    else if (codigo_operacion == HANDSHAKE) {
+        log_info(logger, "Conexión efimera de Kernel");
+        op_code respuesta = OK;
+        send(socket_cliente, &respuesta, sizeof(int), 0);
+        
+        manejar_conexion_kernel(socket_cliente);
+        close(socket_cliente);
+        return NULL;
+    }
+    else {
+        log_error(logger, "Handshake invalido: %d", codigo_operacion);
+        close(socket_cliente);
+        return NULL;
+    }
 }
 
 void* manejar_servidor(void* socket_ptr) 
@@ -86,7 +112,7 @@ void* manejar_servidor(void* socket_ptr)
         *socket_cliente_ptr = socket_cliente;
 
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, atender_cpu, socket_cliente_ptr);
+        pthread_create(&hilo_cliente, NULL, manejar_conexiones_memoria, socket_cliente_ptr);
         pthread_detach(hilo_cliente);
     }
     return NULL;

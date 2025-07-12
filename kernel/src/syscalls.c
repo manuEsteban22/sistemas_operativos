@@ -49,14 +49,33 @@ void llamar_a_io(int socket_cpu) {
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
-        log_info(logger, "Dispositivo PID %d enviado a IO", pid);
+        log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
     }
 
     list_destroy_and_destroy_elements(campos, free);
 }
 
 void dump_memory(int socket_cpu){
-    
+    t_list* recibido = list_create();
+    int pid = list_get(recibido, 0);
+
+    t_pcb* pcb = obtener_pcb(pid);
+    cambiar_estado(pcb, BLOCKED);
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SOLICITUD_DUMP_MEMORY);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    borrar_paquete(paquete);
+
+    if(recibir_operacion(socket_memoria) == MEMORY_DUMP){
+        cambiar_estado(pcb, READY);
+    }else{
+        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
+        cambiar_estado(pcb, EXIT);
+    }
+    cerrar_conexion_memoria(socket_memoria);
 }
 
 void iniciar_proceso(int socket_cpu){

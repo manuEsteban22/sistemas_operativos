@@ -105,7 +105,8 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     int pid = *((int*) list_get(lista_paquete, 0));
     int nro_pagina = *((int*) list_get(lista_paquete, 1));
 
-    //Aca tuca y manu tienen que hacer algo para ver a que frame corresponde esa pagina CHUPAME LAS BOLAS PABLO
+    //Aca tuca y manu tienen que hacer algo para ver a que frame corresponde esa pagina 
+    // Ponganse a laburar vagos
     int marco = 2;//esto borrenlo claramente
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
@@ -138,6 +139,11 @@ int ejecutar_write(int socket_cliente){
     char* datos = list_get(recibido, 1);
 
     //aca tienen que escribir los datos en la direccion fisica esa
+}
+
+void dumpear_memoria(){
+    //hagan algo aca manu y tuca
+    log_trace(logger, "laburini");
 }
 
 // int mandar_instrucciones(int socket_cliente) 

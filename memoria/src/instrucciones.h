@@ -10,6 +10,7 @@ void liberar_memoria();
 int mandar_instruccion(int socket_cliente);
 //int mandar_instrucciones(int socket_cliente);
 int ejecutar_write(int socket_cliente);
+void dumpear_memoria();
 int mandar_frame(int socket_cliente);
 
 
