@@ -27,7 +27,6 @@ typedef struct
     int tamanio;
     double estimacion_rafaga;
     double rafaga_real_anterior;
-    double tiempo_blocked;
     t_temporal* temporal_blocked;
 } t_pcb;
 
