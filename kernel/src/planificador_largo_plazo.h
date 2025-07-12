@@ -15,6 +15,7 @@ typedef enum {
 extern t_queue* cola_new;
 extern t_queue* cola_ready;
 extern t_queue* cola_susp_ready;
+extern t_queue* cola_susp_blocked;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_ready;
@@ -22,6 +23,7 @@ extern pthread_mutex_t mutex_ready;
 extern sem_t sem_procesos_en_new;
 extern sem_t sem_procesos_en_memoria;
 extern sem_t sem_procesos_ready;
+extern sem_t sem_procesos_en_blocked;
 
 extern int pid_global;
 
