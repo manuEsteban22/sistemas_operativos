@@ -8,7 +8,7 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
-         if (!queue_is_empty(cola_blocked)){
+    if (!queue_is_empty(cola_blocked)){
             t_pcb* pcb = queue_peek(cola_blocked); 
 
             int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
