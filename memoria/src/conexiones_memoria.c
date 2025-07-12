@@ -31,7 +31,7 @@ void manejar_conexion_cpu(int socket_cliente) {
                 log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
         }
     }
-    close(socket_cliente);
+    //close(socket_cliente);
 }
 
 // Función para manejar conexiones EFÍMERAS de Kernel
@@ -66,7 +66,7 @@ void manejar_conexion_kernel(int socket_cliente) {
 
 void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
-    free(socket_ptr);
+    //free(socket_ptr);
 
     int codigo_operacion = recibir_operacion(socket_cliente);
     

@@ -21,6 +21,8 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     pcb->estimacion_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
     pcb->rafaga_real_anterior = 0.0;
 
+    log_info(logger, "%d Se crea el proceso - Estado: NEW", pcb->pid);
+
     return pcb;
 }
 
@@ -144,4 +146,17 @@ t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid){
 
     list_destroy(aux);
     return pcb_encontrado;
+}
+
+char* parsear_estado(int estado){
+    switch (estado) {
+        case NEW: return "NEW";
+        case READY: return "READY";
+        case EXEC: return "EXEC";
+        case BLOCKED: return "BLOCKED";
+        case SUSP_BLOCKED: return "SUSP_BLOCKED";
+        case SUSP_READY: return "SUSP_READY";
+        case EXIT: return "EXIT";
+        default: return "DESCONOCIDO";
+    }
 }

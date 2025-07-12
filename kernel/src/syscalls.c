@@ -1,6 +1,7 @@
 #include <syscalls.h>
 
 void llamar_a_io(int socket_cpu) {
+    int estado_anterior;
     t_list* campos = recibir_paquete(socket_cpu);
 
     char* pid_raw = list_get(campos, 0);
@@ -20,7 +21,10 @@ void llamar_a_io(int socket_cpu) {
     if(io == NULL) {
         log_error(logger, "dispositivo IO [%s] no existe. Enviando proceso a EXIT", dispositivo);
         t_pcb* pcb = obtener_pcb(pid);
+        estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, EXIT);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
         borrar_pcb(pcb);
         list_destroy_and_destroy_elements(campos, free);
         return;
@@ -29,7 +33,11 @@ void llamar_a_io(int socket_cpu) {
     pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
+
+    estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);
+    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
     asignar_timer_blocked(pcb);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);

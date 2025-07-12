@@ -118,7 +118,8 @@ void finalizar_proceso(t_pcb* pcb){
     pthread_mutex_lock(&mutex_procesos_en_memoria);
     procesos_en_memoria--;
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
-
+        
+    log_info(logger, "%d Finaliza el proceso", pcb->pid);
     borrar_pcb(pcb);
 
     sem_post(&sem_procesos_en_memoria);
@@ -152,6 +153,8 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
 }
 
 void planificador_largo_plazo(){
+int estado_anterior;
+
     while(1){
         //chequeo que haya procesos en new y que haya espacio en memoria con dos wait
         sem_wait(&sem_procesos_en_new);
@@ -171,7 +174,10 @@ void planificador_largo_plazo(){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
+                estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
@@ -200,7 +206,10 @@ void planificador_largo_plazo(){
                 queue_pop (cola_new);
                 pthread_mutex_unlock(&mutex_new);
 
+                estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);

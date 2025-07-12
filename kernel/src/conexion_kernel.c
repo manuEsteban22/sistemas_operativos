@@ -125,7 +125,7 @@ void handshake_io(int socket_dispositivo){
 }
 
 void* manejar_servidor_io(int socket_io){
-
+    int estado_anterior;
     int socket_cliente = esperar_cliente(socket_io, logger);
 
     while(1){
@@ -171,15 +171,22 @@ void* manejar_servidor_io(int socket_io){
                     sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
                     pthread_mutex_unlock(&mutex_susp_blocked);
 
+                    estado_anterior = pcb->estado_actual;
                     cambiar_estado(pcb, SUSP_READY);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
                     pthread_mutex_lock(&mutex_susp_ready);
                     queue_push(cola_susp_ready, pcb);
                     pthread_mutex_unlock(&mutex_susp_ready);
-                    
+
                 } else if (pcb->estado_actual == BLOCKED){
+                    estado_anterior = pcb->estado_actual;
                     cambiar_estado(pcb, READY);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
                     queue_push(cola_ready, pcb);
+                    log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
                     sem_post(&sem_procesos_ready);
 
                 }
