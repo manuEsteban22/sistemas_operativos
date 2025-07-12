@@ -67,7 +67,9 @@ t_instruccion* fetch(t_pcb* pcb){
     enviar_paquete(paquete_pid_pc, socket_memoria, logger);
     borrar_paquete(paquete_pid_pc);
 
-    if(recibir_operacion(socket_memoria) != PAQUETE){
+    int opcode = recibir_operacion(socket_memoria);
+    if(opcode != PAQUETE){
+        log_trace(logger, "recibi: %d", opcode);
         return NULL;
     }
     t_list* recibido = recibir_paquete(socket_memoria);
@@ -186,33 +188,6 @@ bool check_interrupt(t_pcb* pcb){
     return false;
 }
 
-
-// void prueba_write(int socket_memoria, int socket_kernel_dispatch){
-//     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-//     instruccion->identificador = OC_WRITE;
-//     int* direccion_logica = malloc(sizeof(int));
-//     *direccion_logica = 128;
-//     instruccion->param1 = direccion_logica;
-//     char* datos = strdup("prueba");
-//     instruccion->param2 = datos;
-//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-//     pcb_prueba->pid = 4;
-//     execute(instruccion, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-//     free(direccion_logica);
-//     free(datos);
-//     free(instruccion);
-// }
-
-// void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
-//     t_instruccion* prox;
-//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-//     pcb_prueba->pc = 0;
-//     pcb_prueba->pid = 1;
-//     prox = fetch(pcb_prueba, socket_memoria);
-//     execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-//     free(pcb_prueba);
-//     free(prox);
-// }
 
 void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
 

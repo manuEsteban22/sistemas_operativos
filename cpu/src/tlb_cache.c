@@ -31,19 +31,14 @@ int esta_en_tlb(int pagina){
         log_error(logger, "Error: TLB no inicializada");
         return -1;
     }
-    log_trace(logger, "anda1");
     pthread_mutex_lock(&mutex_tlb);
     int marco = -1;
-    log_trace(logger, "anda2");
     for(int i=0;i < list_size(tlb);i++){
-        log_trace(logger, "anda3");
         t_entrada_tlb* entrada = list_get(tlb, i);
-        log_trace(logger, "anda4");
         if(entrada->pagina == pagina){
             marco = entrada->marco;
             
             entrada->ultimo_acceso = ++contador_acceso;
-            log_trace(logger, "anda5");
         }
     }
     pthread_mutex_unlock(&mutex_tlb);
