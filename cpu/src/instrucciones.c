@@ -51,7 +51,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     }
 
     char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos) + 1;
+    int size_datos = strlen(datos);
 
     //escribir_en_cache(direccion_fisica, datos, pcb);
 
@@ -63,6 +63,11 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     borrar_paquete(paquete);
 
     log_info(logger, "PID: %d - Accion: ESCRIBIR - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
+
+    int confirmacion = recibir_operacion(socket_memoria);
+    if(confirmacion == OK){
+        log_trace(logger, "todo joya");
+    }
 }
 
 char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){

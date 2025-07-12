@@ -57,14 +57,19 @@ t_instruccion* fetch(t_pcb* pcb){
     int pc = pcb->pc;
     int pid = pcb->pid;
     t_instruccion* proxima_instruccion;
-
+    
+    log_trace(logger, "el pid es %d y el pc %d", pcb->pid, pcb->pc);
     t_paquete* paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
+    log_trace(logger, "socket memoria: %d", socket_memoria);
+    cambiar_opcode_paquete(paquete_pid_pc, PAQUETE);
     enviar_paquete(paquete_pid_pc, socket_memoria, logger);
     borrar_paquete(paquete_pid_pc);
 
-    if(recibir_operacion(socket_memoria) != PAQUETE){
+    int opcode = recibir_operacion(socket_memoria);
+    if(opcode != PAQUETE){
+        log_trace(logger, "recibi: %d", opcode);
         return NULL;
     }
     t_list* recibido = recibir_paquete(socket_memoria);
@@ -184,33 +189,6 @@ bool check_interrupt(t_pcb* pcb){
 }
 
 
-// void prueba_write(int socket_memoria, int socket_kernel_dispatch){
-//     t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-//     instruccion->identificador = OC_WRITE;
-//     int* direccion_logica = malloc(sizeof(int));
-//     *direccion_logica = 128;
-//     instruccion->param1 = direccion_logica;
-//     char* datos = strdup("prueba");
-//     instruccion->param2 = datos;
-//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-//     pcb_prueba->pid = 4;
-//     execute(instruccion, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-//     free(direccion_logica);
-//     free(datos);
-//     free(instruccion);
-// }
-
-// void prueba(int socket_memoria, int socket_kernel_dispatch, int socket_kernel_interrupt){
-//     t_instruccion* prox;
-//     t_pcb* pcb_prueba = malloc(sizeof(t_pcb));
-//     pcb_prueba->pc = 0;
-//     pcb_prueba->pid = 1;
-//     prox = fetch(pcb_prueba, socket_memoria);
-//     execute(prox, socket_memoria, socket_kernel_dispatch, pcb_prueba);
-//     free(pcb_prueba);
-//     free(prox);
-// }
-
 void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
 
     //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
@@ -219,7 +197,13 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
     t_instruccion* prox;
 
     while(proceso_en_running){
+        log_warning(logger, "pc = %d", pcb->pc);
         prox = fetch(pcb);
+        if(prox == NULL){
+            log_error(logger, "Error en el fetch en pc=%d", pcb->pc);
+            proceso_en_running = false;
+            return;
+        }
         if(prox->identificador == EXIT){
             proceso_en_running = false;
             log_info(logger, "lei un exit");

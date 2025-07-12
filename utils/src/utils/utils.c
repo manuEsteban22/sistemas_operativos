@@ -210,6 +210,7 @@ void enviar_paquete(t_paquete* paquete, int socket, t_log* logger){
     void* stream_a_enviar = serializar(paquete, bytes_a_enviar);
 
     int resultado = send(socket, stream_a_enviar, bytes_a_enviar, 0);
+    log_trace(logger, "Se envió un paquete al socket %d", socket);
     if (resultado == -1) {
         perror("Error al enviar paquete");  // Te muestra "Broken pipe" u otra causa
         log_error(logger, "Fallo el send. Probablemente el socket está cerrado.");
