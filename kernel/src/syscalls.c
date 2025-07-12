@@ -29,6 +29,9 @@ void llamar_a_io(int socket_cpu) {
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
     cambiar_estado(pcb, BLOCKED);
+    //asignar_timer_blocked(pcb);
+
+
 
     if(io->ocupado) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);
@@ -49,3 +52,5 @@ void llamar_a_io(int socket_cpu) {
 
     list_destroy_and_destroy_elements(campos, free);
 }
+
+void iniciar_proceso(int socket_cpu);

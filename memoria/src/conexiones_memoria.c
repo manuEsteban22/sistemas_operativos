@@ -7,8 +7,8 @@ void* atender_cpu(void* socket_ptr)
     free(socket_ptr);
 
     while(1) {
+        log_trace(logger, "espero un opcode");
         int codigo_operacion = recibir_operacion(socket_cliente);
-
         if (codigo_operacion <= 0) {
             log_info(logger, "Se cerró la conexión o error");
             break;
@@ -33,13 +33,16 @@ void* atender_cpu(void* socket_ptr)
                 break;
             case OC_READ:
                 log_info(logger, "recibi un read");
+                ejecutar_read(socket_cliente);
                 break;
             case OC_WRITE:
                 log_info(logger, "recibi un write");
+                ejecutar_write(socket_cliente);
                 break;
             case OC_FRAME:
                 mandar_frame(socket_cliente);
                 log_info(logger, "mande el frame");
+                break;
 //-------------------------------------------------------------------
             
 //-------------- ESTO PERTENECE A KERNEL -------------------------------
@@ -50,7 +53,11 @@ void* atender_cpu(void* socket_ptr)
                 int* tamanio = list_get(recibido, 1);
                 log_info(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
                 if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
-                send(socket_cliente, OK, sizeof(int), 0);
+                    log_trace(logger, "Hay suficiente memoria, se manda el OK");
+                    t_paquete* paquete = crear_paquete();
+                    cambiar_opcode_paquete(paquete, OK);
+                    enviar_paquete(paquete, socket_cliente, logger);
+                    borrar_paquete(paquete);
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;

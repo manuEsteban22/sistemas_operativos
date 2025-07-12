@@ -64,11 +64,16 @@ int mandar_instruccion(int socket_cliente)
     
     t_paquete* paquete = crear_paquete();
 
-    /*if(pc > cant)
+    if(pc >= cant)
     {
-        cambiar_opcode_paquete(paquete, CERRADO);
+        log_error(logger, "el pc se paso de la cantidad");
+        cambiar_opcode_paquete(paquete, ERROR);
         enviar_paquete(paquete, socket_cliente, logger);
-    }*/
+        borrar_paquete(paquete);
+        liberar_memoria();
+        list_destroy_and_destroy_elements(lista_paquete, free);
+        return -1;
+    }
     
     char* instruccion = obtener_instruccion(pc);
 
@@ -82,6 +87,7 @@ int mandar_instruccion(int socket_cliente)
     int tamanio = strlen(instruccion) + 1;
     log_trace(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
+    cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
 
@@ -106,6 +112,32 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     agregar_a_paquete(paquete,&marco,sizeof(int));
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
+}
+
+int ejecutar_read(int socket_cliente){
+    t_list* recibido = list_create();
+    recibido = recibir_paquete(socket_cliente);
+    int direccion_fisica = *((int*)list_get(recibido, 0));
+    int tamanio = *((int*)list_get(recibido, 1));
+
+    //aca manu y tuca tienen que hacer que lea algo con la direccion fisica y el tamanio
+    //ponganlo en variable leido
+    char* leido = "prueba123";
+    log_trace(logger, "anda antes de mandar lo leido");
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_READ);
+    agregar_a_paquete(paquete, leido, tamanio);
+    enviar_paquete(paquete, socket_cliente, logger);
+    borrar_paquete(paquete);
+}
+
+int ejecutar_write(int socket_cliente){
+    t_list* recibido = list_create();
+    recibido = recibir_paquete(socket_cliente);
+    int direccion_fisica = *((int*)list_get(recibido, 0));
+    char* datos = list_get(recibido, 1);
+
+    //aca tienen que escribir los datos en la direccion fisica esa
 }
 
 // int mandar_instrucciones(int socket_cliente) 

@@ -8,6 +8,7 @@ pthread_mutex_t mutex_procesos_en_memoria = PTHREAD_MUTEX_INITIALIZER;
 t_queue* cola_new;
 t_queue* cola_ready;
 t_queue* cola_susp_ready;
+t_queue* cola_susp_blocked;
 
 pthread_mutex_t mutex_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_ready = PTHREAD_MUTEX_INITIALIZER;
@@ -16,6 +17,8 @@ pthread_mutex_t mutex_susp_ready = PTHREAD_MUTEX_INITIALIZER;
 sem_t sem_procesos_en_new;
 sem_t sem_procesos_en_memoria;
 sem_t sem_procesos_ready;
+sem_t sem_procesos_en_blocked;
+
 //procesos en memoria se refiere a la cantidad de procesos permitidos en memoria simultaneamente
 
 int pid_global = 0;
@@ -41,10 +44,12 @@ void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     sem_init(&sem_procesos_en_new, 0, 0);
     sem_init(&sem_procesos_en_memoria, 0, PROCESOS_MEMORIA);
     sem_init(&sem_procesos_ready, 0, 0);
+    sem_init(&sem_procesos_en_blocked, 0, 0);
 }
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
 void crear_proceso(int tamanio_proceso){
+    log_trace(logger, "Se creo un proceso");
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
     pid_global++;
     char* pid_str = string_itoa(pcb->pid);
@@ -119,6 +124,7 @@ void finalizar_proceso(t_pcb* pcb){
 
 
 bool enviar_pedido_memoria(t_pcb* pcb) {
+    log_trace(logger, "Se envio un pedido a memoria");
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_INIT);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
@@ -126,12 +132,13 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
 
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
-
+    log_trace(logger,"Estoy esperando respuesta de espacio disponible");
     int respuesta = recibir_operacion(socket_memoria);
     if (respuesta == OK) {
         pthread_mutex_lock(&mutex_procesos_en_memoria);
         procesos_en_memoria++;
         pthread_mutex_unlock(&mutex_procesos_en_memoria);
+        log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
         return false;
@@ -152,7 +159,7 @@ void planificador_largo_plazo(){
 
             pcb = queue_peek(cola_susp_ready);
 
-            if(true/*enviar_pedido_memoria(pcb)*/){
+            if(enviar_pedido_memoria(pcb)){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
@@ -176,9 +183,9 @@ void planificador_largo_plazo(){
 
         pthread_mutex_lock(&mutex_new);
         if (!queue_is_empty(cola_new)) {
-        log_trace(logger, " plp hay procesos en new");
+        log_trace(logger, "plp hay procesos en new");
         pcb = queue_peek(cola_new);
-        if(true/*enviar_pedido_memoria(pcb)*/){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
+        if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
             queue_pop (cola_new);
             pthread_mutex_unlock(&mutex_new);
             cambiar_estado(pcb, READY);

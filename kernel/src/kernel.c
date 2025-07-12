@@ -96,6 +96,10 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_planificador_cp, NULL, (void*)planificador_corto_plazo_loop, ptr_dispatch);
     pthread_detach(thread_planificador_cp);
 
+    // pthread_t thread_planificador_mp;
+    // pthread_create(&thread_planificador_mp, NULL, (void*)planificador_mediano_plazo, NULL);
+    // pthread_detach(thread_planificador_mp);
+
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
         pause();

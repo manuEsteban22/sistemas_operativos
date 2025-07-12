@@ -126,11 +126,15 @@ t_list* recibir_paquete (int socket_cliente){
     t_buffer* buffer = malloc(sizeof(t_buffer));
     t_list* contenido;
 
-    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
+    if(recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) <= 0){
+        printf("fallo el recv del size del paquete");
+    }
     
     buffer->stream = malloc(buffer->size);
-
-    recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
+    
+    if(recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL) <= 0){
+        printf("fallo el recv del stream del paquete");
+    }
 
     contenido = deserializar(buffer);
 
@@ -210,6 +214,7 @@ void enviar_paquete(t_paquete* paquete, int socket, t_log* logger){
     void* stream_a_enviar = serializar(paquete, bytes_a_enviar);
 
     int resultado = send(socket, stream_a_enviar, bytes_a_enviar, 0);
+    log_trace(logger, "Se envió un paquete al socket %d", socket);
     if (resultado == -1) {
         perror("Error al enviar paquete");  // Te muestra "Broken pipe" u otra causa
         log_error(logger, "Fallo el send. Probablemente el socket está cerrado.");
