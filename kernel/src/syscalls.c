@@ -55,4 +55,10 @@ void llamar_a_io(int socket_cpu) {
     list_destroy_and_destroy_elements(campos, free);
 }
 
-void iniciar_proceso(int socket_cpu);
+void dump_memory(int socket_cpu){
+    
+}
+
+void iniciar_proceso(int socket_cpu){
+    printf("iniciar");
+}
