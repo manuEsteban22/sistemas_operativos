@@ -6,7 +6,7 @@
 
 typedef enum {
     FIFO,
-    MENOR_MEMORIA,
+    PMCP,   //proceso mas chico primero
     SJF_SIN_DESALOJO,
     SJF_CON_DESALOJO
 } t_algoritmo_planificacion;

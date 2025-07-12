@@ -6,7 +6,7 @@ t_algoritmo_planificacion algoritmo_cp;
 
 t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
     if (strcmp(algoritmo, "FIFO") == 0) return FIFO;
-    if (strcmp(algoritmo, "MENOR_MEMORIA") == 0) return MENOR_MEMORIA;
+    if (strcmp(algoritmo, "PMCP") == 0) return PMCP;
     if (strcmp(algoritmo, "SJF_SIN_DESALOJO") == 0) return SJF_SIN_DESALOJO;
     if (strcmp(algoritmo, "SJF_CON_DESALOJO") == 0) return SJF_CON_DESALOJO;
 
