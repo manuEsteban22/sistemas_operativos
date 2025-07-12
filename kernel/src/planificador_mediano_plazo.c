@@ -42,6 +42,8 @@ void informar_memoria_suspension(int pid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_SUSP);
     agregar_a_paquete(paquete, &pid, sizeof(int));
+    socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
+    cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
 }

@@ -22,6 +22,7 @@ typedef enum
 {
     CERRADO,
     HANDSHAKE,
+    HANDSHAKE_CPU_MEMORIA,
     PAQUETE,
     MENSAJE,
     OK,
@@ -36,7 +37,9 @@ typedef enum
     SYSCALL_DUMP_MEMORY,
     SYSCALL_EXIT,
     SOLICITUD_IO,
+    SOLICITUD_DUMP_MEMORY,
     FINALIZA_IO,
+    MEMORY_DUMP,
     OC_FRAME,
     OC_PAG,
     ERROR

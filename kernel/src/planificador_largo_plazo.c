@@ -135,10 +135,12 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->tamanio), sizeof(int));
 
+    socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
     log_trace(logger,"Estoy esperando respuesta de espacio disponible");
     int respuesta = recibir_operacion(socket_memoria);
+    cerrar_conexion_memoria(socket_memoria);
     if (respuesta == OK) {
         pthread_mutex_lock(&mutex_procesos_en_memoria);
         procesos_en_memoria++;

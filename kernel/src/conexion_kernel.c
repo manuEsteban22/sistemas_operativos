@@ -71,24 +71,24 @@ void* manejar_servidor_cpu(void* arg){
 }
 
 
-void handshake_memoria(int socket){
+bool handshake_memoria(int socket){
     enviar_handshake(socket);
-    log_info(logger, "envié el handshake a memoria");
+    log_info(logger, "Envié un handshake a memoria");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
         log_error(logger, "Fallo al recibir OK de memoria");
-        return;
+        return false;
     }
     if(respuesta == OK){
         log_info(logger, "Recibi el OK de memoria");
-        return;
+        return true;
     }else {
         log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
-        return;
+        return false;
     }
 
-    return;
+    return false;
 }
 
 
@@ -225,17 +225,24 @@ int conectar_memoria(char* ip, char* puerto){
         return -1;
     }
     freeaddrinfo(server_info);
-    //envio y recibo un handhsake a memoria
-    handshake_memoria(fd_socket);
-    
-
-    /*t_paquete  paquete_pid_pc = crear_paquete();
-    agregar_a_paquete(paquete_pid_pc, pid, sizeof(int));
-    agregar_a_paquete(paquete_pid_pc, pc, sizeof(int));
-    enviar_paquete(paquete_pid_pc, fd_socket);
-    borrar_paquete(paquete_pid_pc);*/
 
     return fd_socket;
+}
+
+int operacion_con_memoria(){
+    int socket = conectar_memoria(ip_memoria, puerto_memoria);
+    log_trace(logger, "Se abrio una conexion con memoria");
+    if(handshake_memoria(socket)){
+        return socket;
+    }
+    else{
+        return -1;
+    }
+}
+
+void cerrar_conexion_memoria(int socket){
+    close(socket);
+    log_trace(logger, "La conexion con memoria se cerro con exito");
 }
 
 void enviar_interrupcion_a_cpu() {
