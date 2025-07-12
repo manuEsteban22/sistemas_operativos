@@ -65,7 +65,9 @@ void llamar_a_io(int socket_cpu) {
 
 void dump_memory(int socket_cpu){
     t_list* recibido = list_create();
+    recibido = recibir_paquete(socket_cpu);
     int pid = list_get(recibido, 0);
+    log_trace(logger, "## DUMP MEMORY - PID %d", pid);
 
     t_pcb* pcb = obtener_pcb(pid);
     cambiar_estado(pcb, BLOCKED);

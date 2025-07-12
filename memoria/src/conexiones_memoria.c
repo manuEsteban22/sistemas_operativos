@@ -2,10 +2,12 @@
 #include <pthread.h>
 
 // Función para manejar conexiones PERSISTENTES de CPU
-void manejar_conexion_cpu(int socket_cliente) {
+void* manejar_conexion_cpu(void* arg) {
+    int socket_cliente = *((int*)arg);
+    free(arg);
     while(1) {
         int codigo_operacion = recibir_operacion(socket_cliente);
-        if (codigo_operacion <= 0) {
+        if (codigo_operacion < 0) {
             log_warning(logger, "CPU desconectada");
             break;
         }
@@ -31,7 +33,8 @@ void manejar_conexion_cpu(int socket_cliente) {
                 log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
         }
     }
-    //close(socket_cliente);
+    close(socket_cliente);
+    return NULL;
 }
 
 // Función para manejar conexiones EFÍMERAS de Kernel
@@ -56,7 +59,10 @@ void manejar_conexion_kernel(int socket_cliente) {
             break;
         case SOLICITUD_DUMP_MEMORY:
             log_trace(logger, "Se recibio solicitud de hacer un memory dump");
-            dumpear_memoria();
+            t_list* pid_dumpeo_raw = recibir_paquete(socket_cliente);
+            int* pid_dumpeo = list_get(pid_dumpeo_raw, 0);
+            dumpear_memoria(pid_dumpeo);
+            list_destroy_and_destroy_elements(recibido, free);
             break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
@@ -66,7 +72,7 @@ void manejar_conexion_kernel(int socket_cliente) {
 
 void* manejar_conexiones_memoria(void* socket_ptr) {
     int socket_cliente = *((int*)socket_ptr);
-    //free(socket_ptr);
+    free(socket_ptr);
 
     int codigo_operacion = recibir_operacion(socket_cliente);
     
@@ -74,14 +80,14 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
         log_trace(logger, "Recibi el handshake de una CPU");
         int respuesta = OK;//temporal hasta que agregue lo de mandar tam_pag
         send(socket_cliente, &respuesta, sizeof(int), 0);
-        sleep(5);
         
         int* socket_cpu = malloc(sizeof(int));
         *socket_cpu = socket_cliente;
+        log_trace(logger, "socket cpu: %d", *socket_cpu);
         
         pthread_t hilo_cpu;
         pthread_create(&hilo_cpu, NULL, (void*)manejar_conexion_cpu, socket_cpu);
-        pthread_join(hilo_cpu, NULL);
+        pthread_detach(hilo_cpu);
         return NULL;
     }
     else if (codigo_operacion == HANDSHAKE) {
@@ -90,6 +96,7 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
         send(socket_cliente, &respuesta, sizeof(int), 0);
         
         manejar_conexion_kernel(socket_cliente);
+        log_trace(logger, "socket kernel %d", socket_cliente);
         close(socket_cliente);
         return NULL;
     }

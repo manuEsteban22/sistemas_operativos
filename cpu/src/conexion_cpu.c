@@ -31,6 +31,7 @@ void handshake_memoria(int socket){
     }
     if(respuesta == OK){
         log_info(logger, "Recibi el OK de memoria");
+        sleep(2);
         return;
     }else {
         log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);

@@ -241,11 +241,3 @@ int obtener_marco(int pid, int nro_pagina) {
     }
     return marco;
 }
-
-// int mandar_instrucciones(int socket_cliente) 
-// {
-//     while(1)
-//     {
-//         mandar_instruccion(socket_cliente);    
-//     }
-// }

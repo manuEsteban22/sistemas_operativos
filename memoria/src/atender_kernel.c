@@ -1,5 +1,5 @@
 #include <atender_kernel.h>
-extern t_log* logger;
+//extern t_log* logger;
 
 t_dictionary* tablas_por_pid;
 t_list* paginas_en_swap;

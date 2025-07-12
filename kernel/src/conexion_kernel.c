@@ -54,6 +54,7 @@ void* manejar_servidor_cpu(void* arg){
                 break;
             case SYSCALL_DUMP_MEMORY:
                 dump_memory(socket_cliente);
+                log_trace(logger, "se corrio un dump memory");
             case SYSCALL_INIT:
                 log_trace(logger, "me llego syscall INIT_PROC");
                 iniciar_proceso(socket_cliente);

@@ -4,6 +4,8 @@
 #include <utils/utils.h>
 
 
+extern void* memoria_usuario;
+extern bool* bitmap_marcos;
 void inicializar_memoria();
 
 typedef struct t_tabla_paginas t_tabla_paginas;

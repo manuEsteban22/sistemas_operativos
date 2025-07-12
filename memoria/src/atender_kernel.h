@@ -6,6 +6,7 @@
 #include <commons/collections/list.h>
 
 // Estructuras de métricas y proceso
+extern t_dictionary* tablas_por_pid;
 
 typedef struct {
     int cantidad_accesos_tablas_de_paginas;
