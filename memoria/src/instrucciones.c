@@ -136,6 +136,8 @@ int ejecutar_write(int socket_cliente){
     recibido = recibir_paquete(socket_cliente);
     int direccion_fisica = *((int*)list_get(recibido, 0));
     char* datos = list_get(recibido, 1);
+
+    //aca tienen que escribir los datos en la direccion fisica esa
 }
 
 // int mandar_instrucciones(int socket_cliente) 
