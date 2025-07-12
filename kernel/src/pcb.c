@@ -115,10 +115,10 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 // }
 
 void asignar_timer_blocked(t_pcb* pcb){
-    if (pcb->tiempo_blocked != NULL) {
-        temporal_destroy(pcb->tiempo_blocked);
+    if (pcb->temporal_blocked != NULL) {
+        temporal_destroy(pcb->temporal_blocked);
     }
 
-    pcb->tiempo_blocked = temporal_create();
-    sem_signal(&sem_procesos_en_blocked);
+    pcb->temporal_blocked = temporal_create();
+    //sem_signal(&sem_procesos_en_blocked);
 }
