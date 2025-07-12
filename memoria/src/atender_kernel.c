@@ -62,7 +62,7 @@ void des_suspender_proceso(int pid){
     }
 
     char* pid_str = string_itoa(pid);
-    t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, string_itoa(pid)); //actualizar tabla de pags
+    t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, pid_str); //actualizar tabla de pags
 
     for (int i = 0; i < list_size(paginas_proceso); i++) { //restaurar las pags
         t_pagina_swap* relacion = list_get(paginas_proceso, i);
