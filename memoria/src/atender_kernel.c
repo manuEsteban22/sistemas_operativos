@@ -2,7 +2,8 @@
 extern t_log* logger;
 
 t_dictionary* tablas_por_pid;
-tablas_por_pid = dictionary_create();
+t_list* paginas_en_swap;
+
 
 // busca pags libres, las asigna y arma tabla raiz
 
@@ -30,6 +31,8 @@ void* inicializar_proceso(int tam_proceso, int pid){
 }
 
 void suspender_proceso(int pid){
+
+
     char* pid_str = string_itoa(pid);
     t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, pid_str);
     free(pid_str);
@@ -83,26 +86,26 @@ void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base
 
     for (int i = 0; i < campos_config.entradas_por_tabla; i++){
         t_entrada_tabla* entrada = &tabla->entradas[i];
-        int nro_pagina = pagina_base + 1 * pow(campos_config.entradas_por_tabla, campos_config.cantidad_niveles - nivel - 1);
+        int salto = (int)pow(campos_config.entradas_por_tabla, campos_config.cantidad_niveles - nivel - 1);
+        int nro_pagina = pagina_base + i * salto;
 
         if (nivel < campos_config.cantidad_niveles - 1){
-            if (entrada->siguiente_tabla){
+            if (entrada->siguiente_tabla)
                 suspender_tabla(entrada->siguiente_tabla, nivel + 1, pid, nro_pagina);
-            }    
-        else {
+            
+        } else {
             if (entrada->presencia){
-                suspender_pagina(pid, nro_pagina, entrada->amrco);
+                suspender_pagina(pid, nro_pagina, entrada->marco);
                 bitarray_clean_bit(bitmap_marcos, entrada->marco);
                 entrada->presencia = false;
             }
-        }
         }
     }
 }
 
 void suspender_pagina(int pid, int nro_pagina, int marco){
 
-    t_list marcos_swap = asignar_marcos_swap(1); //pide marco libre
+    t_list* marcos_swap = asignar_marcos_swap(1); //pide marco libre
 
     if (!marcos_swap){
         log_error(logger, "No hay marcos libres en swap para suspender la pagina %d del proceso %d", nro_pagina, pid);
