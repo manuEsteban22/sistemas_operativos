@@ -46,6 +46,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo);
 void asignar_timer_blocked(t_pcb* pcb);
 t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid);
 char* parsear_estado(int estado);
+void log_metricas_estado(t_pcb* pcb);
 
 #include<planificador_largo_plazo.h>
 
