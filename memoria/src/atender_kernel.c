@@ -4,10 +4,11 @@ extern t_log* logger;
 t_dictionary* tablas_por_pid;
 t_list* paginas_en_swap;
 
-
 // busca pags libres, las asigna y arma tabla raiz
 
 void* inicializar_proceso(int tam_proceso, int pid){
+
+
 
     int pags_necesarias = tam_proceso / campos_config.tam_pagina;
     t_tabla_paginas* tabla_raiz = crear_tabla(0);
@@ -97,9 +98,39 @@ void des_suspender_proceso(int pid){
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);
 }
 
-void* finalizar_proceso()
-{
+void* finalizar_proceso(int pid){
 
+    char* pid_str = string_itoa(pid); //liberamos marcos de ram y marcamos las entradas como no presentes
+    t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, pid_str);
+
+    if (!tabla_raiz){
+        log_error(logger, "No se encontró la tabla de páginas para el proceso %d", pid);
+        free(pid_str);
+        return;
+    }
+
+    liberar_tabla(tabla_raiz, 0); 
+
+    for (int i = 0; i < list_size(paginas_en_swap); ){ //liberamos marcos de swap y elminamos las relaciones
+        t_pagina_swap* relacion = list_get(paginas_en_swap, i);
+        if (relacion->pid == pid){
+            t_list* marcos_swap = list_create();
+            int* marco_swap_ptr = malloc(sizeof(int));
+            *marco_swap_ptr = relacion->marco_swap;
+            list_add(marcos_swap, marco_swap_ptr);
+            liberar_marcos(marcos_swap;)
+
+            list_remove(paginas_en_swap, i);
+            free(relacion);
+        } else {
+            i++; // se incrementa solo si no se elimino
+        }
+    }
+
+    dictionary_remove(tablas_por_pid, pid_str); //elimina tabla del diccionario
+    free(pid_str);
+
+    log_info(logger, "Proceso %d finalizado. ")
 }
 
 int buscar_marco_libre() 
