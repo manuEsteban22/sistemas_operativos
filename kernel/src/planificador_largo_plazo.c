@@ -120,11 +120,12 @@ void finalizar_proceso(t_pcb* pcb){
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
         
     log_info(logger, "%d Finaliza el proceso", pcb->pid);
+    log_metricas_estado(pcb);
     borrar_pcb(pcb);
 
     sem_post(&sem_procesos_en_memoria);
     sem_post(&sem_procesos_en_new);
-    //loguear_metricas();
+    
 }
 
 
