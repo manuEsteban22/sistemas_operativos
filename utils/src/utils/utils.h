@@ -7,6 +7,7 @@
 #include<commons/string.h>
 #include<commons/config.h>
 #include<commons/collections/queue.h>
+#include<commons/collections/dictionary.h>
 #include<readline/readline.h>
 #include<signal.h>
 #include<unistd.h>
