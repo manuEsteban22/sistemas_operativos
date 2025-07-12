@@ -13,4 +13,12 @@ void escribir_en_swap(void* buffer, int nro_marco);
 void leer_de_swap(void* buffer, int nro_marco);
 void liberar_marcos(t_list* marcos);
 
+typedef struct {
+    int pid;
+    int nro_pagina;
+    int marco_swap;
+} t_pagina_swap;
+
+t_list* paginas_en_swap;
+
 #endif
