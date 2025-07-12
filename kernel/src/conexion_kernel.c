@@ -71,24 +71,24 @@ void* manejar_servidor_cpu(void* arg){
 }
 
 
-void handshake_memoria(int socket){
+bool handshake_memoria(int socket){
     enviar_handshake(socket);
-    log_info(logger, "envié el handshake a memoria");
+    log_info(logger, "Envié un handshake a memoria");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
         log_error(logger, "Fallo al recibir OK de memoria");
-        return;
+        return false;
     }
     if(respuesta == OK){
         log_info(logger, "Recibi el OK de memoria");
-        return;
+        return true;
     }else {
         log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
-        return;
+        return false;
     }
 
-    return;
+    return false;
 }
 
 
@@ -125,7 +125,7 @@ void handshake_io(int socket_dispositivo){
 }
 
 void* manejar_servidor_io(int socket_io){
-
+    int estado_anterior;
     int socket_cliente = esperar_cliente(socket_io, logger);
 
     while(1){
@@ -144,36 +144,58 @@ void* manejar_servidor_io(int socket_io){
                 //la conexion sigue abierta pero sin mensajes(?
                 log_info(logger, "termino la conexion con exito");
                 break;
+
             case HANDSHAKE:
                 handshake_io(socket_cliente);
                 break;
+
             case PAQUETE:
                 log_info(logger, "llego un paquete");
                 break;
+
             case FINALIZA_IO:
                 t_list* recibido = recibir_paquete(socket_cliente);
                 int* pid = list_get(recibido, 0);
                 log_trace(logger, "Recibi finalizacion de io - pid %d", *pid);
                 t_pcb* pcb = obtener_pcb(*pid);
 
-                if (pcb == NULL) {
+                if (pcb == NULL){
                         log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
                         list_destroy_and_destroy_elements(recibido, free);
                         break;
-                    }
+                }
 
-                if(pcb->estado_actual==SUSP_BLOCKED){
+                if (pcb->estado_actual == SUSP_BLOCKED){
+
+                    pthread_mutex_lock(&mutex_susp_blocked);
+                    sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
+                    pthread_mutex_unlock(&mutex_susp_blocked);
+
+                    estado_anterior = pcb->estado_actual;
                     cambiar_estado(pcb, SUSP_READY);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
+
+                    pthread_mutex_lock(&mutex_susp_ready);
                     queue_push(cola_susp_ready, pcb);
-                }else if(pcb->estado_actual == BLOCKED){
+                    pthread_mutex_unlock(&mutex_susp_ready);
+
+                } else if (pcb->estado_actual == BLOCKED){
+                    estado_anterior = pcb->estado_actual;
                     cambiar_estado(pcb, READY);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
                     queue_push(cola_ready, pcb);
+                    log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
                     sem_post(&sem_procesos_ready);
+
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
+
             case ERROR:
                 break;
+
             default:
                 log_info(logger, "error en el recv");
                 break;
@@ -203,17 +225,24 @@ int conectar_memoria(char* ip, char* puerto){
         return -1;
     }
     freeaddrinfo(server_info);
-    //envio y recibo un handhsake a memoria
-    handshake_memoria(fd_socket);
-    
-
-    /*t_paquete  paquete_pid_pc = crear_paquete();
-    agregar_a_paquete(paquete_pid_pc, pid, sizeof(int));
-    agregar_a_paquete(paquete_pid_pc, pc, sizeof(int));
-    enviar_paquete(paquete_pid_pc, fd_socket);
-    borrar_paquete(paquete_pid_pc);*/
 
     return fd_socket;
+}
+
+int operacion_con_memoria(){
+    int socket = conectar_memoria(ip_memoria, puerto_memoria);
+    log_trace(logger, "Se abrio una conexion con memoria");
+    if(handshake_memoria(socket)){
+        return socket;
+    }
+    else{
+        return -1;
+    }
+}
+
+void cerrar_conexion_memoria(int socket){
+    close(socket);
+    log_trace(logger, "La conexion con memoria se cerro con exito");
 }
 
 void enviar_interrupcion_a_cpu() {

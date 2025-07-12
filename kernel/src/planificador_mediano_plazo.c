@@ -2,6 +2,7 @@
 
 
 void planificador_mediano_plazo(){
+    int estado_anterior;
     log_trace(logger, "arranque a correr plani mediano plazo");
     while(1){
         
@@ -15,7 +16,11 @@ void planificador_mediano_plazo(){
 
             if (tiempo_bloqueado >= tiempo_suspension){
                 queue_pop(cola_blocked); 
-                cambiar_estado(pcb, SUSP_BLOCKED);
+
+                estado_anterior = pcb->estado_actual;
+                cambiar_estado(pcb, SUSP_READY);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
                 pthread_mutex_lock(&mutex_susp_blocked);
                 queue_push(cola_susp_blocked, pcb);
@@ -25,6 +30,8 @@ void planificador_mediano_plazo(){
                 log_info(logger, "PID %d pasa a susp blocked por exceder tiempo", pcb->pid);
 
                 temporal_destroy(pcb->temporal_blocked);
+                sem_post(&sem_procesos_en_memoria);
+                sem_post(&sem_procesos_en_new);
             }
 
         }
@@ -35,6 +42,8 @@ void informar_memoria_suspension(int pid){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_SUSP);
     agregar_a_paquete(paquete, &pid, sizeof(int));
+    socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
+    cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
 }

@@ -20,11 +20,12 @@ void handshake_kernel(int socket, char* nombre){
     return;
 }
 void handshake_memoria(int socket){
-    enviar_handshake(socket);
+    int cod_op = HANDSHAKE_CPU_MEMORIA;    
+    send(socket, &cod_op, sizeof(int), 0);
     log_info(logger, "envié el handshake a memoria");
 
-    int respuesta;
-    if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
+    int respuesta = recibir_operacion(socket);
+    if(respuesta <= 0){
         log_error(logger, "Fallo al recibir OK de memoria");
         return;
     }

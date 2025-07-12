@@ -1,6 +1,7 @@
 #include <syscalls.h>
 
 void llamar_a_io(int socket_cpu) {
+    int estado_anterior;
     t_list* campos = recibir_paquete(socket_cpu);
 
     char* pid_raw = list_get(campos, 0);
@@ -20,7 +21,10 @@ void llamar_a_io(int socket_cpu) {
     if(io == NULL) {
         log_error(logger, "dispositivo IO [%s] no existe. Enviando proceso a EXIT", dispositivo);
         t_pcb* pcb = obtener_pcb(pid);
+        estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, EXIT);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
         borrar_pcb(pcb);
         list_destroy_and_destroy_elements(campos, free);
         return;
@@ -29,7 +33,11 @@ void llamar_a_io(int socket_cpu) {
     pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
+
+    estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);
+    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
     asignar_timer_blocked(pcb);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
@@ -49,14 +57,33 @@ void llamar_a_io(int socket_cpu) {
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
-        log_info(logger, "Dispositivo PID %d enviado a IO", pid);
+        log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
     }
 
     list_destroy_and_destroy_elements(campos, free);
 }
 
 void dump_memory(int socket_cpu){
-    
+    t_list* recibido = list_create();
+    int pid = list_get(recibido, 0);
+
+    t_pcb* pcb = obtener_pcb(pid);
+    cambiar_estado(pcb, BLOCKED);
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, SOLICITUD_DUMP_MEMORY);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    borrar_paquete(paquete);
+
+    if(recibir_operacion(socket_memoria) == MEMORY_DUMP){
+        cambiar_estado(pcb, READY);
+    }else{
+        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
+        cambiar_estado(pcb, EXIT);
+    }
+    cerrar_conexion_memoria(socket_memoria);
 }
 
 void iniciar_proceso(int socket_cpu){

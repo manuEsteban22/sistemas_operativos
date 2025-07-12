@@ -7,6 +7,8 @@
 
 void* manejar_servidor_cpu(void* arg);
 void* manejar_servidor_io(int socket_io);
-void handshake_memoria(int socket);
+bool handshake_memoria(int socket);
 int conectar_memoria(char* ip, char* puerto);
+int operacion_con_memoria();
+void cerrar_conexion_memoria(int socket);
 #endif

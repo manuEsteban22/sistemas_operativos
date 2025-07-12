@@ -4,15 +4,26 @@ extern t_log* logger;
 t_dictionary* tablas_por_pid;
 t_list* paginas_en_swap;
 
+<<<<<<< HEAD
 // busca pags libres, las asigna y arma tabla raiz
+=======
+
+// busca pags libres, las asigna y arma tabla raiz
+>>>>>>> 4cc24c82fb4ffc20da474d804199a3fc0b47bf93
 
 void* inicializar_proceso(int tam_proceso, int pid){
 
+<<<<<<< HEAD
 
 
     int pags_necesarias = tam_proceso / campos_config.tam_pagina;
     t_tabla_paginas* tabla_raiz = crear_tabla(0);
     dictionary_put(tablas_por_pid, string_itoa(pid), tabla_raiz);
+=======
+//     int pags_necesarias = tam_proceso / campos_config.tam_pagina;
+//     t_tabla_paginas* tabla_raiz = crear_tabla(0);
+//     dictionary_put(tablas_por_pid, string_itoa(pid), tabla_raiz);
+>>>>>>> 4cc24c82fb4ffc20da474d804199a3fc0b47bf93
 
     for(int pagina = 0; pagina < pags_necesarias; pagina++){
 
@@ -100,6 +111,7 @@ void des_suspender_proceso(int pid){
 
 void* finalizar_proceso(int pid){
 
+<<<<<<< HEAD
     char* pid_str = string_itoa(pid); //liberamos marcos de ram y marcamos las entradas como no presentes
     t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, pid_str);
 
@@ -132,24 +144,27 @@ void* finalizar_proceso(int pid){
 
     log_info(logger, "Proceso %d finalizado. ")
 }
+=======
+// }
+>>>>>>> 4cc24c82fb4ffc20da474d804199a3fc0b47bf93
 
-int buscar_marco_libre() 
-{
-    for (int i = 0; i < cantidad_marcos_totales; i++) {
-        if (!bitarray_test_bit(bitmap_marcos, i)) {
-            bitarray_set_bit(bitmap_marcos, i);
-            return i;
-        }
-    }
-    return -1;
-}
+// int buscar_marco_libre() 
+// {
+//     for (int i = 0; i < cantidad_marcos_totales; i++) {
+//         if (!bitarray_test_bit(bitmap_marcos, i)) {
+//             bitarray_set_bit(bitmap_marcos, i);
+//             return i;
+//         }
+//     }
+//     return -1;
+// }
 
-// busca la entrada en cuestion
+// // busca la entrada en cuestion
 
-t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina){
+// t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina){
 
-    t_tabla_paginas* actual = tabla_raiz;
-    int bits_por_nivel = log2(campos_config.entradas_por_tabla);
+//     t_tabla_paginas* actual = tabla_raiz;
+//     int bits_por_nivel = log2(campos_config.entradas_por_tabla);
 
     for(int nivel = 0; nivel < campos_config.cantidad_niveles -1; nivel++){
         int indice = (nro_pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel - 1))) & ((1 << bits_por_nivel) - 1);

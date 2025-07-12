@@ -38,9 +38,11 @@ t_pcb* planificador_corto_plazo(){
             break;
         case SJF_SIN_DESALOJO:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
+            log_info(logger, "%d Desalojado por algoritmo SJF”, pcb->pid);
             break;
         case SJF_CON_DESALOJO:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
+            log_info(logger, "%d Desalojado por algoritmo SRT”, pcb->pid);
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
@@ -82,7 +84,12 @@ t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
 }
 
 void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
+    int estado_anterior;
+
+    estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, EXEC);
+    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_EXEC);
