@@ -21,7 +21,7 @@ int tam_pagina = 64;
 int cant_niveles = 3;
 int socket_kernel_dispatch = -1;
 int socket_kernel_interrupt = -1;
-int socket_memoria = -1;
+int socket_memoria;
 
 int main(int argc, char* argv[]) {
     if(argc < 2){
@@ -37,10 +37,8 @@ int main(int argc, char* argv[]) {
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     inicializar_tlb();
 
-    //prueba(socket_memoria, socket_kernel_dispatch);
     t_pcb* pcb = esperar_procesos();
     iniciar_ciclo_de_instrucciones(pcb);
-    //prueba_write(socket_memoria, socket_kernel_dispatch);
     return 0;
 }
 

@@ -6,7 +6,7 @@ void manejar_conexion_cpu(int socket_cliente) {
     while(1) {
         int codigo_operacion = recibir_operacion(socket_cliente);
         if (codigo_operacion <= 0) {
-            log_info(logger, "CPU desconectada");
+            log_warning(logger, "CPU desconectada");
             break;
         }
 
@@ -72,16 +72,16 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     
     if (codigo_operacion == HANDSHAKE_CPU_MEMORIA) {
         log_trace(logger, "Recibi el handshake de una CPU");
-        op_code respuesta = OK;//temporal hasta que agregue lo de mandar tam_pag
+        int respuesta = OK;//temporal hasta que agregue lo de mandar tam_pag
         send(socket_cliente, &respuesta, sizeof(int), 0);
+        sleep(5);
         
         int* socket_cpu = malloc(sizeof(int));
         *socket_cpu = socket_cliente;
         
         pthread_t hilo_cpu;
         pthread_create(&hilo_cpu, NULL, (void*)manejar_conexion_cpu, socket_cpu);
-        pthread_detach(hilo_cpu);
-        
+        pthread_join(hilo_cpu, NULL);
         return NULL;
     }
     else if (codigo_operacion == HANDSHAKE) {
