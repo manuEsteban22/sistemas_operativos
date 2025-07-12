@@ -97,9 +97,9 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_planificador_cp, NULL, (void*)planificador_corto_plazo_loop, ptr_dispatch);
     pthread_detach(thread_planificador_cp);
 
-    // pthread_t thread_planificador_mp;
-    // pthread_create(&thread_planificador_mp, NULL, (void*)planificador_mediano_plazo, NULL);
-    // pthread_detach(thread_planificador_mp);
+    pthread_t thread_planificador_mp;
+    pthread_create(&thread_planificador_mp, NULL, (void*)planificador_mediano_plazo, NULL);
+    pthread_detach(thread_planificador_mp);
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
     while(1){
@@ -133,7 +133,7 @@ t_config* iniciar_config(void){
         PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
         algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
         algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
-        tiempo_suspension = config_get_int_value(config, "TIEMPO_SUSPENSION");
+        tiempo_suspension = config_get_int_value(nuevo_config, "TIEMPO_SUSPENSION");
 
         //log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);

@@ -25,6 +25,8 @@ void planificador_mediano_plazo(){
                 log_info(logger, "PID %d pasa a susp blocked por exceder tiempo", pcb->pid);
 
                 temporal_destroy(pcb->temporal_blocked);
+                sem_post(&sem_procesos_en_memoria);
+                sem_post(&sem_procesos_en_new);
             }
 
         }

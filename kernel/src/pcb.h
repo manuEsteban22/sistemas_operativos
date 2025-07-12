@@ -44,6 +44,7 @@ void borrar_pcb(t_pcb* pcb);
 void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config);
 void chequear_sjf_con_desalojo(t_pcb* nuevo);
 void asignar_timer_blocked(t_pcb* pcb);
+t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid);
 
 #include<planificador_largo_plazo.h>
 

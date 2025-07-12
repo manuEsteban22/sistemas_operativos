@@ -154,10 +154,12 @@ void planificador_largo_plazo(){
         //chequeo que haya procesos en new y que haya espacio en memoria con dos wait
         sem_wait(&sem_procesos_en_new);
         sem_wait(&sem_procesos_en_memoria);
+
         t_pcb* pcb = NULL;
         //pcb = crear_pcb(pid, tamanio);
 
         log_trace(logger, "aca arranco el plani lp");
+
         pthread_mutex_lock(&mutex_susp_ready);
         if(!queue_is_empty(cola_susp_ready)){
 
@@ -174,41 +176,50 @@ void planificador_largo_plazo(){
                 sem_post(&sem_procesos_ready);
                 pthread_mutex_unlock(&mutex_ready);
                 continue;
-            }
-            else{
+
+            } else{
                 pthread_mutex_unlock(&mutex_susp_ready);
                 sem_post(&sem_procesos_en_new);
                 sem_post(&sem_procesos_en_memoria);
                 continue;
             }
+
         } else{
             pthread_mutex_unlock(&mutex_susp_ready);
-            }
+        }
 
         pthread_mutex_lock(&mutex_new);
-        if (!queue_is_empty(cola_new)) {
-        log_trace(logger, "plp hay procesos en new");
-        pcb = queue_peek(cola_new);
-        if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
-            queue_pop (cola_new);
+
+        if (!queue_is_empty(cola_new)){
+            log_trace(logger, "plp hay procesos en new");
+            pcb = queue_peek(cola_new);
+
+            if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
+                queue_pop (cola_new);
+                pthread_mutex_unlock(&mutex_new);
+
+                cambiar_estado(pcb, READY);
+
+                pthread_mutex_lock(&mutex_ready);
+                queue_push(cola_ready, pcb);
+                sem_post(&sem_procesos_ready);
+                pthread_mutex_unlock(&mutex_ready);
+
+            } else{
+                pthread_mutex_unlock(&mutex_new);
+                sem_post(&sem_procesos_en_new);
+                sem_post(&sem_procesos_en_memoria);
+            }
+        } 
+        
+        else {
             pthread_mutex_unlock(&mutex_new);
-            cambiar_estado(pcb, READY);
-       
-            pthread_mutex_lock(&mutex_ready);
-            queue_push(cola_ready, pcb);
-            pthread_mutex_unlock(&mutex_ready);
-            sem_post(&sem_procesos_ready);
-        } else{
-            pthread_mutex_unlock(&mutex_new);
+            log_trace(logger, "la cola de new esta vacia");
+            
             sem_post(&sem_procesos_en_new);
             sem_post(&sem_procesos_en_memoria);
-            }
-        } else{
-        log_trace(logger, "la cola de new esta vacia");
-        pthread_mutex_unlock(&mutex_new);
-        sem_post(&sem_procesos_en_new);
-        sem_post(&sem_procesos_en_memoria);
         }
+
     //inicializar_proceso_en_memoria(pcb);
 }
 }

@@ -122,3 +122,26 @@ void asignar_timer_blocked(t_pcb* pcb){
     pcb->temporal_blocked = temporal_create();
     sem_post(&sem_procesos_en_blocked);
 }
+
+//saca un pcb de la cola de susp_blocked mediante el pid
+t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid){
+    t_list* aux = list_create();
+    t_pcb* pcb_encontrado = NULL;
+
+    while (!queue_is_empty(cola)){
+        t_pcb* actual = queue_pop(cola);
+
+        if (actual->pid == pid){
+            pcb_encontrado = actual;
+        } else {
+            list_add(aux, actual);
+        }
+    }
+
+    for (int i = 0; i < list_size(aux); i++) {
+        queue_push(cola, list_get(aux, i));
+    }
+
+    list_destroy(aux);
+    return pcb_encontrado;
+}

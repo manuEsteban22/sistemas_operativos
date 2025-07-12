@@ -144,36 +144,51 @@ void* manejar_servidor_io(int socket_io){
                 //la conexion sigue abierta pero sin mensajes(?
                 log_info(logger, "termino la conexion con exito");
                 break;
+
             case HANDSHAKE:
                 handshake_io(socket_cliente);
                 break;
+
             case PAQUETE:
                 log_info(logger, "llego un paquete");
                 break;
+
             case FINALIZA_IO:
                 t_list* recibido = recibir_paquete(socket_cliente);
                 int* pid = list_get(recibido, 0);
                 log_trace(logger, "Recibi finalizacion de io - pid %d", *pid);
                 t_pcb* pcb = obtener_pcb(*pid);
 
-                if (pcb == NULL) {
+                if (pcb == NULL){
                         log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
                         list_destroy_and_destroy_elements(recibido, free);
                         break;
-                    }
+                }
 
-                if(pcb->estado_actual==SUSP_BLOCKED){
+                if (pcb->estado_actual == SUSP_BLOCKED){
+
+                    pthread_mutex_lock(&mutex_susp_blocked);
+                    sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
+                    pthread_mutex_unlock(&mutex_susp_blocked);
+
                     cambiar_estado(pcb, SUSP_READY);
+
+                    pthread_mutex_lock(&mutex_susp_ready);
                     queue_push(cola_susp_ready, pcb);
-                }else if(pcb->estado_actual == BLOCKED){
+                    pthread_mutex_unlock(&mutex_susp_ready);
+                    
+                } else if (pcb->estado_actual == BLOCKED){
                     cambiar_estado(pcb, READY);
                     queue_push(cola_ready, pcb);
                     sem_post(&sem_procesos_ready);
+
                 }
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
+
             case ERROR:
                 break;
+
             default:
                 log_info(logger, "error en el recv");
                 break;
