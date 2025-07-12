@@ -16,9 +16,12 @@ extern t_queue* cola_new;
 extern t_queue* cola_ready;
 extern t_queue* cola_susp_ready;
 extern t_queue* cola_susp_blocked;
+extern t_queue* cola_blocked;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_ready;
+extern pthread_mutex_t mutex_blocked;
+extern pthread_mutex_t mutex_susp_blocked;
 
 extern sem_t sem_procesos_en_new;
 extern sem_t sem_procesos_en_memoria;

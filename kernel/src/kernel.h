@@ -2,7 +2,7 @@
 #define KERNEL_H_
 #include<utils/utils.h>
 #include<pcb.h>
-
+#include<planificador_mediano_plazo.h>
 
 extern t_log* logger;
 extern t_config* config;
@@ -18,6 +18,7 @@ extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
 extern pthread_mutex_t mutex_exec;
 extern char* algoritmo_largo_plazo;
 extern char* algoritmo_corto_plazo;
+extern int tiempo_suspension;
 
 
 typedef struct

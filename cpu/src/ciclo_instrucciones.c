@@ -144,8 +144,7 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
         break;
     case GOTO:
         log_info(logger, "ejecute un GOTO");
-        pcb->pc = (int)instruccion->param1;
-        //pcb->pc = atoi(instruccion->param1);
+        pcb->pc = atoi(instruccion->param1);
         break;
     case IO:
         pcb->pc++;

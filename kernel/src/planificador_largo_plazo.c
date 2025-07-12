@@ -9,9 +9,12 @@ t_queue* cola_new;
 t_queue* cola_ready;
 t_queue* cola_susp_ready;
 t_queue* cola_susp_blocked;
+t_queue* cola_blocked;
 
 pthread_mutex_t mutex_new = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_ready = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_blocked = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_susp_blocked = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_susp_ready = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t sem_procesos_en_new;
@@ -41,6 +44,7 @@ void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
+    cola_blocked = queue_create();
     sem_init(&sem_procesos_en_new, 0, 0);
     sem_init(&sem_procesos_en_memoria, 0, PROCESOS_MEMORIA);
     sem_init(&sem_procesos_ready, 0, 0);

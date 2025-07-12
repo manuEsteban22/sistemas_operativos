@@ -26,11 +26,13 @@ void llamar_a_io(int socket_cpu) {
         return;
     }
 
+    pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
     cambiar_estado(pcb, BLOCKED);
-    //asignar_timer_blocked(pcb);
-
+    asignar_timer_blocked(pcb);
+    queue_push(cola_blocked, pcb);
+    pthread_mutex_unlock(&mutex_blocked);
 
 
     if(io->ocupado) {
@@ -53,4 +55,10 @@ void llamar_a_io(int socket_cpu) {
     list_destroy_and_destroy_elements(campos, free);
 }
 
-void iniciar_proceso(int socket_cpu);
+void dump_memory(int socket_cpu){
+    
+}
+
+void iniciar_proceso(int socket_cpu){
+    printf("iniciar");
+}

@@ -19,6 +19,7 @@ int socket_io;
 int socket_dispatch;
 int socket_interrupt;
 int socket_memoria;
+int tiempo_suspension;
 pthread_t thread_io;
 pthread_t thread_dispatch;
 pthread_t thread_interrupt;
@@ -132,6 +133,7 @@ t_config* iniciar_config(void){
         PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
         algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
         algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
+        tiempo_suspension = config_get_int_value(config, "TIEMPO_SUSPENSION");
 
         //log_info(logger, "no se pudo leer el archivo de config");
         log_info(logger, "la ip del server memoria es: %s", ip_memoria);
