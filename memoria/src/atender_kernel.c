@@ -61,6 +61,9 @@ void des_suspender_proceso(int pid){
         return;
     }
 
+    char* pid_str = string_itoa(pid);
+    t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, string_itoa(pid)); //actualizar tabla de pags
+
     for (int i = 0; i < list_size(paginas_proceso); i++) { //restaurar las pags
         t_pagina_swap* relacion = list_get(paginas_proceso, i);
         int marco_ram = buscar_marco_libre();
@@ -73,12 +76,12 @@ void des_suspender_proceso(int pid){
         leer_de_swap(buffer, relacion->marco_swap);
         memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
 
-        t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, string_itoa(pid)); //actualizar tabla de pags
-        t_entrada_tabla* entrada = buscar_entrada(tabla_raiz, rel->nro_pagina);
+
+        t_entrada_tabla* entrada = buscar_entrada(tabla_raiz, relacion->nro_pagina);
         entrada->presencia = true;
         entrada->marco = marco_ram;
 
-        t_list* marcos_swap = list_crate(); //liberar marcos del swap
+        t_list* marcos_swap = list_create(); //liberar marcos del swap
         int* marco_swap_ptr = malloc(sizeof(int));
         *marco_swap_ptr = relacion->marco_swap;
         list_add(marcos_swap, marco_swap_ptr);
@@ -88,6 +91,7 @@ void des_suspender_proceso(int pid){
         free(relacion);
         free(buffer);
     }
+    free(pid_str);
 
     list_destroy(paginas_proceso);
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);
