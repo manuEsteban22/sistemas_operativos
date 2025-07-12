@@ -45,9 +45,36 @@ void suspender_proceso(int pid){
     suspender_tabla(tabla_raiz, 0, pid, 0);
 }
 
-void* des_suspender_proceso()
-{
+void des_suspender_proceso(int pid){
 
+    t_list* paginas_proceso = list_create(); //filtramos las paginas de ese proceso
+    for (int i = 0; i < list_size(paginas_en_swap); i++){
+        t_pagina_swap* relacion = list_get(paginas_en_swap, i);
+        if(relacion->pid == pid){
+            list_add(paginas_proceso, relacion);
+        }
+    }
+
+    if (list_size(paginas_proceso) > cantidad_marcos_libres()){
+        log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
+        list_destroy(paginas_proceso);
+        // Enviar mensaje de error si corresponde
+        return;
+    }
+
+    // 3. Restaurar cada página
+    for (int i = 0; i < list_size(paginas_proceso); i++) {
+        t_pagina_swap* rel = list_get(paginas_proceso, i);
+        int marco_ram = buscar_marco_libre();
+        if (marco_ram == -1) {
+            log_error(logger, "Error inesperado: no hay marco libre para restaurar página");
+            // Manejo de rollback si querés
+            break;
+        }
+    }
+    void* buffer = malloc(campos_config.tam_pagina);
+    leer_de_swap(buffer, rel->marco_swap);
+    memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
 }
 
 void* finalizar_proceso()
