@@ -113,3 +113,10 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 //     dictionary_iterator(tabla_pcbs, buscar_exec);
 //     return hay_exec;
 // }
+
+void asignar_timer_blocked(t_pcb* pcb){
+    if (pcb->tiempo_blocked != NULL) {
+        temporal_destroy(pcb->tiempo_blocked);
+    }
+    pcb->tiempo_blocked = temporal_create();
+}

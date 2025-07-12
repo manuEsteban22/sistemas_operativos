@@ -27,6 +27,8 @@ typedef struct
     int tamanio;
     double estimacion_rafaga;
     double rafaga_real_anterior;
+    double tiempo_blocked;
+    t_temporal* temporal_blocked;
 } t_pcb;
 
 typedef struct
@@ -42,6 +44,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);
 void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config);
 void chequear_sjf_con_desalojo(t_pcb* nuevo);
+void asignar_timer_blocked(t_pcb* pcb);
 
 #include<planificador_largo_plazo.h>
 
