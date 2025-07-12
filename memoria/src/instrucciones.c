@@ -99,7 +99,7 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     int pid = *((int*) list_get(lista_paquete, 0));
     int nro_pagina = *((int*) list_get(lista_paquete, 1));
 
-    //Aca tuca y manu tienen que hacer algo para ver a que frame corresponde esa pagina
+    //Aca tuca y manu tienen que hacer algo para ver a que frame corresponde esa pagina CHUPAME LAS BOLAS PABLO
     int marco = 2;//esto borrenlo claramente
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
