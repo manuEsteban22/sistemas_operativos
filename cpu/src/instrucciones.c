@@ -51,7 +51,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     }
 
     char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos);
+    int size_datos = strlen(datos) + 1;
 
     //escribir_en_cache(direccion_fisica, datos, pcb);
 
@@ -63,21 +63,16 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     borrar_paquete(paquete);
 
     log_info(logger, "PID: %d - Accion: ESCRIBIR - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
-
-    int confirmacion = recibir_operacion(socket_memoria);
-    if(confirmacion == OK){
-        log_trace(logger, "todo joya");
-    }
 }
 
 char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     int tamanio = (*(int*)instruccion->param2);
 
-    char* lectura_cache = leer_de_cache(direccion_fisica, tamanio, pcb);
-    if(lectura_cache != NULL){
-        log_info(logger, "pid%d, los datos: %s estaban en cache", pcb->pid, lectura_cache);
-        return lectura_cache;
-    }
+    // char* lectura_cache = leer_de_cache(direccion_fisica, tamanio, pcb);
+    // if(lectura_cache != NULL){
+    //     log_info(logger, "pid%d, los datos: %s estaban en cache", pcb->pid, lectura_cache);
+    //     return lectura_cache;
+    // }
 
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
@@ -86,12 +81,15 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 
+    if(recibir_operacion(socket_memoria) != OC_READ){
+        log_error(logger, "No se recibió la lectura");
+    }
     t_list* contenido = recibir_paquete(socket_memoria);
     char* datos = list_get(contenido, 0);
 
     int nro_pagina = direccion_fisica / tam_pagina;
     int marco = traducir_direccion(pcb, direccion_fisica) / tam_pagina;
-    actualizar_cache(nro_pagina,marco,datos,false,pcb);
+    //actualizar_cache(nro_pagina,marco,datos,false,pcb);
 
     log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
 

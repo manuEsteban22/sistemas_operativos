@@ -29,7 +29,7 @@ void llamar_a_io(int socket_cpu) {
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
     cambiar_estado(pcb, BLOCKED);
-    asignar_timer_blocked(pcb);
+    //asignar_timer_blocked(pcb);
 
 
 
