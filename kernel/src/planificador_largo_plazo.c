@@ -29,8 +29,8 @@ int pid_global = 0;
 void chequear_algoritmo_planificacion(char* algoritmo_largo_plazo){
     if (strcmp(algoritmo_largo_plazo,"FIFO") == 0){
     enum_algoritmo_lp = FIFO;
-    } else if(strcmp(algoritmo_largo_plazo,"MENOR_MEMORIA") == 0){
-    enum_algoritmo_lp = MENOR_MEMORIA;
+    } else if(strcmp(algoritmo_largo_plazo,"PMCP") == 0){
+    enum_algoritmo_lp = PMCP;
     } else{
     log_info(logger,"Algoritmo de planificación invalido: %s",algoritmo_largo_plazo);
     exit(EXIT_FAILURE);
@@ -66,7 +66,7 @@ void crear_proceso(int tamanio_proceso){
         case FIFO:
             queue_push(cola_new, pcb);
             break;
-        case MENOR_MEMORIA:
+        case PMCP:
             insertar_en_orden_por_memoria(cola_new, pcb);
             break;
         case SJF_SIN_DESALOJO:
@@ -120,11 +120,12 @@ void finalizar_proceso(t_pcb* pcb){
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
         
     log_info(logger, "%d Finaliza el proceso", pcb->pid);
+    log_metricas_estado(pcb);
     borrar_pcb(pcb);
 
     sem_post(&sem_procesos_en_memoria);
     sem_post(&sem_procesos_en_new);
-    //loguear_metricas();
+    
 }
 
 
