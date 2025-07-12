@@ -55,26 +55,42 @@ void des_suspender_proceso(int pid){
         }
     }
 
-    if (list_size(paginas_proceso) > cantidad_marcos_libres()){
+    if (list_size(paginas_proceso) > cantidad_marcos_libres()){ //error si no hay suficientes marcos libres
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
         list_destroy(paginas_proceso);
-        // Enviar mensaje de error si corresponde
         return;
     }
 
-    // 3. Restaurar cada página
-    for (int i = 0; i < list_size(paginas_proceso); i++) {
-        t_pagina_swap* rel = list_get(paginas_proceso, i);
+    for (int i = 0; i < list_size(paginas_proceso); i++) { //restaurar las pags
+        t_pagina_swap* relacion = list_get(paginas_proceso, i);
         int marco_ram = buscar_marco_libre();
         if (marco_ram == -1) {
             log_error(logger, "Error inesperado: no hay marco libre para restaurar página");
-            // Manejo de rollback si querés
             break;
         }
+
+        void* buffer = malloc(campos_config.tam_pagina);
+        leer_de_swap(buffer, relacion->marco_swap);
+        memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
+
+        t_tabla_paginas* tabla_raiz = dictionary_get(tablas_por_pid, string_itoa(pid)); //actualizar tabla de pags
+        t_entrada_tabla* entrada = buscar_entrada(tabla_raiz, rel->nro_pagina);
+        entrada->presencia = true;
+        entrada->marco = marco_ram;
+
+        t_list* marcos_swap = list_crate(); //liberar marcos del swap
+        int* marco_swap_ptr = malloc(sizeof(int));
+        *marco_swap_ptr = relacion->marco_swap;
+        list_add(marcos_swap, marco_swap_ptr);
+        liberar_marcos(marcos_swap);
+
+        list_remove_element(paginas_en_swap, relacion);
+        free(relacion);
+        free(buffer);
     }
-    void* buffer = malloc(campos_config.tam_pagina);
-    leer_de_swap(buffer, rel->marco_swap);
-    memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
+
+    list_destroy(paginas_proceso);
+    log_info(logger, "Proceso %d des-suspendido correctamente", pid);
 }
 
 void* finalizar_proceso()
