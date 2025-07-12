@@ -104,6 +104,7 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
     log_trace(logger, "arranque a correr pcp");
     while (1) {
         sem_wait(&sem_procesos_ready);
+        log_trace(logger, "arranque una vuelta de pcp");
         t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
         if (pcb == NULL) {
             log_trace(logger, "el pcb que agarro de ready es null");

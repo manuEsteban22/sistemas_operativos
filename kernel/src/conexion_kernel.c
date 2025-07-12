@@ -54,6 +54,10 @@ void* manejar_servidor_cpu(void* arg){
             case SYSCALL_IO:
                 llamar_a_io(socket_cliente);
                 break;
+            case SYSCALL_INIT:
+                log_trace(logger, "me llego syscall INIT_PROC");
+                //iniciar_proceso(socket_cliente);
+                break;
             case ERROR:
                 break;
             default:
