@@ -33,6 +33,7 @@ void* atender_cpu(void* socket_ptr)
                 break;
             case OC_READ:
                 log_info(logger, "recibi un read");
+                ejecutar_read(socket_cliente);
                 break;
             case OC_WRITE:
                 log_info(logger, "recibi un write");

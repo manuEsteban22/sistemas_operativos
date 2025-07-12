@@ -34,6 +34,7 @@ t_tabla_paginas* crear_tabla(int nivel_actual)
     t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
     tabla->entradas = malloc(sizeof(t_entrada_tabla) * campos_config.entradas_por_tabla);
 
+
     for(int i = 0; i < campos_config.entradas_por_tabla; i++)
     {
         tabla->entradas[i].presencia = false;

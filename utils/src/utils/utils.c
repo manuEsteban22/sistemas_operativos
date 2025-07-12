@@ -126,11 +126,15 @@ t_list* recibir_paquete (int socket_cliente){
     t_buffer* buffer = malloc(sizeof(t_buffer));
     t_list* contenido;
 
-    recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL);
+    if(recv(socket_cliente, &(buffer->size), sizeof(int), MSG_WAITALL) <= 0){
+        printf("fallo el recv del size del paquete");
+    }
     
     buffer->stream = malloc(buffer->size);
-
-    recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL);
+    
+    if(recv(socket_cliente, buffer->stream, buffer->size, MSG_WAITALL) <= 0){
+        printf("fallo el recv del stream del paquete");
+    }
 
     contenido = deserializar(buffer);
 
