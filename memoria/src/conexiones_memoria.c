@@ -78,9 +78,16 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
     
     if (codigo_operacion == HANDSHAKE_CPU_MEMORIA) {
         log_trace(logger, "Recibi el handshake de una CPU");
-        int respuesta = OK;//temporal hasta que agregue lo de mandar tam_pag
-        send(socket_cliente, &respuesta, sizeof(int), 0);
-        
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, OK);
+
+        agregar_a_paquete(paquete, &(campos_config.entradas_por_tabla), sizeof(int));
+        agregar_a_paquete(paquete, &(campos_config.tam_pagina), sizeof(int));
+        agregar_a_paquete(paquete, &(campos_config.cantidad_niveles), sizeof(int));
+        enviar_paquete(paquete, socket_cliente, logger);
+        borrar_paquete(paquete);
+    
+
         int* socket_cpu = malloc(sizeof(int));
         *socket_cpu = socket_cliente;
         log_trace(logger, "socket cpu: %d", *socket_cpu);
