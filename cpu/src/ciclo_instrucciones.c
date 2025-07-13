@@ -113,7 +113,7 @@ int decode(t_instruccion* instruccion, t_pcb* pcb){
     log_trace(logger, "PID: %d - Dirección lógica a traducir: %d", pcb->pid, direccion_logica);
     int direccion_fisica = traducir_direccion(pcb, direccion_logica);
 
-    log_info(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
+    log_trace(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
     return direccion_fisica;
 }
 

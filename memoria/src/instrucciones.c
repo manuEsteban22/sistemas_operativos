@@ -54,8 +54,7 @@ void liberar_memoria()
 int mandar_instruccion(int socket_cliente) 
 {
 
-    t_list* lista_paquete = list_create();
-    lista_paquete = recibir_paquete(socket_cliente);
+    t_list* lista_paquete = recibir_paquete(socket_cliente);
     int pid = *((int*) list_get(lista_paquete, 0));
     int pc = *((int*) list_get(lista_paquete, 1));
 
@@ -101,8 +100,7 @@ int mandar_instruccion(int socket_cliente)
 }
 
 int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el frame
-    t_list* lista_paquete = list_create();
-    lista_paquete = recibir_paquete(socket_cliente);
+    t_list* lista_paquete = recibir_paquete(socket_cliente);
 
     int pid = *((int*) list_get(lista_paquete, 0));
     int nro_pagina = *((int*) list_get(lista_paquete, 1));

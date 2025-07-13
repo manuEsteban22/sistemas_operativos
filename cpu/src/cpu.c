@@ -16,9 +16,9 @@ char* reemplazo_tlb;
 int entradas_cache;
 char* reemplazo_cache;
 int retardo_cache;
-int entradas_por_tabla = 4;//estas estan hardcodeadas pero vienen del handshake
-int tam_pagina = 64;
-int cant_niveles = 3;
+int entradas_por_tabla;
+int tam_pagina;
+int cant_niveles;
 int socket_kernel_dispatch = -1;
 int socket_kernel_interrupt = -1;
 int socket_memoria;
