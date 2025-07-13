@@ -5,7 +5,7 @@
 void* memoria_usuario = NULL;
 int cantidad_marcos;
 
-bool* bitmap_marcos = NULL;
+t_bitarray* bitmap_marcos = NULL;
 
 void inicializar_memoria()
 {
@@ -22,6 +22,13 @@ void inicializar_memoria()
 
     bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);            
     memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos); 
+
+    int tam_en_bytes = (cantidad_marcos + 7)/8;
+
+    char* buffer = malloc(tam_en_bytes);
+    memset(buffer, 0, tam_en_bytes);
+
+    bitmap_marcos = bitarray_create_with_mode(buffer, tam_en_bytes, LSB_FIRST);
 
 
     log_info(logger,"Memoria de usuario inicializada con %d marcos de %db cada uno",cantidad_marcos, campos_config.tam_pagina);

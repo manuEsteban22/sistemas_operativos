@@ -117,7 +117,9 @@ void* finalizar_proceso(int pid){
 
 int buscar_marco_libre() 
 {
-    for (int i = 0; i < cantidad_marcos_totales; i++) {
+    int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
+    
+    for (int i = 0; i < cantidad_marcos; i++) {
         if (!bitarray_test_bit(bitmap_marcos, i)) {
             bitarray_set_bit(bitmap_marcos, i);
             return i;

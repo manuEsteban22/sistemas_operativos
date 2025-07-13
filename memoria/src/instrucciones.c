@@ -113,6 +113,8 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     agregar_a_paquete(paquete,&marco,sizeof(int));
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
+    
+    return 0;
 }
 
 int ejecutar_read(int socket_cliente){

@@ -4,6 +4,8 @@
 #include <memoria.h>
 #include <commons/collections/dictionary.h>
 #include <commons/collections/list.h>
+#include <math.h>
+
 
 // Estructuras de métricas y proceso
 extern t_dictionary* tablas_por_pid;

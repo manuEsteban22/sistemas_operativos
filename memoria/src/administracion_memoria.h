@@ -2,10 +2,10 @@
 #define ADMINISTRACION_MEMORIA_H_
 #include <memoria.h>
 #include <utils/utils.h>
-
+#include <commons/bitarray.h>
 
 extern void* memoria_usuario;
-extern bool* bitmap_marcos;
+extern t_bitarray* bitmap_marcos;
 void inicializar_memoria();
 
 typedef struct t_tabla_paginas t_tabla_paginas;
