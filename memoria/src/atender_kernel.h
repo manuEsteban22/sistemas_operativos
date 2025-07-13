@@ -29,6 +29,7 @@ typedef struct {
 } t_proceso;
 
 // Funciones públicas
+int cantidad_marcos_libres();
 void* inicializar_proceso(int tam_proceso, int pid);
 void suspender_proceso(int pid);
 void des_suspender_proceso(int pid);

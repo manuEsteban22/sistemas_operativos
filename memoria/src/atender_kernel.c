@@ -190,3 +190,16 @@ void suspender_pagina(int pid, int nro_pagina, int marco){
     free(buffer); //libera
     liberar_marcos(marcos_swap);
 }
+
+int cantidad_marcos_libres()
+{
+    int marcos_libres = 0;
+    int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
+    
+    for (int i = 0; i < cantidad_marcos; i++) {
+        if (!bitarray_test_bit(bitmap_marcos, i)) {
+            marcos_libres ++;
+        }
+    }
+    return marcos_libres;
+}
