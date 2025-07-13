@@ -65,7 +65,8 @@ void llamar_a_io(int socket_cpu) {
 
 void dump_memory(int socket_cpu){
     t_list* recibido = recibir_paquete(socket_cpu);
-    int pid = list_get(recibido, 0);
+    int* pid_ptr = list_get(recibido, 0);
+    int pid = *pid_ptr;
     log_trace(logger, "## DUMP MEMORY - PID %d", pid);
 
     t_pcb* pcb = obtener_pcb(pid);
@@ -73,7 +74,7 @@ void dump_memory(int socket_cpu){
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SOLICITUD_DUMP_MEMORY);
-    agregar_a_paquete(paquete, pid, sizeof(int));
+    agregar_a_paquete(paquete, &pid, sizeof(int));
     socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);

@@ -60,7 +60,7 @@ void manejar_conexion_kernel(int socket_cliente) {
             t_list* pid_dumpeo_raw = recibir_paquete(socket_cliente);
             int* pid_dumpeo = list_get(pid_dumpeo_raw, 0);
             dumpear_memoria(pid_dumpeo);
-            list_destroy_and_destroy_elements(recibido, free);
+            //list_destroy_and_destroy_elements(recibido, free);
             break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
