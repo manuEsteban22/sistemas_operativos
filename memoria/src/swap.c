@@ -2,6 +2,7 @@
 #include <memoria.h>
 
 bool* bitmap_marcos_swap;
+t_list* paginas_en_swap = NULL;
 
 void inicializar_swap(){
 

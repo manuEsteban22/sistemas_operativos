@@ -2,7 +2,6 @@
 //extern t_log* logger;
 
 t_dictionary* tablas_por_pid;
-t_list* paginas_en_swap;
 
 // busca pags libres, las asigna y arma tabla raiz
 
@@ -49,7 +48,7 @@ void des_suspender_proceso(int pid){
             list_add(paginas_proceso, relacion);
         }
     }
-    if (list_size(paginas_proceso) > cantidad_marcos_libres()){
+    if (list_size(paginas_proceso) > 8/*cantidad_marcos_libres()*/){
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
         list_destroy(paginas_proceso);
         return;
@@ -92,7 +91,7 @@ void* finalizar_proceso(int pid){
         free(pid_str);
         return NULL;
     }
-    liberar_tabla(proceso->tabla_raiz, 0);
+    //liberar_tabla(proceso->tabla_raiz, 0);
     for (int i = 0; i < list_size(paginas_en_swap); ){
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
         if (relacion->pid == pid){

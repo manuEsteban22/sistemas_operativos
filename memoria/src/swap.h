@@ -19,6 +19,6 @@ typedef struct {
     int marco_swap;
 } t_pagina_swap;
 
-t_list* paginas_en_swap;
+extern t_list* paginas_en_swap;
 
 #endif
