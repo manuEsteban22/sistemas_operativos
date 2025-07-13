@@ -2,16 +2,16 @@
 
 int fd_escucha;
 
-void* atender_cliente(void* fd_conexion_ptr, t_log* logger) {
+/*void* atender_cliente(void* fd_conexion_ptr, t_log* logger) {
     int socket_cliente = *((int*)fd_conexion_ptr);
     free(fd_conexion_ptr);
 
-    log_info(logger, "se conectó un cliente");
+    log_trace(logger, "se conectó un cliente");
 
     close(socket_cliente);
 
     return NULL;
-}
+}*/
 
 int iniciar_servidor(char* PUERTO, t_log* logger){
     int socket_servidor;
@@ -37,18 +37,18 @@ int iniciar_servidor(char* PUERTO, t_log* logger){
 
     listen(socket_servidor, SOMAXCONN);
     freeaddrinfo(server_info);
-    log_info(logger, "Listo para escucha");
+    log_trace(logger, "Listo para escucha");
     return socket_servidor;
 }
 
 int esperar_cliente(int socket_servidor, t_log* logger){
     int socket_cliente;
     socket_cliente = accept(socket_servidor, NULL, NULL);
-    log_info(logger, "se conecto un cliente");
+    log_trace(logger, "se conecto un cliente");
     return socket_cliente;
 }
 
-int crear_conexion(char* ip, char* puerto){
+/*int crear_conexion(char* ip, char* puerto){
     struct addrinfo hints;
     struct addrinfo *server_info;
 
@@ -68,7 +68,7 @@ int crear_conexion(char* ip, char* puerto){
     freeaddrinfo(server_info);
 
     return socket_cliente;
-}
+}*/
 
 void* serializar(t_paquete* paquete, int bytes_a_enviar){
     //meto el contenido del paquete en un unico stream de datos para hacer el send
@@ -160,25 +160,6 @@ t_paquete* cambiar_opcode_paquete(t_paquete* paquete, op_code codigo){
     paquete->codigo_operacion = codigo;
     return paquete;
 }
-/*void enviar_handshake(int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion = HANDSHAKE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = 0;
-	paquete->buffer->stream = NULL;
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	borrar_paquete(paquete);
-}*/
-
 void enviar_mensaje(int socket, char* mensaje){
     int cod_op = MENSAJE;
     int size = strlen(mensaje) + 1;
@@ -216,9 +197,7 @@ void enviar_paquete(t_paquete* paquete, int socket, t_log* logger){
     int resultado = send(socket, stream_a_enviar, bytes_a_enviar, 0);
     log_trace(logger, "Se envió un paquete al socket %d", socket);
     if (resultado == -1) {
-        perror("Error al enviar paquete");  // Te muestra "Broken pipe" u otra causa
         log_error(logger, "Fallo el send. Probablemente el socket está cerrado.");
-        // Podés cerrar el socket si querés: close(socket);
     }
 
     free(stream_a_enviar);
@@ -239,17 +218,6 @@ int recibir_operacion(int socket_cliente){
         return -1;
     }
 }
-
-/*void* recibir_buffer(int* size, int socket_cliente)
-{
-	void * buffer;
-
-	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	buffer = malloc(*size);
-	recv(socket_cliente, buffer, *size, MSG_WAITALL);
-
-	return buffer;
-}*/
 
 void borrar_paquete(t_paquete* paquete){
     free(paquete->buffer->stream);

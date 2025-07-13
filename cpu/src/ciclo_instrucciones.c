@@ -58,17 +58,16 @@ t_instruccion* fetch(t_pcb* pcb){
     int pid = pcb->pid;
     t_instruccion* proxima_instruccion;
     
-    log_trace(logger, "el pid es %d y el pc %d", pcb->pid, pcb->pc);
+    log_info(logger, "## PID: %d - FETCH - Program Counter: %d", pcb->pid, pcb->pc);
     t_paquete* paquete_pid_pc = crear_paquete();
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
-    log_trace(logger, "socket memoria: %d", socket_memoria);
     enviar_paquete(paquete_pid_pc, socket_memoria, logger);
     borrar_paquete(paquete_pid_pc);
 
     int opcode = recibir_operacion(socket_memoria);
     if(opcode != PAQUETE){
-        log_trace(logger, "recibi: %d", opcode);
+        log_error(logger, "## Error en el fetch, se recibio el opcode: %d", opcode);
         return NULL;
     }
     t_list* recibido = recibir_paquete(socket_memoria);
@@ -85,10 +84,8 @@ t_instruccion* fetch(t_pcb* pcb){
     }
 
     char* instruccion_sin_traducir = strdup((char*)elemento);
-    log_info(logger, "Instrucción sin traducir: %s", instruccion_sin_traducir);
     proxima_instruccion = leerInstruccion(instruccion_sin_traducir);
 
-    log_info(logger, "Instruccion: %d, param1: %s, param2: %s", proxima_instruccion->identificador, proxima_instruccion->param1, proxima_instruccion->param2);
     list_destroy_and_destroy_elements(recibido, free);
 
     return proxima_instruccion;
@@ -124,42 +121,44 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
     {
     case NOOP:
         //no hace nada
-        log_info(logger, "ejecute un noop");
+        log_info(logger, "## PID: %d - Ejecutando: NOOP", pid);
         pcb->pc++;
         break;
     case WRITE:
         direccion_fisica = decode(instruccion, pcb);
         ejecutar_write(instruccion, direccion_fisica, pcb);
-        log_info(logger, "ejecute un write");
-        free(instruccion->param1);
-        free(instruccion->param2);
+        log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, *((int*)instruccion->param1), *((char*)instruccion->param2));
         pcb->pc++;
         break;
     case READ:
         direccion_fisica = decode(instruccion, pcb);
         char* datos = ejecutar_read(instruccion, direccion_fisica, pcb);
-        log_info(logger, "el read leyo: %s", datos);
+        log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, *((int*)instruccion->param1), *((int*)instruccion->param2));
+        log_trace(logger, "Datos leidos: %s", datos);
         free(datos);
         pcb->pc++;
         break;
     case GOTO:
-        log_info(logger, "ejecute un GOTO");
+        log_info(logger, "## PID: %d - Ejecutando: GOTO - %d", pid, *((int*)instruccion->param1));
         pcb->pc = atoi(instruccion->param1);
         break;
     case IO:
-        pcb->pc++;
+        log_info(logger, "## PID: %d - Ejecutando: IO - %s %d", pid, *((char*)instruccion->param1), *((int*)instruccion->param2));
         ejecutar_io(instruccion, pcb);
+        pcb->pc++;
         break;
     case INIT_PROC:
         init_proc(instruccion, pcb);
+        log_info(logger, "## PID: %d - Ejecutando: INIT_PROC - %s %d", pid, instruccion->param1, instruccion->param2);
         pcb->pc++;
         break;
     case DUMP_MEMORY:
         dump_memory(pcb);
+        log_info(logger, "## PID: %d - Ejecutando: DUMP_MEMORY", pid);
         pcb->pc++;
         break;
     case EXIT:
-        log_info(logger, "ejecute un EXIT");
+        log_info(logger, "## PID: %d - Ejecutando: EXIT", pid);
         exit_syscall(pcb);
         break;
     default:
@@ -167,6 +166,8 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
         pcb->pc++;
         break;
     }
+    free(instruccion->param1);
+    free(instruccion->param2);
     return;
 }
 
@@ -175,6 +176,7 @@ bool check_interrupt(t_pcb* pcb){
     int recibido = recv(socket_kernel_interrupt, &opcode, sizeof(int), MSG_DONTWAIT);
 
     if(recibido > 0 && opcode == OC_INTERRUPT){
+        log_info(logger, "## Llega interrupción al puerto Interrupt");
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, OC_INTERRUPT);
         agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
@@ -195,7 +197,6 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
     t_instruccion* prox;
 
     while(proceso_en_running){
-        log_trace(logger, "pc = %d", pcb->pc);
         prox = fetch(pcb);
         if(prox == NULL){
             log_error(logger, "Error en el fetch en pc=%d", pcb->pc);
@@ -204,7 +205,7 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
         }
         if(prox->identificador == EXIT){
             proceso_en_running = false;
-            log_info(logger, "lei un exit");
+            log_trace(logger, "lei un exit");
         }
         execute(prox, pcb);
 

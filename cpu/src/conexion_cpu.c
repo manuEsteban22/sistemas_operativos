@@ -32,9 +32,9 @@ void handshake_memoria(int socket){
     if(respuesta == OK){
         log_info(logger, "Recibi el OK de memoria");
         t_list* recibido = recibir_paquete(socket);
-        int entradas_por_tabla = *((int*)list_get(recibido, 0));
-        int tam_pagina = *((int*)list_get(recibido, 1));
-        int cant_niveles = *((int*)list_get(recibido, 2));
+        entradas_por_tabla = *((int*)list_get(recibido, 0));
+        tam_pagina = *((int*)list_get(recibido, 1));
+        cant_niveles = *((int*)list_get(recibido, 2));
         log_trace(logger, "Entradas por tabla %d - Tamanio pagina %d - Cantidad niveles %d", entradas_por_tabla,tam_pagina, cant_niveles);
         list_destroy_and_destroy_elements(recibido, free);
         return;

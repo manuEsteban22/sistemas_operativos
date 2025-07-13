@@ -1,10 +1,8 @@
-
 #include <administracion_memoria.h>
 
-
+t_dictionary* tablas_por_pid;
 void* memoria_usuario = NULL;
 int cantidad_marcos;
-
 t_bitarray* bitmap_marcos = NULL;
 
 void inicializar_memoria()
@@ -20,8 +18,8 @@ void inicializar_memoria()
 
     cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);            
-    memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos); 
+    // bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);            
+    // memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos); 
 
     int tam_en_bytes = (cantidad_marcos + 7)/8;
 
@@ -58,7 +56,8 @@ t_tabla_paginas* crear_tabla(int nivel_actual)
 void* creacion_estructuras_administrativas()
 {
    inicializar_memoria();
-   crear_tabla(0);
+   tablas_por_pid = dictionary_create();
+   //crear_tabla(0);
    return NULL;
 }
 

@@ -14,20 +14,20 @@ void* manejar_conexion_cpu(void* arg) {
 
         switch(codigo_operacion) {
             case PAQUETE:
-                log_info(logger, "Llegó un paquete");
+                log_trace(logger, "Llegó un paquete");
                 mandar_instruccion(socket_cliente);         
                 break;
             case OC_READ:
-                log_info(logger, "recibi un read");
+                log_trace(logger, "recibi un read");
                 ejecutar_read(socket_cliente);
                 break;
             case OC_WRITE:
-                log_info(logger, "recibi un write");
+                log_trace(logger, "recibi un write");
                 ejecutar_write(socket_cliente);
                 break;
             case OC_FRAME:
                 mandar_frame(socket_cliente);
-                log_info(logger, "mande el frame");
+                log_trace(logger, "mande el frame");
                 break;
             default:
                 log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
@@ -45,16 +45,14 @@ void manejar_conexion_kernel(int socket_cliente) {
         case OC_INIT:
             log_trace(logger, "Llego una peticion de crear un nuevo proceso");
             t_list* recibido = recibir_paquete(socket_cliente);
-            int* pid = list_get(recibido, 0);
-            int* tamanio = list_get(recibido, 1);
-            log_trace(logger, "Proceso PID=%d - Tamanio=%d", *pid, *tamanio);
-            if(*tamanio <= campos_config.tam_memoria){//esto se va a tener que cambiar por una funcion de memoria disponible creo
-                log_trace(logger, "Hay suficiente memoria, se manda el OK");
-                t_paquete* paquete = crear_paquete();
-                cambiar_opcode_paquete(paquete, OK);
-                enviar_paquete(paquete, socket_cliente, logger);
-                borrar_paquete(paquete);
-            }
+            int pid = *((int*)list_get(recibido, 0));
+            int tamanio = *((int*)list_get(recibido, 1));
+            log_trace(logger, "Proceso PID=%d - Tamanio=%d", pid, tamanio);
+            inicializar_proceso(tamanio, pid);
+            t_paquete* paquete = crear_paquete();
+            cambiar_opcode_paquete(paquete, OK);
+            enviar_paquete(paquete, socket_cliente, logger);
+            borrar_paquete(paquete);
             list_destroy_and_destroy_elements(recibido, free);
             break;
         case SOLICITUD_DUMP_MEMORY:
@@ -98,12 +96,11 @@ void* manejar_conexiones_memoria(void* socket_ptr) {
         return NULL;
     }
     else if (codigo_operacion == HANDSHAKE) {
-        log_info(logger, "Conexión efimera de Kernel");
+        log_info(logger, "## Kernel Conectado - FD del socket: %d", socket_cliente);
         op_code respuesta = OK;
         send(socket_cliente, &respuesta, sizeof(int), 0);
         
         manejar_conexion_kernel(socket_cliente);
-        log_trace(logger, "socket kernel %d", socket_cliente);
         close(socket_cliente);
         return NULL;
     }

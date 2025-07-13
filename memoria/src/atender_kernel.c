@@ -1,7 +1,5 @@
 #include <atender_kernel.h>
-//extern t_log* logger;
 
-t_dictionary* tablas_por_pid;
 
 // busca pags libres, las asigna y arma tabla raiz
 
@@ -26,6 +24,7 @@ void* inicializar_proceso(int tam_proceso, int pid){
         entrada->presencia = true;
         entrada->marco = marco_libre;
     }
+    log_info(logger, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
     return proceso->tabla_raiz;
 }
 
@@ -48,7 +47,7 @@ void des_suspender_proceso(int pid){
             list_add(paginas_proceso, relacion);
         }
     }
-    if (list_size(paginas_proceso) > 8/*cantidad_marcos_libres()*/){
+    if (list_size(paginas_proceso) > cantidad_marcos_libres()){
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
         list_destroy(paginas_proceso);
         return;
@@ -109,7 +108,7 @@ void* finalizar_proceso(int pid){
     dictionary_remove(tablas_por_pid, pid_str);
     free(pid_str);
     // Log de métricas
-    log_info(logger, "Proceso %d finalizado. Accesos: %d, Page Faults: %d, Pags usadas: %d", pid, proceso->accesos_memoria, proceso->page_faults, proceso->paginas_usadas);
+    log_info(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d", pid, proceso->metricas.cantidad_accesos_tablas_de_paginas, proceso->metricas.cantidad_instrucciones_solicitadas, proceso->metricas.cantidad_bajadas_a_swap, proceso->metricas.cantidad_subidas_a_memoria, proceso->metricas.cantidad_lecturas_memoria, proceso->metricas.cantidad_escrituras_memoria);
     free(proceso); // liberar struct proceso
     return NULL;
 }

@@ -7,6 +7,7 @@
 extern void* memoria_usuario;
 extern t_bitarray* bitmap_marcos;
 void inicializar_memoria();
+extern t_dictionary* tablas_por_pid;
 
 typedef struct t_tabla_paginas t_tabla_paginas;
 

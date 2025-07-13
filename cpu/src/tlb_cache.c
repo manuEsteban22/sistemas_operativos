@@ -11,7 +11,6 @@ void inicializar_tlb(){
         list_destroy(tlb);
     }
     tlb = list_create();
-    //list_add(tlb, 1);
 }
 
 void escribir_pagina_en_memoria(int marco, void* contenido) {

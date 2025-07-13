@@ -58,6 +58,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, datos, size_datos);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     cambiar_opcode_paquete(paquete, OC_WRITE);
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
@@ -77,6 +78,7 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     cambiar_opcode_paquete(paquete, OC_READ);
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);

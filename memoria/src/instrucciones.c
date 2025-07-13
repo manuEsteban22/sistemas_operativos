@@ -86,7 +86,7 @@ int mandar_instruccion(int socket_cliente)
     }
 
     int tamanio = strlen(instruccion) + 1;
-    log_trace(logger, "PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
+    log_info(logger, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
     cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
@@ -119,11 +119,12 @@ int ejecutar_read(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
     int direccion_fisica = *((int*)list_get(recibido, 0));
     int tamanio = *((int*)list_get(recibido, 1));
+    int pid = *((int*)list_get(recibido, 2));
 
     void* leido = malloc(tamanio);
-    memcpy(leido, memoria_usuario + direccion_fisica, tamanio);
+    memcpy(leido, memoria_usuario + direccion_fisica, tamanio);//falta actualizar metricas de proceso
 
-    log_trace(logger, "anda antes de mandar lo leido");
+    log_info(logger, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_READ);
     agregar_a_paquete(paquete, leido, tamanio);
@@ -138,9 +139,12 @@ int ejecutar_write(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
     int direccion_fisica = *((int*)list_get(recibido, 0));
     char* datos = list_get(recibido, 1);
+    int pid = *((int*)list_get(recibido, 2));
     int tamanio = strlen(datos) + 1;
 
-    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
+    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);//falta actualizar metricas de proceso
+
+    log_info(logger, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OK);

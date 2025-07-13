@@ -1,15 +1,12 @@
 #ifndef ATENDER_KERNEL_H_
 #define ATENDER_KERNEL_H_
-#include <config_memoria.h>
 #include <memoria.h>
+#include <config_memoria.h>
 #include <commons/collections/dictionary.h>
 #include <commons/collections/list.h>
 #include <math.h>
 
-
 // Estructuras de métricas y proceso
-extern t_dictionary* tablas_por_pid;
-
 typedef struct {
     int cantidad_accesos_tablas_de_paginas;
     int cantidad_instrucciones_solicitadas;
