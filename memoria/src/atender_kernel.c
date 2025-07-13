@@ -90,7 +90,7 @@ void* finalizar_proceso(int pid){
         free(pid_str);
         return NULL;
     }
-    //liberar_tabla(proceso->tabla_raiz, 0);
+    liberar_tabla(proceso->tabla_raiz, 0);
     for (int i = 0; i < list_size(paginas_en_swap); ){
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
         if (relacion->pid == pid){
@@ -200,4 +200,20 @@ int cantidad_marcos_libres()
         }
     }
     return marcos_libres;
+}
+
+void liberar_tabla(t_tabla_paginas* tabla, int nivel) 
+{
+    for (int i = 0; i < campos_config.entradas_por_tabla; i++) {
+        t_entrada_tabla* entrada = &tabla->entradas[i];
+        if (nivel < campos_config.cantidad_niveles - 1) {
+            if (entrada->siguiente_tabla)
+                liberar_tabla(entrada->siguiente_tabla, nivel + 1);
+        } else {
+            if (entrada->presencia) {
+                bitarray_clean_bit(bitmap_marcos, entrada->marco);
+                entrada->presencia = false;
+            }
+        }
+    }
 }
