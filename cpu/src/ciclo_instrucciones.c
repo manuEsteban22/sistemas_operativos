@@ -75,19 +75,15 @@ t_instruccion* fetch(t_pcb* pcb){
         log_error(logger, "Error al recibir instrucciones de memoria");
         return NULL;
     }
-
     void* elemento = list_get(recibido, 0);
     if (elemento == NULL) {
         log_error(logger, "Elemento NULL recibido en list_get");
         list_destroy_and_destroy_elements(recibido, free);
         return NULL;
     }
-
     char* instruccion_sin_traducir = strdup((char*)elemento);
     proxima_instruccion = leerInstruccion(instruccion_sin_traducir);
-
     list_destroy_and_destroy_elements(recibido, free);
-
     return proxima_instruccion;
 }
 
@@ -127,29 +123,29 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
     case WRITE:
         direccion_fisica = decode(instruccion, pcb);
         ejecutar_write(instruccion, direccion_fisica, pcb);
-        log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, *((int*)instruccion->param1), *((char*)instruccion->param2));
+        log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, atoi(instruccion->param1), (char*)instruccion->param2);
         pcb->pc++;
         break;
     case READ:
         direccion_fisica = decode(instruccion, pcb);
         char* datos = ejecutar_read(instruccion, direccion_fisica, pcb);
-        log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, *((int*)instruccion->param1), *((int*)instruccion->param2));
+        log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, atoi(instruccion->param1), atoi(instruccion->param2));
         log_trace(logger, "Datos leidos: %s", datos);
         free(datos);
         pcb->pc++;
         break;
     case GOTO:
-        log_info(logger, "## PID: %d - Ejecutando: GOTO - %d", pid, *((int*)instruccion->param1));
+        log_info(logger, "## PID: %d - Ejecutando: GOTO - %d", pid, atoi(instruccion->param1));
         pcb->pc = atoi(instruccion->param1);
         break;
     case IO:
-        log_info(logger, "## PID: %d - Ejecutando: IO - %s %d", pid, *((char*)instruccion->param1), *((int*)instruccion->param2));
+        log_info(logger, "## PID: %d - Ejecutando: IO - %s %d", pid, (char*)instruccion->param1, atoi(instruccion->param2));
         ejecutar_io(instruccion, pcb);
         pcb->pc++;
         break;
     case INIT_PROC:
         init_proc(instruccion, pcb);
-        log_info(logger, "## PID: %d - Ejecutando: INIT_PROC - %s %d", pid, instruccion->param1, instruccion->param2);
+        log_info(logger, "## PID: %d - Ejecutando: INIT_PROC - %s %d", pid, (char*)instruccion->param1, atoi(instruccion->param2));
         pcb->pc++;
         break;
     case DUMP_MEMORY:

@@ -145,11 +145,7 @@ int ejecutar_write(int socket_cliente){
     memcpy(memoria_usuario + direccion_fisica, datos, tamanio);//falta actualizar metricas de proceso
 
     log_info(logger, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
-
-    t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OK);
-    enviar_paquete(paquete, socket_cliente, logger);
-    borrar_paquete(paquete);
+    
     list_destroy_and_destroy_elements(recibido, free);
     return 0;
 }

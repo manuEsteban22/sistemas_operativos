@@ -73,7 +73,7 @@ void dump_memory(int socket_cpu){
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SOLICITUD_DUMP_MEMORY);
-    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, pid, sizeof(int));
     socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
