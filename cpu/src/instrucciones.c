@@ -103,7 +103,7 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
 }
 
 //le dice a kernel que envie el dispositivo a io, formato [pid][tam_disp][disp][tiempo]
-void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb){
+void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     char* dispositivo = (char*)instruccion->param1;
     int tiempo = atoi(instruccion->param2);
 
@@ -117,6 +117,7 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb){
     agregar_a_paquete(paquete, &size_dispositivo, sizeof(int));
     agregar_a_paquete(paquete, dispositivo, size_dispositivo);
     agregar_a_paquete(paquete, &tiempo, sizeof(int));
+    agregar_a_paquete(paquete, &cpu_id, sizeof(int));
     
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);

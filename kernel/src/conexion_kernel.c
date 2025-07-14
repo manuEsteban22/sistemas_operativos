@@ -26,13 +26,13 @@ void* manejar_servidor_cpu(void* arg){
                 break;
             case HANDSHAKE:
                 int cpu_id;
-                log_info(logger, "recibi un handshake de cpu");
+                log_trace(logger, "recibi un handshake de cpu");
                 op_code respuesta = OK;
                 send(socket_cliente, &respuesta, sizeof(int),0);
-                log_info(logger, "Envie OK a %s", nombre_cliente);
+                log_trace(logger, "Envie OK a %s", nombre_cliente);
 
                 recv(socket_cliente, &cpu_id, sizeof(int), MSG_WAITALL);
-                log_info(logger, "Conexion de CPU ID: %d", cpu_id);
+                log_trace(logger, "Conexion de CPU ID: %d", cpu_id);
 
                 if (strcmp(nombre_cliente, "DISPATCH") == 0) {
                     int* socket_dispatch_ptr = malloc(sizeof(int));
@@ -40,12 +40,20 @@ void* manejar_servidor_cpu(void* arg){
 
                     char* cpu_id_str = string_itoa(cpu_id);
                     dictionary_put(tabla_dispatch, cpu_id_str, socket_dispatch_ptr);
-                    log_info(logger, "Socket DISPATCH guardado: %d", socket_cliente);
+                    log_trace(logger, "Socket DISPATCH guardado: %d", socket_cliente);
+                    free(cpu_id_str);
+                }else if(strcmp(nombre_cliente, "INTERRUPT") == 0){
+                    int* socket_interrupt_ptr = malloc(sizeof(int));
+                    *socket_interrupt_ptr = socket_cliente;
+
+                    char* cpu_id_str = string_itoa(cpu_id);
+                    dictionary_put(tabla_interrupt, cpu_id_str, socket_interrupt_ptr);
+                    log_trace(logger, "Socket INTERRUPT guardado: %d", socket_cliente);
                     free(cpu_id_str);
                 }
                 break;
             case PAQUETE:
-                log_info(logger, "llego un paquete");
+                log_trace(logger, "llego un paquete");
                 break;
             case SYSCALL_IO:
                 llamar_a_io(socket_cliente);

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     inicializar_tlb();
 
     t_pcb* pcb = esperar_procesos();
-    iniciar_ciclo_de_instrucciones(pcb);
+    iniciar_ciclo_de_instrucciones(pcb, cpu_id);
     return 0;
 }
 

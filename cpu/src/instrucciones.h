@@ -8,7 +8,7 @@
 
 void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb);
 char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb);
-void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb);
+void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id);
 void init_proc(t_instruccion* instruccion, t_pcb* pcb);
 void dump_memory(t_pcb* pcb);
 void exit_syscall(t_pcb* pcb);

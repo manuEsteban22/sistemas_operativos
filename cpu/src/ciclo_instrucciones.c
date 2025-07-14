@@ -110,7 +110,7 @@ int decode(t_instruccion* instruccion, t_pcb* pcb){
     return direccion_fisica;
 }
 
-void execute(t_instruccion* instruccion, t_pcb* pcb){
+void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     int direccion_fisica;
     int pid = pcb->pid;
     switch (instruccion->identificador)
@@ -140,8 +140,8 @@ void execute(t_instruccion* instruccion, t_pcb* pcb){
         break;
     case IO:
         log_info(logger, "## PID: %d - Ejecutando: IO - %s %d", pid, (char*)instruccion->param1, atoi(instruccion->param2));
-        ejecutar_io(instruccion, pcb);
         pcb->pc++;
+        ejecutar_io(instruccion, pcb, cpu_id);
         break;
     case INIT_PROC:
         init_proc(instruccion, pcb);
@@ -185,7 +185,7 @@ bool check_interrupt(t_pcb* pcb){
 }
 
 
-void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
+void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int cpu_id){
 
     //hacer un bucle que llame a cada parte del ciclo hasta que el fetch devuelva un exit
     bool proceso_en_running = true;
@@ -203,7 +203,7 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
             proceso_en_running = false;
             log_trace(logger, "lei un exit");
         }
-        execute(prox, pcb);
+        execute(prox, pcb, cpu_id);
 
         if(proceso_en_running){
             hay_interrupcion = check_interrupt(pcb);

@@ -1,18 +1,20 @@
 #include <syscalls.h>
 
-void llamar_a_io(int socket_cpu) {
+void llamar_a_io(int socket_dispatch) {
     int estado_anterior;
-    t_list* campos = recibir_paquete(socket_cpu);
+    t_list* campos = recibir_paquete(socket_dispatch);
 
     char* pid_raw = list_get(campos, 0);
     char* pc_raw = list_get(campos, 1);
     //char* size_disp_raw = list_get(campos, 2);
     char* dispositivo = list_get(campos, 3);
     char* tiempo_raw = list_get(campos, 4);
+    char* cpuid_raw = list_get(campos, 5);
 
     int pid = *(int*)pid_raw;
     int pc = *(int*)pc_raw;
     int tiempo = *(int*)tiempo_raw;
+    int cpu_id = *(int*)cpuid_raw;
 
     log_info(logger, "recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
@@ -41,6 +43,10 @@ void llamar_a_io(int socket_cpu) {
     asignar_timer_blocked(pcb);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
+    char* cpu_id_str = string_itoa(cpu_id);
+    int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+    socket_interrupt = *socket_interrupt_ptr;
+    free(cpu_id_str);
 
     t_paquete* senial_bloqueante = crear_paquete();
     cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
