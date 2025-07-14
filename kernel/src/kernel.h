@@ -18,6 +18,8 @@ extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
 extern t_dictionary* tabla_exec; // tiene pcb -> cpuid
 extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
 extern t_dictionary* tabla_interrupt; // tiene cpuid -> socket interrupt
+extern t_queue* cpus_libres; // tiene los cpuid libres
+extern pthread_mutex_t mutex_cpus_libres;
 extern pthread_mutex_t mutex_exec;
 extern char* algoritmo_largo_plazo;
 extern char* algoritmo_corto_plazo;

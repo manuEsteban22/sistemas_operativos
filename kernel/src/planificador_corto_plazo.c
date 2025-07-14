@@ -127,17 +127,32 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
         t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
         if (pcb == NULL) {
             log_trace(logger, "el pcb que agarro de ready es null");
-            sleep(1);  // opcional, evitás un busy-wait innecesario
             continue;
-        }else{
-            log_trace(logger, "aca anda el pcp");
         }
 
         // Buscás un CPU disponible — por ahora podés hardcodear socket_dispatch y cpu_id si solo tenés uno
-        int cpu_id = 123;  // o algo que identifique a tu CPU
+        pthread_mutex_lock(&mutex_cpus_libres);
+        int* cpu_id_ptr = queue_pop(cpus_libres);
+        pthread_mutex_unlock(&mutex_cpus_libres);
+
+        if (cpu_id_ptr == NULL) {
+            log_error(logger, "No se encontró la CPU asignada al PCB");
+            continue;
+        }
+        int cpu_id = *cpu_id_ptr;
+        free(cpu_id_ptr);
+
+        log_warning(logger,"cpu id: %d", cpu_id);//borrar
+
         char* cpu_id_str = string_itoa(cpu_id);
         int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, cpu_id_str);
         free(cpu_id_str);
+
+        if (tabla_dispatch == NULL) {
+            log_error(logger, "Tabla dispatch no inicializada");
+            continue;
+        }
+
         if (socket_dispatch_ptr == NULL) {
             log_error(logger, "No se encontró el socket dispatch para CPU %d", cpu_id);
             continue;

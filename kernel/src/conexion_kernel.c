@@ -40,6 +40,14 @@ void* manejar_servidor_cpu(void* arg){
 
                     char* cpu_id_str = string_itoa(cpu_id);
                     dictionary_put(tabla_dispatch, cpu_id_str, socket_dispatch_ptr);
+
+                    int* cpu_id_ptr = malloc(sizeof(int));
+                    *cpu_id_ptr = cpu_id;
+
+                    pthread_mutex_lock(&mutex_cpus_libres);
+                    queue_push(cpus_libres, cpu_id_ptr);
+                    pthread_mutex_unlock(&mutex_cpus_libres);
+
                     log_trace(logger, "Socket DISPATCH guardado: %d", socket_cliente);
                     free(cpu_id_str);
                 }else if(strcmp(nombre_cliente, "INTERRUPT") == 0){

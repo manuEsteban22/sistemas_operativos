@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <commons/collections/queue.h>
 #include <pcb.h>
+#include <kernel.h>
 
 t_pcb* planificador_corto_plazo ();
 t_pcb* planificar_sjf_sin_desalojo(t_queue* cola);

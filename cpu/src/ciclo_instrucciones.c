@@ -173,12 +173,12 @@ bool check_interrupt(t_pcb* pcb){
 
     if(recibido > 0 && opcode == OC_INTERRUPT){
         log_info(logger, "## Llega interrupción al puerto Interrupt");
-        t_paquete* paquete = crear_paquete();
-        cambiar_opcode_paquete(paquete, OC_INTERRUPT);
-        agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
-        agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
-        enviar_paquete(paquete, socket_kernel_dispatch, logger);
-        borrar_paquete(paquete);
+        // t_paquete* paquete = crear_paquete();
+        // cambiar_opcode_paquete(paquete, OC_INTERRUPT);
+        // agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+        // agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
+        // enviar_paquete(paquete, socket_kernel_dispatch, logger);
+        // borrar_paquete(paquete);
         return true;
     }
     return false;

@@ -75,6 +75,12 @@ void llamar_a_io(int socket_dispatch) {
         log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
     }
 
+    int* cpu_id_ptr = malloc(sizeof(int));
+    *cpu_id_ptr = cpu_id;
+    pthread_mutex_lock(&mutex_cpus_libres);
+    queue_push(cpus_libres, cpu_id_ptr);
+    pthread_mutex_unlock(&mutex_cpus_libres);
+
     list_destroy_and_destroy_elements(campos, free);
 }
 

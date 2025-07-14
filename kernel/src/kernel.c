@@ -29,8 +29,10 @@ t_dictionary* dispositivos_io;
 t_dictionary* tabla_pcbs;
 t_dictionary* tabla_exec;
 pthread_mutex_t mutex_exec = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_cpus_libres = PTHREAD_MUTEX_INITIALIZER;
 t_dictionary* tabla_dispatch;
 t_dictionary* tabla_interrupt;
+t_queue* cpus_libres;
 
 int main(int argc, char* argv[]) {
     logger = iniciar_logger();
@@ -40,6 +42,7 @@ int main(int argc, char* argv[]) {
     tabla_exec = dictionary_create();
     tabla_dispatch = dictionary_create();
     tabla_interrupt = dictionary_create();
+    cpus_libres = queue_create();
 
     /*
     if(argc < 3){

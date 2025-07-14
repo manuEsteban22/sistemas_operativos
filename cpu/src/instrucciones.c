@@ -121,10 +121,10 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);
-    log_trace(logger, "envié instruccion io en pid: %d", pcb->pid);
 
     int respuesta = recibir_operacion(socket_kernel_dispatch);
     if(respuesta == OK){
+        log_trace(logger, "Recibi confirmacion de IO de kernel");
         return;
     }
     else{
