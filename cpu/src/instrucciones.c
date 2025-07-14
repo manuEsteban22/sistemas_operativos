@@ -121,7 +121,14 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb){
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);
     log_trace(logger, "envié instruccion io en pid: %d", pcb->pid);
-    return;
+
+    int respuesta = recibir_operacion(socket_kernel_dispatch);
+    if(respuesta == OK){
+        return;
+    }
+    else{
+        log_error(logger, "No se recibio respuesta del IO de kernel");
+    }
 }
 
 void init_proc(t_instruccion* instruccion, t_pcb* pcb){

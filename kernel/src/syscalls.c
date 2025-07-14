@@ -42,6 +42,15 @@ void llamar_a_io(int socket_cpu) {
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
 
+    t_paquete* senial_bloqueante = crear_paquete();
+    cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
+    enviar_paquete(senial_bloqueante, socket_interrupt, logger);
+    borrar_paquete(senial_bloqueante);
+    
+    t_paquete* confirmacion = crear_paquete();
+    cambiar_opcode_paquete(confirmacion, OK);
+    enviar_paquete(confirmacion, socket_dispatch, logger);
+    borrar_paquete(confirmacion);
 
     if(io->ocupado) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);

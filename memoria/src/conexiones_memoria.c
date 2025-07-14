@@ -29,8 +29,12 @@ void* manejar_conexion_cpu(void* arg) {
                 mandar_frame(socket_cliente);
                 log_trace(logger, "mande el frame");
                 break;
+            case CERRADO:
+                log_trace(logger, "Se cerro la conexion con CPU");
+                break;
             default:
                 log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
+                break;
         }
     }
     close(socket_cliente);
@@ -57,8 +61,8 @@ void manejar_conexion_kernel(int socket_cliente) {
             break;
         case SOLICITUD_DUMP_MEMORY:
             log_trace(logger, "Se recibio solicitud de hacer un memory dump");
-            t_list* pid_dumpeo_raw = recibir_paquete(socket_cliente);
-            int* pid_dumpeo = list_get(pid_dumpeo_raw, 0);
+            t_list* recibido_pid_dump = recibir_paquete(socket_cliente);
+            int pid_dumpeo = *((int*)list_get(recibido_pid_dump, 0));
             dumpear_memoria(pid_dumpeo);
             //list_destroy_and_destroy_elements(recibido, free);
             break;

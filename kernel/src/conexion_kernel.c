@@ -22,9 +22,7 @@ void* manejar_servidor_cpu(void* arg){
 
         switch (codigo_operacion){
             case CERRADO:
-                //close(socket_cliente);
-                //la conexion sigue abierta pero sin mensajes(?
-                log_info(logger, "termino la conexion con exito");
+                log_info(logger, "Se cerro la conexion");
                 break;
             case HANDSHAKE:
                 int cpu_id;
@@ -141,8 +139,6 @@ void* manejar_servidor_io(int socket_io){
 
         switch (codigo_operacion){
             case CERRADO:
-                //close(socket_cliente);
-                //la conexion sigue abierta pero sin mensajes(?
                 log_info(logger, "termino la conexion con exito");
                 break;
 
@@ -161,9 +157,9 @@ void* manejar_servidor_io(int socket_io){
                 t_pcb* pcb = obtener_pcb(*pid);
 
                 if (pcb == NULL){
-                        log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
-                        list_destroy_and_destroy_elements(recibido, free);
-                        break;
+                    log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
+                    list_destroy_and_destroy_elements(recibido, free);
+                    break;
                 }
 
                 if (pcb->estado_actual == SUSP_BLOCKED){

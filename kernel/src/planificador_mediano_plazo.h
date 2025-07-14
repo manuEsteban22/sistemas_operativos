@@ -4,6 +4,7 @@
 #include<utils/utils.h>
 #include<kernel.h>
 #include<pcb.h>
+//#include<conexion_kernel.h>
 
 
 void planificador_mediano_plazo();

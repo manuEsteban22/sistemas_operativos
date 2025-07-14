@@ -17,7 +17,7 @@ t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
 
 void inicializar_planificador_cp(char* algoritmo_planificacion_cp){
     parsear_algoritmo_cp(algoritmo_planificacion_cp);
-}
+}//????
 
 //algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
 
@@ -104,7 +104,9 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     cambiar_opcode_paquete(paquete_mem, OC_INIT);
     agregar_a_paquete(paquete_mem, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete_mem, &(pcb->tamanio), sizeof(int));
+    socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete_mem, socket_memoria, logger);
+    cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete_mem);
 
     //--------------------------------------------------------

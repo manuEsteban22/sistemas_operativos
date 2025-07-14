@@ -212,4 +212,5 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb){
         free(prox);
     }
     free(pcb);
+    log_trace(logger, "se esta ejecutando esto");
 }
