@@ -4,6 +4,7 @@
 #include<utils/utils.h>
 #include<cpu.h>
 
-t_pcb* esperar_procesos();
+bool esperar_procesos(int cpu_id);
+void bucle_esperar_procesos(int cpu_id);
 
 #endif

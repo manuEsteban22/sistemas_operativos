@@ -37,10 +37,10 @@ int main(int argc, char* argv[]) {
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     inicializar_tlb();
 
-    t_pcb* pcb = esperar_procesos();
-    iniciar_ciclo_de_instrucciones(pcb, cpu_id);
+    bucle_esperar_procesos(cpu_id);
     return 0;
 }
+
 
 t_log* iniciar_logger(int id){
     t_log* nuevo_logger;

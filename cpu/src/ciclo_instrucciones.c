@@ -212,5 +212,5 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int cpu_id){
         free(prox);
     }
     free(pcb);
-    log_trace(logger, "se esta ejecutando esto");
+    log_trace(logger, "Termino un ciclo cpu");
 }
