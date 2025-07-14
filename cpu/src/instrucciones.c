@@ -51,7 +51,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     }
 
     char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos) + 1;
+    int size_datos = strlen(datos);
 
     //escribir_en_cache(direccion_fisica, datos, pcb);
 
@@ -89,8 +89,8 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     t_list* contenido = recibir_paquete(socket_memoria);
     char* datos = list_get(contenido, 0);
 
-    int nro_pagina = direccion_fisica / tam_pagina;
-    int marco = traducir_direccion(pcb, direccion_fisica) / tam_pagina;
+    //nt nro_pagina = direccion_fisica / tam_pagina;
+    //int marco = direccion_fisica / tam_pagina;
     //actualizar_cache(nro_pagina,marco,datos,false,pcb);
 
     log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);

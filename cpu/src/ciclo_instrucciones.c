@@ -90,6 +90,7 @@ t_instruccion* fetch(t_pcb* pcb){
 bool requiere_traduccion(t_instruccion* instruccion){
     if(instruccion->identificador == WRITE || instruccion->identificador == READ){
         return true;
+        log_debug(logger, "Detecté un write o read");
     }
     else{
         return false;

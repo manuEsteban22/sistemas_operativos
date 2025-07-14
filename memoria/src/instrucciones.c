@@ -239,5 +239,6 @@ int obtener_marco(int pid, int nro_pagina) {
             marco = actual->entradas[indice].marco;
         }
     }
+    log_trace(logger, "Marco = %d", marco);
     return marco;
 }
