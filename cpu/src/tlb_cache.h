@@ -26,8 +26,13 @@ typedef struct{
     bool usado;
 } t_entrada_cache;
 
+// extern t_list* cache;
+extern int puntero_clock;
+
 void inicializar_tlb();
+void inicializar_cache();
 int esta_en_tlb(int pagina);
 int pedir_frame(t_pcb* pcb, int nro_pagina);
+void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb);
 
 #endif

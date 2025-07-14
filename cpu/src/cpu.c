@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
     socket_memoria = conectar_memoria(ip_memoria, puerto_memoria);
     inicializar_tlb();
+    inicializar_cache();
 
     bucle_esperar_procesos(cpu_id);
     return 0;

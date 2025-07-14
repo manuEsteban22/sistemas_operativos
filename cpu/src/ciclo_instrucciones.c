@@ -105,6 +105,7 @@ int decode(t_instruccion* instruccion, t_pcb* pcb){
     }
     int direccion_logica = *(int*)instruccion->param1;
     log_trace(logger, "PID: %d - Dirección lógica a traducir: %d", pcb->pid, direccion_logica);
+
     int direccion_fisica = traducir_direccion(pcb, direccion_logica);
 
     log_trace(logger, "direccion logica: %d, direccion fisica %d", direccion_logica, direccion_fisica);
@@ -113,6 +114,8 @@ int decode(t_instruccion* instruccion, t_pcb* pcb){
 
 void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     int direccion_fisica;
+    int direccion_logica;
+    char* datos;
     int pid = pcb->pid;
     switch (instruccion->identificador)
     {
@@ -122,15 +125,32 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         pcb->pc++;
         break;
     case WRITE:
+        direccion_logica = *(int*)instruccion->param1;
+        datos = (char*)instruccion->param2;
+        log_trace(logger, "dir logica = %d, datos = %s", direccion_logica, datos);
+
+        if(entradas_cache > 0){
+            escribir_en_cache(direccion_logica, datos, pcb);
+        }
         direccion_fisica = decode(instruccion, pcb);
-        ejecutar_write(instruccion, direccion_fisica, pcb);
-        log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, atoi(instruccion->param1), (char*)instruccion->param2);
+        ejecutar_write(instruccion, direccion_fisica, pcb);    
+        
+        log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, direccion_logica, (char*)instruccion->param2);
         pcb->pc++;
         break;
     case READ:
-        direccion_fisica = decode(instruccion, pcb);
-        char* datos = ejecutar_read(instruccion, direccion_fisica, pcb);
-        log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, atoi(instruccion->param1), atoi(instruccion->param2));
+        log_debug(logger,"debug1");
+        direccion_logica = *(int*)instruccion->param1;
+        int tamanio = *(int*)instruccion->param2;
+        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
+        datos = leer_de_cache(direccion_logica,tamanio,pcb);
+        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
+        if(datos == NULL){
+            log_debug(logger,"debug3");
+            direccion_fisica = decode(instruccion, pcb);
+            datos = ejecutar_read(instruccion, direccion_fisica, pcb);
+        }
+        log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, direccion_logica, tamanio);
         log_trace(logger, "Datos leidos: %s", datos);
         free(datos);
         pcb->pc++;

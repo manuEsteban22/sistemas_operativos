@@ -41,7 +41,8 @@ typedef enum
     FINALIZA_IO,
     MEMORY_DUMP,
     OC_FRAME,
-    OC_PAG,
+    OC_PAG_WRITE,
+    OC_PAG_READ,
     ERROR
 } op_code;
 typedef struct

@@ -3,8 +3,9 @@
 t_list* tlb;
 t_list* cache;
 pthread_mutex_t mutex_tlb = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_cache = PTHREAD_MUTEX_INITIALIZER;
 int contador_acceso = 0;
-
+int puntero_clock;
 
 void inicializar_tlb(){
     if(tlb != NULL){
@@ -13,16 +14,40 @@ void inicializar_tlb(){
     tlb = list_create();
 }
 
-void escribir_pagina_en_memoria(int marco, void* contenido) {
+void inicializar_cache() {
+    cache = list_create();
+}
+
+void escribir_pagina_en_memoria(int direccion_fisica, void* contenido) {
     t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OC_PAG);
-    
-    agregar_a_paquete(paquete, &marco, sizeof(int));
-    agregar_a_paquete(paquete, &contenido, string_length(contenido));
+    cambiar_opcode_paquete(paquete, OC_PAG_WRITE);
+    //agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
+    agregar_a_paquete(paquete, &contenido, strlen(contenido));
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 }
+char* leer_pagina_memoria(int nro_pagina, t_pcb* pcb){
+    int direccion_logica = nro_pagina * tam_pagina;
+    int direccion_fisica = traducir_direccion(pcb, direccion_logica);
 
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_PAG_READ);
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
+    enviar_paquete(paquete, socket_memoria, logger);
+    borrar_paquete(paquete);
+
+    if(recibir_operacion(socket_memoria) == OC_PAG_READ){
+        t_list* recibido = recibir_paquete(socket_memoria);
+        char* contenido = (char*)list_get(recibido, 0);
+        char* pagina = malloc(tam_pagina);
+        memcpy(pagina, contenido, tam_pagina);
+        log_trace(logger, "Se leyo una pagina de memoria con contenido %s", contenido);
+        list_destroy_and_destroy_elements(recibido, free);
+        return pagina;
+    }
+}
 
 int esta_en_tlb(int pagina){
     log_trace(logger,"Buscando pagina %d en TLB", pagina);
@@ -77,18 +102,107 @@ void limpiar_tlb() {
 }
 
 bool esta_en_cache(int pagina, int* marco, t_pcb* pcb){
+    log_debug(logger, "debug 1.2.1");
+    pthread_mutex_lock(&mutex_cache);
+    bool encontrado = false;
     for (int i = 0; i < list_size(cache); i++) {
+        log_debug(logger, "debug 1.2.2");
         t_entrada_cache* entrada = list_get(cache, i);
+        log_debug(logger, "debug 1.2.3");
         if (entrada->pagina == pagina) {
             *marco = entrada->marco;
             entrada->usado = true;
-            log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, pagina);
-            return true;
+            encontrado = true;
+            break;
         }
     }
+    pthread_mutex_unlock(&mutex_cache);
+    log_debug(logger, "debug 1.2.4");
+    if(encontrado == true){
+        log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, pagina);
+        return encontrado;
+    }else{
+        log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, pagina);
+        return encontrado;
+    }
+}
+
+void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
+    if(entradas_cache <= 0) return NULL;
+
+    int nro_pagina = direccion_logica / tam_pagina;
+    int desplazamiento = direccion_logica % tam_pagina;
+    int marco;
+
+    log_debug(logger, "debug_1.2, nro_pagina %d", nro_pagina);
+    if(!esta_en_cache(nro_pagina, &marco, pcb)){
+        log_error(logger, "La pagina no estaba en cache");
+        return NULL;
+    }
+    log_debug(logger, "debug_1.3");
+    pthread_mutex_lock(&mutex_cache);
+
+    t_entrada_cache* entrada = NULL;
+    for(int i = 0; i < list_size(cache); i++) {
+        log_debug(logger, "debug_1.4");
+        t_entrada_cache* temp = list_get(cache, i);
+        if(temp->pagina == nro_pagina) {
+            entrada = temp;
+            break;
+        }
+    }
+
+    if(entrada == NULL) {
+        pthread_mutex_unlock(&mutex_cache);
+        return NULL;
+    }
     
-    log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, pagina);
-    return false;
+    char* datos = NULL;
+
+    if(desplazamiento + tamanio > tam_pagina) {
+        log_error(logger, "Se intento leer fuera de la pagina");
+        pthread_mutex_unlock(&mutex_cache);
+        return NULL;
+    }
+    datos = malloc(tamanio + 1);
+    log_debug(logger, "debug_1.5");
+    memcpy(datos, entrada->contenido + desplazamiento, tamanio);
+
+    entrada->usado = true;
+    pthread_mutex_unlock(&mutex_cache);
+    return datos;
+
+}
+
+void escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
+    int nro_pagina = direccion_logica / tam_pagina;
+    int desplazamiento = direccion_logica % tam_pagina;
+    int marco;
+    if(esta_en_cache(nro_pagina, &marco, pcb)){
+        pthread_mutex_lock(&mutex_cache);
+
+        t_entrada_cache* entrada = NULL;
+        for(int i = 0; i < list_size(cache); i++){
+            t_entrada_cache* temp = list_get(cache, i);
+            if(temp->pagina == nro_pagina){
+                entrada = temp;
+                break;
+            }
+        }
+        if(entrada != NULL){
+            memcpy(entrada->contenido +desplazamiento, datos, strlen(datos) + 1);
+            entrada->modificado = true;
+            entrada->usado = true;
+        }
+        pthread_mutex_unlock(&mutex_cache);
+    } else{
+        char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
+        if(pagina_completa != NULL){
+            memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
+            actualizar_cache(nro_pagina, marco, pagina_completa, true, pcb);
+            free(pagina_completa);
+        }
+    }
 }
 
 void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb) {
@@ -104,10 +218,10 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
         int indice_victima = encontrar_victima_cache();
         
         t_entrada_cache* victima = list_get(cache, indice_victima);
-        if (victima->modificado) {
-            escribir_pagina_en_memoria(victima->marco, victima->contenido);
-            log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
-        }
+        // if (victima->modificado) {
+        //     escribir_pagina_en_memoria((victima->marco * tam_pagina), victima->contenido);
+        //     log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
+        // }
         
         list_remove(cache, indice_victima);
         free(victima->contenido);
@@ -116,25 +230,47 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
     
     list_add(cache, nueva_entrada);
     log_info(logger, "PID: %d - Cache Add - Pagina: %d", pcb->pid, pagina);
+    return;
 }
 
 int encontrar_victima_cache() {
-    int puntero_clock = 0;
-    
-    if(strcmp(reemplazo_cache, "CLOCK") == 0 || strcmp(reemplazo_cache, "CLOCK-M") == 0) {
-        for(int i = 0; i < list_size(cache); i++) {
+    puntero_clock = 0;
+    int clock_m = 0;
+
+    if(strcmp(reemplazo_cache, "CLOCK-M") == 0){
+        for(int i=0; i < list_size(cache); i++){
             t_entrada_cache* entrada = list_get(cache, puntero_clock);
-            if(!entrada->usado) {
+            if(!entrada->usado && !entrada->modificado) {
                 int victima = puntero_clock;
                 puntero_clock = (puntero_clock + 1) % entradas_cache;
                 return victima;
             }
+        }
+        puntero_clock = 0;
+        clock_m++;
+    }
+    
+    if(strcmp(reemplazo_cache, "CLOCK") == 0 || strcmp(reemplazo_cache, "CLOCK-M") == 0) {
+        for(int i = 0; i < list_size(cache) || clock_m == 2; i++) {
+            t_entrada_cache* entrada = list_get(cache, puntero_clock);   
+            if(!entrada->usado) {
+                int victima = puntero_clock;
+                puntero_clock = (puntero_clock + 1) % entradas_cache;
+
+                if(entrada->modificado){
+                    escribir_pagina_en_memoria((entrada->marco * tam_pagina), entrada->contenido);
+                }
+
+                return victima;
+            }
             entrada->usado = false;
             puntero_clock = (puntero_clock + 1) % entradas_cache;
+            clock_m++;
         }
     }
 
     //default a fifo
+    log_error(logger, "No se pudo poner algoritmo de cache correctamente, usando fifo");
     return 0;
 }
 int pedir_frame(t_pcb* pcb, int nro_pagina){

@@ -1,48 +1,48 @@
 #include <instrucciones.h>
 
 
-void escribir_en_cache(int direccion_fisica, char* datos, t_pcb* pcb) {
-    int nro_pagina = direccion_fisica / tam_pagina;
-    int desplazamiento = direccion_fisica % tam_pagina;
-    int marco;
+// void escribir_en_cache(int direccion_fisica, char* datos, t_pcb* pcb) {
+//     int nro_pagina = direccion_fisica / tam_pagina;
+//     int desplazamiento = direccion_fisica % tam_pagina;
+//     int marco;
     
-    if(esta_en_cache(nro_pagina, &marco, pcb)) {
-        for(int i = 0; i < list_size(cache); i++) {
-            t_entrada_cache* entrada = list_get(cache, i);
-            if(entrada->pagina == nro_pagina) {
-                memcpy(entrada->contenido + desplazamiento, datos, strlen(datos));
-                entrada->modificado = true;
-                log_info(logger, "PID: %d - Cache Update - Pagina: %d", pcb->pid, nro_pagina);
-                return;
-            }
-        }
-    }
-}
+//     if(esta_en_cache(nro_pagina, &marco, pcb)) {
+//         for(int i = 0; i < list_size(cache); i++) {
+//             t_entrada_cache* entrada = list_get(cache, i);
+//             if(entrada->pagina == nro_pagina) {
+//                 memcpy(entrada->contenido + desplazamiento, datos, strlen(datos));
+//                 entrada->modificado = true;
+//                 log_info(logger, "PID: %d - Cache Update - Pagina: %d", pcb->pid, nro_pagina);
+//                 return;
+//             }
+//         }
+//     }
+// }
 
-char* leer_de_cache(int direccion_fisica, int tamanio, t_pcb* pcb) {
-    int nro_pagina = direccion_fisica / tam_pagina;
-    int desplazamiento = direccion_fisica % tam_pagina;
-    void* contenido_pagina = NULL;
-    int marco;
+// char* leer_de_cache(int direccion_fisica, int tamanio, t_pcb* pcb) {
+//     int nro_pagina = direccion_fisica / tam_pagina;
+//     int desplazamiento = direccion_fisica % tam_pagina;
+//     void* contenido_pagina = NULL;
+//     int marco;
     
-    if(esta_en_cache(nro_pagina, &marco, pcb)) {
-        t_entrada_cache* entrada = NULL;
-        for(int i = 0; i < list_size(cache); i++) {
-            entrada = list_get(cache, i);
-            if(entrada->pagina == nro_pagina) {
-                break;
-            }
-        }
+//     if(esta_en_cache(nro_pagina, &marco, pcb)) {
+//         t_entrada_cache* entrada = NULL;
+//         for(int i = 0; i < list_size(cache); i++) {
+//             entrada = list_get(cache, i);
+//             if(entrada->pagina == nro_pagina) {
+//                 break;
+//             }
+//         }
         
-        if(entrada != NULL) {
-            char* datos = malloc(tamanio + 1);
-            memcpy(datos, entrada->contenido + desplazamiento, tamanio);
-            //datos[tamanio] = '\0';
-            return datos;
-        }
-    }
-    return NULL;
-}
+//         if(entrada != NULL) {
+//             char* datos = malloc(tamanio + 1);
+//             memcpy(datos, entrada->contenido + desplazamiento, tamanio);
+//             //datos[tamanio] = '\0';
+//             return datos;
+//         }
+//     }
+//     return NULL;
+// }
 
 void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     if(instruccion == NULL || pcb == NULL || instruccion->param2 == NULL){
@@ -74,7 +74,8 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     //     log_info(logger, "pid%d, los datos: %s estaban en cache", pcb->pid, lectura_cache);
     //     return lectura_cache;
     // }
-
+    // char* datos = malloc(tamanio + 1);
+    // memset(datos, 0, tamanio +1);
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
@@ -87,19 +88,18 @@ char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
         log_error(logger, "No se recibió la lectura");
     }
     t_list* contenido = recibir_paquete(socket_memoria);
-    char* datos = list_get(contenido, 0);
+    char* datos_crudos = list_get(contenido, 0);
+    char* datos_leidos = strndup(datos_crudos, tamanio);
 
     //nt nro_pagina = direccion_fisica / tam_pagina;
     //int marco = direccion_fisica / tam_pagina;
     //actualizar_cache(nro_pagina,marco,datos,false,pcb);
 
-    log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
-
-    char* copia_datos = strdup(datos);
+    log_info(logger, "PID: %d - Accion: LEER - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos_leidos);
 
     list_destroy_and_destroy_elements(contenido, free);
 
-    return copia_datos;
+    return datos_leidos;
 }
 
 //le dice a kernel que envie el dispositivo a io, formato [pid][tam_disp][disp][tiempo]

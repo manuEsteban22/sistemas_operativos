@@ -152,13 +152,14 @@ int ejecutar_write(int socket_cliente){
 
 int leer_pagina_completa(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
-    int direccion_fisica = *((int*)list_get(recibido, 0));
+    int pid = *((int*)list_get(recibido, 0));
+    int direccion_fisica = *((int*)list_get(recibido, 1));
 
     void* buffer = malloc(campos_config.tam_pagina);
     memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
 
     t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OC_READ);
+    cambiar_opcode_paquete(paquete, OC_PAG_READ);
     agregar_a_paquete(paquete, buffer, campos_config.tam_pagina);
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
