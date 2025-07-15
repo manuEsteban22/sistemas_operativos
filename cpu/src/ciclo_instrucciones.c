@@ -129,9 +129,12 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         datos = (char*)instruccion->param2;
         log_trace(logger, "dir logica = %d, datos = %s", direccion_logica, datos);
 
-        if(entradas_cache > 0){
-            escribir_en_cache(direccion_logica, datos, pcb);
+        if(escribir_en_cache(direccion_logica, datos, pcb)){
+            log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, direccion_logica, (char*)instruccion->param2);
+            pcb->pc++;
+            break;
         }
+        
         direccion_fisica = decode(instruccion, pcb);
         ejecutar_write(instruccion, direccion_fisica, pcb);    
         

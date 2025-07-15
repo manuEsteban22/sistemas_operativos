@@ -4,6 +4,7 @@ t_list* tlb;
 t_list* cache;
 pthread_mutex_t mutex_tlb = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cache = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_cache_clock = PTHREAD_MUTEX_INITIALIZER;
 int contador_acceso = 0;
 int puntero_clock;
 
@@ -18,12 +19,13 @@ void inicializar_cache() {
     cache = list_create();
 }
 
-void escribir_pagina_en_memoria(int direccion_fisica, void* contenido) {
+void escribir_pagina_en_memoria(int direccion_fisica, void* contenido, t_pcb* pcb) {
+    log_debug(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG_WRITE);
-    //agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
-    agregar_a_paquete(paquete, &contenido, strlen(contenido));
+    agregar_a_paquete(paquete, contenido, tam_pagina);
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 }
@@ -174,10 +176,14 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
 
 }
 
-void escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
+bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
+    if(entradas_cache <= 0){
+        return false;
+    }
     int nro_pagina = direccion_logica / tam_pagina;
     int desplazamiento = direccion_logica % tam_pagina;
     int marco;
+    
     if(esta_en_cache(nro_pagina, &marco, pcb)){
         pthread_mutex_lock(&mutex_cache);
 
@@ -189,18 +195,33 @@ void escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
                 break;
             }
         }
+        log_debug(logger, "debug escribir en cache 4");
         if(entrada != NULL){
-            memcpy(entrada->contenido +desplazamiento, datos, strlen(datos) + 1);
+            log_debug(logger, "debug escribir en cache 5");
+            memcpy(entrada->contenido + desplazamiento, datos, strlen(datos) + 1);
+            log_debug(logger, "debug escribir en cache 6");
             entrada->modificado = true;
             entrada->usado = true;
         }
         pthread_mutex_unlock(&mutex_cache);
+        return true;
     } else{
+        log_debug(logger, "debug escribir en cache 7");
+
+        int direccion_fisica = traducir_direccion(pcb, direccion_logica);
+        int marco_local = direccion_fisica / tam_pagina;
+
         char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
+        log_debug(logger, "debug escribir en cache 8");
+
         if(pagina_completa != NULL){
+            log_debug(logger, "debug escribir en cache 9");
             memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
-            actualizar_cache(nro_pagina, marco, pagina_completa, true, pcb);
+            log_debug(logger, "debug escribir en cache 10, marco: %d", marco_local);
+            actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
+            log_debug(logger, "debug escribir en cache 11");
             free(pagina_completa);
+            return true;
         }
     }
 }
@@ -215,7 +236,7 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
     nueva_entrada->usado = true;
     
     if (list_size(cache) >= entradas_cache) {
-        int indice_victima = encontrar_victima_cache();
+        int indice_victima = encontrar_victima_cache(pcb);
         
         t_entrada_cache* victima = list_get(cache, indice_victima);
         // if (victima->modificado) {
@@ -233,44 +254,48 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
     return;
 }
 
-int encontrar_victima_cache() {
-    puntero_clock = 0;
-    int clock_m = 0;
+int encontrar_victima_cache(t_pcb* pcb) {
+    pthread_mutex_lock(&mutex_cache_clock);
+    int vueltas = 0;
 
-    if(strcmp(reemplazo_cache, "CLOCK-M") == 0){
-        for(int i=0; i < list_size(cache); i++){
+    while (vueltas < 2) {
+        for (int i = 0; i < list_size(cache); i++) {
             t_entrada_cache* entrada = list_get(cache, puntero_clock);
-            if(!entrada->usado && !entrada->modificado) {
-                int victima = puntero_clock;
-                puntero_clock = (puntero_clock + 1) % entradas_cache;
-                return victima;
-            }
-        }
-        puntero_clock = 0;
-        clock_m++;
-    }
-    
-    if(strcmp(reemplazo_cache, "CLOCK") == 0 || strcmp(reemplazo_cache, "CLOCK-M") == 0) {
-        for(int i = 0; i < list_size(cache) || clock_m == 2; i++) {
-            t_entrada_cache* entrada = list_get(cache, puntero_clock);   
-            if(!entrada->usado) {
-                int victima = puntero_clock;
-                puntero_clock = (puntero_clock + 1) % entradas_cache;
+            
+            log_trace(logger, "Evaluando entrada %d: usado=%d, modificado=%d", puntero_clock, entrada->usado, entrada->modificado);
 
-                if(entrada->modificado){
-                    escribir_pagina_en_memoria((entrada->marco * tam_pagina), entrada->contenido);
+            if (strcmp(reemplazo_cache, "CLOCK-M") == 0) {
+                if (vueltas == 0 && !entrada->usado && !entrada->modificado) {
+                    int victima = puntero_clock;
+                    puntero_clock = (puntero_clock + 1) % entradas_cache;
+                    pthread_mutex_unlock(&mutex_cache_clock);
+                    return victima;
                 }
-
-                return victima;
+                if (vueltas == 1 && !entrada->usado && entrada->modificado) {
+                    // Escribir a memoria antes de reemplazar
+                    escribir_pagina_en_memoria((entrada->marco * tam_pagina), entrada->contenido, pcb);
+                    int victima = puntero_clock;
+                    puntero_clock = (puntero_clock + 1) % entradas_cache;
+                    pthread_mutex_unlock(&mutex_cache_clock);
+                    return victima;
+                }
+            } else if (strcmp(reemplazo_cache, "CLOCK") == 0) {
+                if (!entrada->usado) {
+                    int victima = puntero_clock;
+                    puntero_clock = (puntero_clock + 1) % entradas_cache;
+                    pthread_mutex_unlock(&mutex_cache_clock);
+                    return victima;
+                }
             }
+
             entrada->usado = false;
             puntero_clock = (puntero_clock + 1) % entradas_cache;
-            clock_m++;
         }
+        vueltas++;
     }
 
-    //default a fifo
-    log_error(logger, "No se pudo poner algoritmo de cache correctamente, usando fifo");
+    log_error(logger, "No se encontró víctima, usando la entrada 0 por defecto.");
+    pthread_mutex_unlock(&mutex_cache_clock);
     return 0;
 }
 int pedir_frame(t_pcb* pcb, int nro_pagina){

@@ -170,9 +170,11 @@ int leer_pagina_completa(int socket_cliente){
 
 int escribir_pagina_completa(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
-    int direccion_fisica = *((int*)list_get(recibido, 0));
-    void* datos = list_get(recibido, 1);
+    int pid = *((int*)list_get(recibido, 0));
+    int direccion_fisica = *((int*)list_get(recibido, 1));
+    void* datos = list_get(recibido, 2);
 
+    log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
     memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
 
     t_paquete* paquete = crear_paquete();
