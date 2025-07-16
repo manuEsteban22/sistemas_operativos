@@ -29,10 +29,7 @@ void escribir_pagina_en_memoria(int direccion_fisica, void* contenido, t_pcb* pc
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 }
-char* leer_pagina_memoria(int nro_pagina, t_pcb* pcb){
-    int direccion_logica = nro_pagina * tam_pagina;
-    int direccion_fisica = traducir_direccion(pcb, direccion_logica);
-
+char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG_READ);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
@@ -43,12 +40,26 @@ char* leer_pagina_memoria(int nro_pagina, t_pcb* pcb){
     if(recibir_operacion(socket_memoria) == OC_PAG_READ){
         t_list* recibido = recibir_paquete(socket_memoria);
         char* contenido = (char*)list_get(recibido, 0);
+
         char* pagina = malloc(tam_pagina);
         memcpy(pagina, contenido, tam_pagina);
+
         log_trace(logger, "Se leyo una pagina de memoria con contenido %s", contenido);
         list_destroy_and_destroy_elements(recibido, free);
         return pagina;
     }
+}
+
+void cache_miss(int nro_pagina, t_pcb* pcb){
+    log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
+    int direccion_logica = nro_pagina * tam_pagina;
+    int direccion_fisica = traducir_direccion(pcb, direccion_logica);
+    int marco = direccion_fisica / tam_pagina;
+
+    char* pagina_leida = leer_pagina_memoria(direccion_fisica, pcb);
+
+    actualizar_cache(nro_pagina, marco, pagina_leida, false, pcb);
+    free(pagina_leida);
 }
 
 int esta_en_tlb(int pagina){
@@ -133,15 +144,16 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
 
     log_debug(logger, "debug_1.2, nro_pagina %d", nro_pagina);
     if(!hit){
-        log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
+        // log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
         
-        log_debug(logger, "La pagina no estaba en cache");
-        datos = leer_pagina_memoria(nro_pagina, pcb);
-        int direccion_fisica = traducir_direccion(pcb, direccion_logica);
-        int marco = direccion_fisica / tam_pagina;
+        // log_debug(logger, "La pagina no estaba en cache");
+        // datos = leer_pagina_memoria(nro_pagina, pcb);
+        // int direccion_fisica = traducir_direccion(pcb, direccion_logica);
+        // int marco = direccion_fisica / tam_pagina;
 
-        actualizar_cache(nro_pagina, marco, datos, false, pcb);
-        free(datos);
+        // actualizar_cache(nro_pagina, marco, datos, false, pcb);
+        // free(datos);
+        cache_miss(nro_pagina, pcb);
 
         usleep(retardo_cache * 1000);
         esta_en_cache(nro_pagina, &marco, pcb);
@@ -209,18 +221,20 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
         return true;
     } else{
 
+        // cache_miss(nro_pagina, pcb);
+        // usleep(retardo_cache * 1000);
+        // return true;
+
         int direccion_fisica = traducir_direccion(pcb, direccion_logica);
         int marco_local = direccion_fisica / tam_pagina;
-
         char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
-        if(pagina_completa != NULL){
-            memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
-            log_debug(logger, "debug escribir en cache, marco: %d", marco_local);
-            actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
-            free(pagina_completa);
-            usleep(retardo_cache * 1000);
-            return true;
-        }
+        
+        memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
+        log_debug(logger, "debug escribir en cache, marco: %d", marco_local);
+        actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
+        free(pagina_completa);
+        usleep(retardo_cache * 1000);
+        return true;
     }
 }
 
@@ -237,10 +251,9 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
         int indice_victima = encontrar_victima_cache(pcb);
         
         t_entrada_cache* victima = list_get(cache, indice_victima);
-        // if (victima->modificado) {
-        //     escribir_pagina_en_memoria((victima->marco * tam_pagina), victima->contenido);
-        //     log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
-        // }
+        if (victima->modificado) {
+        log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
+        }
         
         list_remove(cache, indice_victima);
         free(victima->contenido);
