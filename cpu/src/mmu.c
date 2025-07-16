@@ -22,26 +22,12 @@ int traducir_direccion(t_pcb* pcb, int direccion_logica){
     }
 
     if(marco == -1){ //TLB MISS
-        log_info(logger, "PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
         marco = pedir_frame(pcb, nro_pagina);
-
+        
         if(entradas_tlb > 0){
         actualizar_tlb(nro_pagina, marco);
+        log_info(logger, "PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
         }
     }
-
-    
-
-    // if(entradas_cache > 0 && esta_en_cache(nro_pagina, &marco)){
-    //     log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, nro_pagina);
-    //     usleep(retardo_cache);
-    //     return marco * tam_pagina + desplazamiento;
-    // }
-
- 
-    
-
-    
-
     return marco * tam_pagina + desplazamiento;
 }

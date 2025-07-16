@@ -132,9 +132,10 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         if(escribir_en_cache(direccion_logica, datos, pcb)){
             log_info(logger, "## PID: %d - Ejecutando: WRITE - %d %s", pid, direccion_logica, (char*)instruccion->param2);
             pcb->pc++;
+            log_debug(logger, "Se ejecutó un Write de cache");
             break;
         }
-        
+        log_debug(logger, "Se ejecutó un Write sin cache");
         direccion_fisica = decode(instruccion, pcb);
         ejecutar_write(instruccion, direccion_fisica, pcb);    
         
@@ -142,17 +143,16 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         pcb->pc++;
         break;
     case READ:
-        log_debug(logger,"debug1");
         direccion_logica = *(int*)instruccion->param1;
         int tamanio = *(int*)instruccion->param2;
-        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
-        datos = leer_de_cache(direccion_logica,tamanio,pcb);
-        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
-        if(datos == NULL){
+        if(entradas_cache <= 0){
             log_debug(logger,"debug3");
             direccion_fisica = decode(instruccion, pcb);
             datos = ejecutar_read(instruccion, direccion_fisica, pcb);
         }
+        datos = leer_de_cache(direccion_logica,tamanio,pcb);
+        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
+        
         log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, direccion_logica, tamanio);
         log_trace(logger, "Datos leidos: %s", datos);
         free(datos);
