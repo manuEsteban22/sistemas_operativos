@@ -37,8 +37,7 @@ void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pc
     int confirmacion = recibir_operacion(socket_memoria);
 
     if(confirmacion != OK) log_error(logger, "No se confirmo la escritura de pagina");
-    int basura = recibir_operacion(socket_memoria);
-    log_error(logger, "basura %d", basura);
+    recibir_operacion(socket_memoria);//0 basura de cerrado
     return;
 }
 char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
@@ -155,7 +154,6 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
 
     bool hit = esta_en_cache(nro_pagina, &marco, pcb);
 
-    log_debug(logger, "debug_1.2, nro_pagina %d", nro_pagina);
     if(!hit){
         cache_miss(nro_pagina, pcb);
 
@@ -193,7 +191,7 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
     entrada->usado = true;
     pthread_mutex_unlock(&mutex_cache);
     usleep(retardo_cache * 1000);
-
+    log_info(logger, "PID: %d - Accion: LEER - Valor: %s", pcb->pid, datos);
     return datos;
 }
 
@@ -227,19 +225,16 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
         return true;
     } else{
 
-        // cache_miss(nro_pagina, pcb);
-        // usleep(retardo_cache * 1000);
-        // return true;
-
         int direccion_fisica = traducir_direccion(pcb, direccion_logica);
         int marco_local = direccion_fisica / tam_pagina;
         char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
-        
+        log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
         memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
         log_debug(logger, "Escribiendo en cache %d bytes en offset %d: '%s'", strlen(datos), desplazamiento, datos);
         log_debug(logger, "debug escribir en cache, marco: %d", marco_local);
         actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
         free(pagina_completa);
+        log_info(logger, "PID: %d - Accion: ESCRIBIR - Direccion fisica: %d - Valor: %s", pcb->pid, direccion_fisica, datos);
         usleep(retardo_cache * 1000);
         return true;
     }
@@ -261,7 +256,6 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
         if (victima->modificado) {
             log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, victima->pagina, victima->marco);
             escribir_pagina_en_memoria((victima->marco * tam_pagina), victima->contenido, pcb);
-            log_error(logger, "voy a hacer un memory update con el contenido %s", victima->contenido);
         }
         
         list_remove(cache, indice_victima);

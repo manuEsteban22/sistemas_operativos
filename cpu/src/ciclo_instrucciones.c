@@ -151,7 +151,6 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         }else{
             datos = leer_de_cache(direccion_logica,tamanio,pcb);
         }
-        log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
         
         log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, direccion_logica, tamanio);
         log_trace(logger, "Datos leidos: %s", datos);
