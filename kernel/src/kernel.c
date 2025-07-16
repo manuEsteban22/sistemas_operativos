@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
     inicializar_planificador_cp(algoritmo_corto_plazo);
-    crear_proceso(256);
+    //crear_proceso(256);
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);

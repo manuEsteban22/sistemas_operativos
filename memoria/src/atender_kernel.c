@@ -3,7 +3,7 @@
 
 // busca pags libres, las asigna y arma tabla raiz
 
-void* inicializar_proceso(int tam_proceso, int pid){
+void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
     int pags_necesarias = tam_proceso / campos_config.tam_pagina;
     t_proceso* proceso = malloc(sizeof(t_proceso));
     proceso->pid = pid;
@@ -13,6 +13,7 @@ void* inicializar_proceso(int tam_proceso, int pid){
     proceso->page_faults = 0;
     memset(&proceso->metricas, 0, sizeof(t_metricas));
     dictionary_put(tablas_por_pid, string_itoa(pid), proceso);
+    cargar_instrucciones(pid, nombre_archivo); 
 
     for(int pagina = 0; pagina < pags_necesarias; pagina++){
         int marco_libre = buscar_marco_libre();

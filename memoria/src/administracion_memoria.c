@@ -57,6 +57,7 @@ void* creacion_estructuras_administrativas()
 {
    inicializar_memoria();
    tablas_por_pid = dictionary_create();
+    lista_de_instrucciones_por_pid = dictionary_create();
    //crear_tabla(0);
    return NULL;
 }

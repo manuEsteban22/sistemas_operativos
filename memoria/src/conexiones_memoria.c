@@ -14,7 +14,7 @@ void* manejar_conexion_cpu(void* arg) {
 
         switch(codigo_operacion) {
             case PAQUETE:
-                log_trace(logger, "Llegó un paquete");
+                log_trace(logger, "Llegó un FETCH");
                 mandar_instruccion(socket_cliente);         
                 break;
             case OC_READ:
@@ -52,20 +52,50 @@ void* manejar_conexion_cpu(void* arg) {
 // Función para manejar conexiones EFÍMERAS de Kernel
 void manejar_conexion_kernel(int socket_cliente) {
     int codigo_operacion = recibir_operacion(socket_cliente);
-    
+    t_list* recibido;
     switch(codigo_operacion) {
         case OC_INIT:
-            log_trace(logger, "Llego una peticion de crear un nuevo proceso");
-            t_list* recibido = recibir_paquete(socket_cliente);
+            recibido = recibir_paquete(socket_cliente);
             int pid = *((int*)list_get(recibido, 0));
             int tamanio = *((int*)list_get(recibido, 1));
+            char* nombre_archivo = list_get(recibido, 2);
+            //char* pid_str = string_itoa(pid);
+
+            // if (dictionary_has_key(tablas_por_pid, pid_str)) {
+            //     log_trace(logger, "PID %d ya tiene estructuras cargadas", pid);
+            //     free(pid_str);
+            //     t_paquete* paquete = crear_paquete();
+            //     cambiar_opcode_paquete(paquete, OK);
+            //     enviar_paquete(paquete, socket_cliente, logger);
+            //     borrar_paquete(paquete);
+            //     list_destroy_and_destroy_elements(recibido, free);
+            //     break;
+            // }
+            //free(pid_str);
+            log_trace(logger, "Llego una peticion de crear un proceso");
             log_trace(logger, "Proceso PID=%d - Tamanio=%d", pid, tamanio);
-            inicializar_proceso(tamanio, pid);
+            inicializar_proceso(tamanio, pid, nombre_archivo);
             t_paquete* paquete = crear_paquete();
             cambiar_opcode_paquete(paquete, OK);
             enviar_paquete(paquete, socket_cliente, logger);
             borrar_paquete(paquete);
             list_destroy_and_destroy_elements(recibido, free);
+            break;
+        case ESPACIO_DISPONIBLE:
+            recibido = recibir_paquete(socket_cliente);
+            char* pid_str = list_get(recibido, 0);
+
+            if (dictionary_has_key(tablas_por_pid, pid_str)) {
+                log_trace(logger, "PID %s ya tiene estructuras cargadas", pid_str);
+                free(pid_str);
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, OK);
+                enviar_paquete(paquete, socket_cliente, logger);
+                borrar_paquete(paquete);
+                list_destroy_and_destroy_elements(recibido, free);
+                break;
+            }
+            free(pid_str);
             break;
         case SOLICITUD_DUMP_MEMORY:
             log_trace(logger, "Se recibio solicitud de hacer un memory dump");

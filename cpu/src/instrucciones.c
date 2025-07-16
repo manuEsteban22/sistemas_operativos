@@ -1,49 +1,5 @@
 #include <instrucciones.h>
 
-
-// void escribir_en_cache(int direccion_fisica, char* datos, t_pcb* pcb) {
-//     int nro_pagina = direccion_fisica / tam_pagina;
-//     int desplazamiento = direccion_fisica % tam_pagina;
-//     int marco;
-    
-//     if(esta_en_cache(nro_pagina, &marco, pcb)) {
-//         for(int i = 0; i < list_size(cache); i++) {
-//             t_entrada_cache* entrada = list_get(cache, i);
-//             if(entrada->pagina == nro_pagina) {
-//                 memcpy(entrada->contenido + desplazamiento, datos, strlen(datos));
-//                 entrada->modificado = true;
-//                 log_info(logger, "PID: %d - Cache Update - Pagina: %d", pcb->pid, nro_pagina);
-//                 return;
-//             }
-//         }
-//     }
-// }
-
-// char* leer_de_cache(int direccion_fisica, int tamanio, t_pcb* pcb) {
-//     int nro_pagina = direccion_fisica / tam_pagina;
-//     int desplazamiento = direccion_fisica % tam_pagina;
-//     void* contenido_pagina = NULL;
-//     int marco;
-    
-//     if(esta_en_cache(nro_pagina, &marco, pcb)) {
-//         t_entrada_cache* entrada = NULL;
-//         for(int i = 0; i < list_size(cache); i++) {
-//             entrada = list_get(cache, i);
-//             if(entrada->pagina == nro_pagina) {
-//                 break;
-//             }
-//         }
-        
-//         if(entrada != NULL) {
-//             char* datos = malloc(tamanio + 1);
-//             memcpy(datos, entrada->contenido + desplazamiento, tamanio);
-//             //datos[tamanio] = '\0';
-//             return datos;
-//         }
-//     }
-//     return NULL;
-// }
-
 void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     if(instruccion == NULL || pcb == NULL || instruccion->param2 == NULL){
         log_error(logger,"## Error en la instruccion o el pcb");
@@ -53,7 +9,6 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     char* datos = (char*)instruccion->param2;
     int size_datos = strlen(datos);
 
-    //escribir_en_cache(direccion_fisica, datos, pcb);
 
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));

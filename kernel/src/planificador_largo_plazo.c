@@ -52,7 +52,7 @@ void inicializar_planificador_lp(char* algoritmo_largo_plazo){
 }
 
 //para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
-void crear_proceso(int tamanio_proceso){
+int crear_proceso(int tamanio_proceso){
     log_trace(logger, "Se creo un proceso");
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
     pid_global++;
@@ -83,6 +83,7 @@ void crear_proceso(int tamanio_proceso){
     }
     pthread_mutex_unlock(&mutex_new);
     sem_post(&sem_procesos_en_new);
+    return pcb->pid;
 }
 
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
@@ -132,7 +133,7 @@ void finalizar_proceso(t_pcb* pcb){
 bool enviar_pedido_memoria(t_pcb* pcb) {
     log_trace(logger, "Se envio un pedido a memoria");
     t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OC_INIT);
+    cambiar_opcode_paquete(paquete, ESPACIO_DISPONIBLE);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
     agregar_a_paquete(paquete, &(pcb->tamanio), sizeof(int));
 

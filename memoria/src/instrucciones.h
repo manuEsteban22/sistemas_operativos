@@ -2,8 +2,9 @@
 #define INSTRUCCIONES_H_
 #include <memoria.h>
 
-void cargar_instrucciones(int pid);
-char* obtener_instruccion(int pc);
+extern t_dictionary* lista_de_instrucciones_por_pid;
+void cargar_instrucciones(int pid, char* nombre_archivo);
+char* obtener_instruccion(int pc, char* pid);
 int cantidad_instrucciones();
 int espacio_libre();
 void liberar_memoria();

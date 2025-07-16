@@ -43,6 +43,7 @@ typedef enum
     OC_FRAME,
     OC_PAG_WRITE,
     OC_PAG_READ,
+    ESPACIO_DISPONIBLE,
     ERROR
 } op_code;
 typedef struct

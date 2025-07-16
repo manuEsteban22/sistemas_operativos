@@ -110,5 +110,24 @@ void dump_memory(int socket_cpu){
 }
 
 void iniciar_proceso(int socket_cpu){
-    printf("iniciar");
+    //pid, tamanio, string_nombre_archivo
+    t_list* recibido = recibir_paquete(socket_cpu);
+    int* pid_anterior = list_get(recibido, 0);
+    int* tamanio_proceso = list_get(recibido, 1);
+    char* nombre_archivo = list_get(recibido, 2);
+
+    log_error(logger, "pid anterior %d, tamanio %d, nombre archivo %s", pid_anterior, tamanio_proceso, nombre_archivo);
+    int pid = crear_proceso(tamanio_proceso);
+
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_INIT);
+    agregar_a_paquete(paquete, pid, sizeof(int));
+    agregar_a_paquete(paquete, tamanio_proceso, sizeof(int));
+    agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo));
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    cerrar_conexion_memoria(socket_memoria);
+    borrar_paquete(paquete);
+    log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, *tamanio_proceso);
 }

@@ -35,7 +35,7 @@ void inicializar_planificador_lp(char* algoritmo_planificacion_lp);
 bool enviar_pedido_memoria(t_pcb* pcb);
 void chequear_algoritmo_planificacion (char* algoritmo_planificacion_lp);
 void planificador_largo_plazo();
-void crear_proceso(int tamanio_proceso);
+int crear_proceso(int tamanio_proceso);
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo);
 
 #endif

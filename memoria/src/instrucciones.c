@@ -4,11 +4,13 @@
 #include <time.h>
 #define MAX_LINEA 256
 
-static t_list* lista_instrucciones = NULL;
+//static t_list* lista_instrucciones = NULL;
+t_dictionary* lista_de_instrucciones_por_pid = NULL;
 
-void cargar_instrucciones(int pid) 
+void cargar_instrucciones(int pid, char* nombre_archivo) 
 {
-    char* Archivo = string_from_format("%sinstrucciones_pid%i.txt", campos_config.path_instrucciones, pid);
+    nombre_archivo = "instrucciones_pid"; //hardcodeado por ahora
+    char* Archivo = string_from_format("%s%s", campos_config.path_instrucciones, nombre_archivo);
     FILE* archivo = fopen( Archivo, "r");
     if (!archivo) 
     {
@@ -16,7 +18,7 @@ void cargar_instrucciones(int pid)
         exit(EXIT_FAILURE);
     }
 
-    lista_instrucciones = list_create();
+    t_list* lista_instrucciones = list_create();
 
     char linea[MAX_LINEA];
     while (fgets(linea, sizeof(linea), archivo)) 
@@ -26,17 +28,18 @@ void cargar_instrucciones(int pid)
     }
 
     fclose(archivo);
+    dictionary_put(lista_de_instrucciones_por_pid, string_itoa(pid), lista_instrucciones);
 }
 
-char* obtener_instruccion(int pc) 
+char* obtener_instruccion(int pc, char* pid) 
 {
-    if (pc >= list_size(lista_instrucciones)) return NULL;
-    return list_get(lista_instrucciones, pc);
+    if (pc >= list_size(dictionary_get(lista_de_instrucciones_por_pid, pid))) return NULL;
+    return list_get(dictionary_get(lista_de_instrucciones_por_pid, pid), pc);
 }
 
-int cantidad_instrucciones() 
+int cantidad_instrucciones(char* pid) 
 {
-    return list_size(lista_instrucciones);
+    return list_size(dictionary_get(lista_de_instrucciones_por_pid, pid));
 }
 
 int espacio_libre()
@@ -45,9 +48,9 @@ int espacio_libre()
     return tam_mem;
 }
 
-void liberar_memoria() 
+void liberar_memoria(char* pid) 
 {
-    list_destroy_and_destroy_elements(lista_instrucciones, free);
+    list_destroy_and_destroy_elements(dictionary_get(lista_de_instrucciones_por_pid, pid), free);
 }
 
 
@@ -55,12 +58,13 @@ int mandar_instruccion(int socket_cliente)
 {
 
     t_list* lista_paquete = recibir_paquete(socket_cliente);
-    int pid = *((int*) list_get(lista_paquete, 0));
+    char* pid = list_get(lista_paquete, 0);
     int pc = *((int*) list_get(lista_paquete, 1));
 
-    cargar_instrucciones(pid);
+    //leer_instrucciones(pid);
+    //cargar_instrucciones(pid);
 
-    int cant = cantidad_instrucciones();
+    int cant = cantidad_instrucciones(pid);
 
     
     t_paquete* paquete = crear_paquete();
@@ -71,22 +75,21 @@ int mandar_instruccion(int socket_cliente)
         cambiar_opcode_paquete(paquete, ERROR);
         enviar_paquete(paquete, socket_cliente, logger);
         borrar_paquete(paquete);
-        liberar_memoria();
+        liberar_memoria(pid);
         list_destroy_and_destroy_elements(lista_paquete, free);
         return -1;
     }
-    
-    char* instruccion = obtener_instruccion(pc);
+    char* instruccion = obtener_instruccion(pc, pid);
 
     if (instruccion == NULL) {
     log_error(logger, "No se encontró la instrucción en la posición PC=%d", pc);
-    liberar_memoria();
+    liberar_memoria(pid);
     list_destroy_and_destroy_elements(lista_paquete, free);
     return -1;
     }
 
     int tamanio = strlen(instruccion) + 1;
-    log_info(logger, "## PID: %d - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
+    log_info(logger, "## PID: %s - Obtener instrucción: %d - Instrucción: %s", pid, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
     cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
@@ -94,7 +97,7 @@ int mandar_instruccion(int socket_cliente)
 
     printf("Espacio libre: %d\n", espacio_libre());
 
-    liberar_memoria();
+    liberar_memoria(pid);
     list_destroy_and_destroy_elements(lista_paquete, free); 
     return 0;
 }

@@ -28,7 +28,7 @@ typedef struct {
 // Funciones públicas
 int cantidad_marcos_libres();
 void liberar_tabla(t_tabla_paginas* tabla, int nivel);
-void* inicializar_proceso(int tam_proceso, int pid);
+void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo);
 void suspender_proceso(int pid);
 void des_suspender_proceso(int pid);
 void* finalizar_proceso(int pid);
