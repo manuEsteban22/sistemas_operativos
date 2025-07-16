@@ -9,6 +9,8 @@ extern t_config* config;
 extern int PROCESOS_MEMORIA;
 extern char* ip_memoria;
 extern char* puerto_memoria;
+extern char* puerto_interrupt;
+extern char* puerto_dispatch;
 extern int socket_memoria;
 extern int socket_io;
 extern int socket_interrupt;

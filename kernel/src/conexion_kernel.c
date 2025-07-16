@@ -3,13 +3,12 @@
 #include <conexion_kernel.h>
 
 void* manejar_servidor_cpu(void* arg){
+    
     t_args_hilo* argumentos = (t_args_hilo*) arg;
-    int socket = argumentos->socket;
+    int socket_cliente = argumentos->socket;
     char* nombre_cliente = strdup(argumentos->nombre);
     free(arg);
 
-    int socket_cliente = esperar_cliente(socket, logger);
-    
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
@@ -258,5 +257,31 @@ void cerrar_conexion_memoria(int socket){
     log_trace(logger, "La conexion con memoria se cerro con exito");
 }
 
+void* hilo_main_cpu(void* args){
 
+    pthread_t thread_dispatch;
+    pthread_t thread_interrupt;
+
+    while(1){
+        
+        int socket_cliente_dispatch = esperar_cliente(socket_dispatch, logger);
+        t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
+        args_dispatch->socket = socket_cliente_dispatch;
+        args_dispatch->nombre = "DISPATCH";
+
+        pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
+        pthread_detach(thread_dispatch);
+        log_trace(logger, "Nueva conexión DISPATCH aceptada");
+
+        int socket_cliente_interrupt = esperar_cliente(socket_interrupt, logger);
+        t_args_hilo* args_interrupt = malloc(sizeof(t_args_hilo));
+        args_interrupt->socket = socket_cliente_interrupt;
+        args_interrupt->nombre = "INTERRUPT";
+
+        pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
+        pthread_detach(thread_interrupt);
+        log_trace(logger, "Nueva conexión INTERRUPT aceptada");
+    }
+
+}
 //por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept

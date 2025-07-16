@@ -21,8 +21,7 @@ int socket_interrupt;
 int socket_memoria;
 int tiempo_suspension;
 pthread_t thread_io;
-pthread_t thread_dispatch;
-pthread_t thread_interrupt;
+pthread_t thread_principal;
 char *algoritmo_largo_plazo;
 char *algoritmo_corto_plazo;
 t_dictionary* dispositivos_io;
@@ -64,24 +63,14 @@ int main(int argc, char* argv[]) {
     socket_dispatch = iniciar_servidor(puerto_dispatch, logger);
     socket_interrupt = iniciar_servidor(puerto_interrupt, logger);
 
-    //Creo argumentos para los hilos
-    t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
-    t_args_hilo* args_interrupt = malloc(sizeof(t_args_hilo));
-    args_dispatch->socket = socket_dispatch;
-    args_interrupt->socket = socket_interrupt;
-    args_dispatch->nombre = "DISPATCH";
-    args_interrupt->nombre = "INTERRUPT";
     int* ptr_io = malloc(sizeof(int));
     ptr_io = socket_io;
     int* ptr_dispatch = malloc(sizeof(int));
     ptr_dispatch = socket_dispatch;
 
 
-    pthread_create(&thread_dispatch, NULL, manejar_servidor_cpu, (void*)args_dispatch);
-    pthread_detach(thread_dispatch);
-
-    pthread_create(&thread_interrupt, NULL, manejar_servidor_cpu, (void*)args_interrupt);
-    pthread_detach(thread_interrupt);
+    pthread_create(&thread_principal, NULL, hilo_main_cpu, NULL);
+    pthread_detach(thread_principal);
 
     pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
     pthread_detach(thread_io);
