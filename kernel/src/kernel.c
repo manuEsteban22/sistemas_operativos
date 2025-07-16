@@ -20,7 +20,7 @@ int socket_dispatch;
 int socket_interrupt;
 int socket_memoria;
 int tiempo_suspension;
-pthread_t thread_io;
+pthread_t thread_io_main;
 pthread_t thread_principal;
 char *algoritmo_largo_plazo;
 char *algoritmo_corto_plazo;
@@ -63,8 +63,8 @@ int main(int argc, char* argv[]) {
     socket_dispatch = iniciar_servidor(puerto_dispatch, logger);
     socket_interrupt = iniciar_servidor(puerto_interrupt, logger);
 
-    int* ptr_io = malloc(sizeof(int));
-    ptr_io = socket_io;
+    // int* ptr_io = malloc(sizeof(int));
+    // ptr_io = socket_io;
     int* ptr_dispatch = malloc(sizeof(int));
     ptr_dispatch = socket_dispatch;
 
@@ -72,8 +72,8 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_principal, NULL, hilo_main_cpu, NULL);
     pthread_detach(thread_principal);
 
-    pthread_create(&thread_io, NULL, manejar_servidor_io, ptr_io);
-    pthread_detach(thread_io);
+    pthread_create(&thread_io_main, NULL, hilo_main_io, NULL);
+    pthread_detach(thread_io_main);
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
     inicializar_planificador_cp(algoritmo_corto_plazo);
@@ -102,7 +102,6 @@ int main(int argc, char* argv[]) {
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
     nuevo_logger = log_create("kernel.log","LogKernel",true,LOG_LEVEL_TRACE);
-    log_info(nuevo_logger, "funciona logger kernel :)");
     return nuevo_logger;
 }
 
@@ -126,13 +125,13 @@ t_config* iniciar_config(void){
         tiempo_suspension = config_get_int_value(nuevo_config, "TIEMPO_SUSPENSION");
 
         //log_info(logger, "no se pudo leer el archivo de config");
-        log_info(logger, "la ip del server memoria es: %s", ip_memoria);
-        log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
-        log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
-        log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
-        log_info(logger, "el puerto del server io es: %s", puerto_io);
-        log_info(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
-        log_info(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
+        // log_info(logger, "la ip del server memoria es: %s", ip_memoria);
+        // log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
+        // log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
+        // log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
+        // log_info(logger, "el puerto del server io es: %s", puerto_io);
+        log_trace(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
+        log_trace(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
         return nuevo_config;
     }   else {
             log_error(logger, "Falta IP_MEMORIA en el config");

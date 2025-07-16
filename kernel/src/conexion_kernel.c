@@ -138,10 +138,11 @@ void handshake_io(int socket_dispositivo){
     return;
 }
 
-void* manejar_servidor_io(int socket_io){
-    int estado_anterior;
-    int socket_cliente = esperar_cliente(socket_io, logger);
+void* manejar_servidor_io(void* arg){
+    int socket_cliente = *((int*) arg);
+    free(arg);
 
+    int estado_anterior;
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
@@ -282,6 +283,15 @@ void* hilo_main_cpu(void* args){
         pthread_detach(thread_interrupt);
         log_trace(logger, "Nueva conexión INTERRUPT aceptada");
     }
-
 }
-//por cada cpu(o conexion) queremos un accept nuevo, por lo tanto hay que tirar un hilo por cada accept
+void* hilo_main_io(void* args){
+    pthread_t thread_io;
+
+    while(1){
+        int socket_cliente = esperar_cliente(socket_io, logger);
+        int* socket_cliente_ptr = malloc(sizeof(int));
+        *socket_cliente_ptr = socket_cliente;
+        pthread_create(&thread_io, NULL, manejar_servidor_io, (void*)socket_cliente_ptr);
+        pthread_detach(thread_io);
+    }
+}
