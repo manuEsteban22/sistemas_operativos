@@ -154,10 +154,10 @@ int leer_pagina_completa(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
     int pid = *((int*)list_get(recibido, 0));
     int direccion_fisica = *((int*)list_get(recibido, 1));
-
-    void* buffer = malloc(campos_config.tam_pagina);
+    log_debug(logger, "PID %d - Dir Fisica %d", pid, direccion_fisica);
+    char* buffer = malloc(campos_config.tam_pagina);
     memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
-
+    log_debug(logger, "Contenido de la pagina : %s", buffer);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG_READ);
     agregar_a_paquete(paquete, buffer, campos_config.tam_pagina);
@@ -172,9 +172,10 @@ int escribir_pagina_completa(int socket_cliente){
     t_list* recibido = recibir_paquete(socket_cliente);
     int pid = *((int*)list_get(recibido, 0));
     int direccion_fisica = *((int*)list_get(recibido, 1));
-    void* datos = list_get(recibido, 2);
+    char* datos = list_get(recibido, 2);
 
     log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
+    log_debug(logger, "Los datos a escribir en la pagina son", datos);
     memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
 
     t_paquete* paquete = crear_paquete();

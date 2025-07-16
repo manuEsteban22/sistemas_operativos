@@ -34,8 +34,8 @@ void* manejar_conexion_cpu(void* arg) {
                 log_trace(logger, "Cache me escribio una pagina");
                 break;
             case OC_PAG_READ:
-                leer_pagina_completa(socket_cliente);
                 log_trace(logger, "Cache me pidio una pagina");
+                leer_pagina_completa(socket_cliente);
                 break;
             case CERRADO:
                 log_trace(logger, "Se cerro la conexion con CPU");

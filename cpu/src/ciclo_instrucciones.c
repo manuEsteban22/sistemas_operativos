@@ -146,11 +146,11 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         direccion_logica = *(int*)instruccion->param1;
         int tamanio = *(int*)instruccion->param2;
         if(entradas_cache <= 0){
-            log_debug(logger,"debug3");
             direccion_fisica = decode(instruccion, pcb);
             datos = ejecutar_read(instruccion, direccion_fisica, pcb);
+        }else{
+            datos = leer_de_cache(direccion_logica,tamanio,pcb);
         }
-        datos = leer_de_cache(direccion_logica,tamanio,pcb);
         log_trace(logger, "direccion_logica %d, tamanio %d", direccion_logica, tamanio);
         
         log_info(logger, "## PID: %d - Ejecutando: READ - %d %d", pid, direccion_logica, tamanio);
