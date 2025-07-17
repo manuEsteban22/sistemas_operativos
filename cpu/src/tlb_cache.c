@@ -99,14 +99,16 @@ void actualizar_tlb(int pagina, int marco) {
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
     nueva_entrada->ultimo_acceso = ++contador_acceso;
+    t_entrada_tlb* victima = NULL;
 
     if (list_size(tlb) >= entradas_tlb) {
-        t_entrada_tlb* victima = NULL;
         if (strcmp(reemplazo_tlb, "FIFO") == 0) {
             victima = list_get(tlb, 0);
         } else if (strcmp(reemplazo_tlb, "LRU") == 0) {
-            int mas_antiguo = -1;
-            for(int i = 0; i<list_size(tlb);i++){
+            victima = list_get(tlb, 0);
+            int mas_antiguo = victima->ultimo_acceso;
+
+            for(int i = 1; i<list_size(tlb);i++){
                 t_entrada_tlb* entrada = list_get(tlb,i);
                 if(entrada->ultimo_acceso < mas_antiguo){
                     mas_antiguo = entrada->ultimo_acceso;
@@ -286,8 +288,6 @@ int encontrar_victima_cache(t_pcb* pcb) {
                     return victima;
                 }
                 if (vueltas == 1 && !entrada->usado && entrada->modificado) {
-                    // Escribir a memoria antes de reemplazar
-                    //log_error(logger, "voy a hacer un memory update con el contenido %s", (entrada->contenido));
                     
                     int victima = puntero_clock;
                     puntero_clock = (puntero_clock + 1) % entradas_cache;
