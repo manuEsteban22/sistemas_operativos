@@ -1,4 +1,4 @@
-#include <atender_kernel.h>
+#include <atencion_kernel.h>
 
 
 // busca pags libres, las asigna y arma tabla raiz
@@ -38,6 +38,8 @@ void suspender_proceso(int pid){
         return;
     }
     suspender_tabla(proceso->tabla_raiz, 0, pid, 0);
+
+    proceso->metricas.cantidad_bajadas_a_swap++;
 }
 
 void des_suspender_proceso(int pid){
@@ -78,6 +80,9 @@ void des_suspender_proceso(int pid){
         free(relacion);
         free(buffer);
     }
+
+    proceso->metricas.cantidad_subidas_a_memoria++;
+
     free(pid_str);
     list_destroy(paginas_proceso);
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);

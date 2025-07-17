@@ -1,6 +1,7 @@
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_
 #include <memoria.h>
+#include <atencion_kernel.h>
 
 extern t_dictionary* lista_de_instrucciones_por_pid;
 void cargar_instrucciones(int pid, char* nombre_archivo);

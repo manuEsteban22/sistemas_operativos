@@ -1,7 +1,7 @@
 #ifndef CONEXIONES_MEMORIA_H_
 #define CONEXIONES_MEMORIA_H_
-
 #include <memoria.h>
+#include <atencion_kernel.h>
 
 void* manejar_servidor(void* socket_cliente_ptr);
 void* atender_cpu(void* socket_ptr);

@@ -88,6 +88,9 @@ void escribir_en_swap(void* buffer, int nro_marco){
     int posicion = nro_marco * campos_config.tam_pagina;
     fseek(archivo_swap, posicion, SEEK_SET);
     fwrite(buffer, 1, campos_config.tam_pagina, archivo_swap);
+
+ 
+
     fclose(archivo_swap);
     log_info(logger, "Se escribió una página en el marco %d del swap.", nro_marco);
 }

@@ -1,6 +1,5 @@
 #include <instrucciones.h>
 #include <math.h>
-#include <atender_kernel.h> // Para t_proceso y el diccionario
 #include <time.h>
 #define MAX_LINEA 256
 
@@ -93,6 +92,10 @@ int mandar_instruccion(int socket_cliente)
     agregar_a_paquete(paquete, instruccion, tamanio);
     cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
+
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // yrsteajteazjntguesijk sxr4
+    proceso->metricas.cantidad_instrucciones_solicitadas++;
+
     borrar_paquete(paquete);
 
     log_info(logger, "Espacio libre: %d\n", espacio_libre());
@@ -122,15 +125,22 @@ int ejecutar_read(int socket_cliente){
     int direccion_fisica = *((int*)list_get(recibido, 0));
     int tamanio = *((int*)list_get(recibido, 1));
     int pid = *((int*)list_get(recibido, 2));
+    char* pid_str = string_itoa(pid);
 
     void* leido = malloc(tamanio);
-    memcpy(leido, memoria_usuario + direccion_fisica, tamanio);//falta actualizar metricas de proceso
+    memcpy(leido, memoria_usuario + direccion_fisica, tamanio);
 
     log_info(logger, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_READ);
     agregar_a_paquete(paquete, leido, tamanio);
     enviar_paquete(paquete, socket_cliente, logger);
+
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); //cut6dseyrasjiytr46azjtr4ea6
+    proceso->metricas.cantidad_lecturas_memoria++;
+
+    free(pid_str);
+
     borrar_paquete(paquete);
     free(leido);
     list_destroy_and_destroy_elements(recibido, free);
@@ -143,8 +153,14 @@ int ejecutar_write(int socket_cliente){
     char* datos = list_get(recibido, 1);
     int pid = *((int*)list_get(recibido, 2));
     int tamanio = strlen(datos) + 1;
+    char* pid_str = string_itoa(pid);
 
-    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);//falta actualizar metricas de proceso
+    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
+
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // aaaaaaaaaaaaaaaaaaaaaaaaaakhfysxky
+    proceso->metricas.cantidad_escrituras_memoria++;
+
+    free(pid_str);
 
     log_info(logger, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
     
@@ -157,13 +173,21 @@ int leer_pagina_completa(int socket_cliente){
     int pid = *((int*)list_get(recibido, 0));
     int direccion_fisica = *((int*)list_get(recibido, 1));
     log_debug(logger, "PID %d - Dir Fisica %d", pid, direccion_fisica);
+    char* pid_str = string_itoa(pid);
+
     char* buffer = malloc(campos_config.tam_pagina);
     memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
     log_debug(logger, "Contenido de la pagina : %s", buffer);
+
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG_READ);
     agregar_a_paquete(paquete, buffer, campos_config.tam_pagina);
     enviar_paquete(paquete, socket_cliente, logger);
+
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); //cut6dseyrasjiytr46azjtr4ea6
+    proceso->metricas.cantidad_lecturas_memoria++;
+
+    free(pid_str);
     borrar_paquete(paquete);
     free(buffer);
     list_destroy_and_destroy_elements(recibido, free);
@@ -175,6 +199,7 @@ int escribir_pagina_completa(int socket_cliente){
     int pid = *((int*)list_get(recibido, 0));
     int direccion_fisica = *((int*)list_get(recibido, 1));
     char* datos = list_get(recibido, 2);
+    char* pid_str = string_itoa(pid);
 
     log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
     log_debug(logger, "Los datos a escribir en la pagina son", datos);
@@ -183,19 +208,26 @@ int escribir_pagina_completa(int socket_cliente){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OK);
     enviar_paquete(paquete, socket_cliente, logger);
+
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // aaaaaaaaaaaaaaaaaaaaaaaaaakhfysxky
+    proceso->metricas.cantidad_escrituras_memoria++;
+
+    free(pid_str);
     borrar_paquete(paquete);
     list_destroy_and_destroy_elements(recibido, free);
     return 0;
 }
 
 void dumpear_memoria(int pid){
-    char* timestamp = obtener_timestamp(); // Implementá una función para timestamp
+    char* timestamp = obtener_timestamp(); //fecha que lo identifica
     char* path = string_from_format("%s%d-%s.dmp", campos_config.dump_path, pid, timestamp);
+    
     FILE* archivo = fopen(path, "wb");
     if (!archivo) {
         log_error(logger, "No se pudo crear el dump para el proceso %d", pid);
-        free(path);
         free(timestamp);
+        free(path);
+        
         return;
     }
     char* pid_str = string_itoa(pid);
@@ -214,7 +246,6 @@ void dumpear_memoria(int pid){
     log_info(logger, "Dump de memoria del proceso %d generado", pid);
 }
 
-// Implementación simple de timestamp para el dump
 char* obtener_timestamp() {
     time_t now = time(NULL);
     struct tm* tm_info = localtime(&now);
@@ -223,7 +254,6 @@ char* obtener_timestamp() {
     return buffer;
 }
 
-// Devuelve el número de marco correspondiente a una página lógica, contando accesos y retardo por nivel
 int obtener_marco(int pid, int nro_pagina) {
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
