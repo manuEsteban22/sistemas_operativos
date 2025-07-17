@@ -172,7 +172,8 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         pcb->pc++;
         break;
     case DUMP_MEMORY:
-        dump_memory(pcb);
+        log_trace(logger, "Se va a ejecutar un dump memory PID %d ", pcb->pid);
+        dump_memory(pcb, cpu_id);
         log_info(logger, "## PID: %d - Ejecutando: DUMP_MEMORY", pid);
         pcb->pc++;
         break;

@@ -85,19 +85,15 @@ void llamar_a_io(int socket_dispatch) {
     list_destroy_and_destroy_elements(campos, free);
 }
 
-void dump_memory(int socket_cpu){
+void dump_memory(int socket_dispatch){
     int estado_anterior;
 
     t_list* recibido = recibir_paquete(socket_dispatch);
-    int* pid_ptr = list_get(recibido, 0);
-    int* pc_ptr = list_get(recibido, 1);
-    int* cpu_id_ptr = list_get(recibido, 2);
+    int pid = *((int*)list_get(recibido, 0));
+    int pc = *((int*)list_get(recibido, 1));
+    int cpu_id = *((int*)list_get(recibido, 2));
 
-    int pid = *pid_ptr;
-    int pc = *pc_ptr;
-    int cpu_id = *cpu_id_ptr;
-
-    log_trace(logger, "## DUMP MEMORY - PID %d", pid);
+    log_trace(logger, "## DUMP MEMORY - PID %d - PC %d - CPU_ID %d", pid, pc, cpu_id);
 
     pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);

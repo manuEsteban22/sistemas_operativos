@@ -233,9 +233,29 @@ void dumpear_memoria(int pid){
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     free(pid_str);
+    if(!proceso){
+        log_error(logger, "No se encontró el proceso %d", pid);
+        fclose(archivo);
+        free(timestamp);
+        free(path);
+        return;
+    }
     for (int i = 0; i < proceso->paginas_usadas; i++) {
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, i);
-        if (entrada->presencia) {
+        log_trace(logger, "Entrada %d: ptr=%p", i, entrada);
+        if(!entrada || entrada == NULL){
+            log_error(logger, "Entrada NULL");
+        }
+        if (((uintptr_t)entrada) < 0x1000 || ((uintptr_t)entrada) > 0xFFFFFFFFFFFF) {
+            log_error(logger, "Puntero inválido en página %d: %p", i, entrada);
+            continue;
+        }
+
+        log_trace(logger, "Presencia? ptr=%p", (void*)&entrada->presencia);
+        
+            
+        if(entrada->presencia){//Da segmentation fault
+            log_warning(logger, "Anduvo");
             void* origen = memoria_usuario + entrada->marco * campos_config.tam_pagina;
             fwrite(origen, 1, campos_config.tam_pagina, archivo);
         }

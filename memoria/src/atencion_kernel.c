@@ -4,26 +4,35 @@
 // busca pags libres, las asigna y arma tabla raiz
 
 void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
-    int pags_necesarias = tam_proceso / campos_config.tam_pagina;
+    int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;
     t_proceso* proceso = malloc(sizeof(t_proceso));
+    memset(proceso, 0, sizeof(t_proceso));
     proceso->pid = pid;
     proceso->tabla_raiz = crear_tabla(0);
     proceso->paginas_usadas = pags_necesarias;
     proceso->accesos_memoria = 0;
     proceso->page_faults = 0;
+    char* pid_str = string_itoa(pid);
     memset(&proceso->metricas, 0, sizeof(t_metricas));
-    dictionary_put(tablas_por_pid, string_itoa(pid), proceso);
+    log_trace(logger, "cargue el pid %s", pid_str);
+    dictionary_put(tablas_por_pid, pid_str, proceso);
     cargar_instrucciones(pid, nombre_archivo); 
 
     for(int pagina = 0; pagina < pags_necesarias; pagina++){
         int marco_libre = buscar_marco_libre();
         if (marco_libre == -1){
+            log_error(logger, "Algo 1");
             return NULL; //falta q haga algo
         }
         bitarray_set_bit(bitmap_marcos, marco_libre);
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina);
+        if (!entrada) {
+            log_error(logger, "No se pudo inicializar la entrada de la página %d para PID %d", pagina, pid);
+            return NULL;
+        }
         entrada->presencia = true;
         entrada->marco = marco_libre;
+        log_trace(logger, "Se inicializo bien el bit de presencia");
     }
     log_info(logger, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
     return proceso->tabla_raiz;
@@ -141,12 +150,21 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina){
 
     for(int nivel = 0; nivel < campos_config.cantidad_niveles -1; nivel++){
         int indice = (nro_pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel - 1))) & ((1 << bits_por_nivel) - 1);
+        if (!actual->entradas[indice].siguiente_tabla) {
+            log_error(logger, "Tabla no creada");
+            return NULL; 
+        }
         actual = actual->entradas[indice].siguiente_tabla;
     }
 
     int indice_final = nro_pagina & ((1 << bits_por_nivel) - 1);
     return &actual->entradas[indice_final];
 }
+
+bool entrada_valida(t_entrada_tabla* entrada) {
+    return entrada != NULL && (entrada->presencia == 0 || entrada->presencia == 1);
+}
+
 
 void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base){
 

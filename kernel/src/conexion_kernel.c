@@ -66,6 +66,7 @@ void* manejar_servidor_cpu(void* arg){
                 llamar_a_io(socket_cliente);
                 break;
             case SYSCALL_DUMP_MEMORY:
+                log_trace(logger, "se va a correr un dump memory");  
                 dump_memory(socket_cliente);
                 log_trace(logger, "se corrio un dump memory");
             case SYSCALL_INIT:
