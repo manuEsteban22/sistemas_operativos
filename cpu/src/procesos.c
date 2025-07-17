@@ -22,6 +22,7 @@ bool esperar_procesos(int cpu_id){
         return false;
     }
     else{
+        log_error(logger, "No llego el opcode esperado: %d", opcode);
         return true;
     }
 }

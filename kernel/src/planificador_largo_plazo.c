@@ -202,7 +202,6 @@ int estado_anterior;
 
             if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
                 queue_pop(cola_new);
-                log_debug(logger, "debug 1");
                 pthread_mutex_unlock(&mutex_new);
 
                 estado_anterior = pcb->estado_actual;
@@ -216,11 +215,10 @@ int estado_anterior;
                 pthread_mutex_unlock(&mutex_ready);
 
             } else{
-                log_debug(logger, "debug 2");
+                log_warning(logger, "No habia suficiente espacio en memoria");
                 pthread_mutex_unlock(&mutex_new);
             }
         } else {
-            log_debug(logger, "debug 4");
             pthread_mutex_unlock(&mutex_new);
             log_trace(logger, "la cola de new esta vacia");
         }

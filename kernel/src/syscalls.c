@@ -110,7 +110,7 @@ void dump_memory(int socket_cpu){
 }
 
 void iniciar_proceso(int socket_cpu){
-    //pid, tamanio, string_nombre_archivo
+    //pid, tamanio, nombre_archivo
     t_list* recibido = recibir_paquete(socket_cpu);
     int* pid_anterior = list_get(recibido, 0);
     int* tamanio_proceso = list_get(recibido, 1);

@@ -60,6 +60,7 @@ t_instruccion* fetch(t_pcb* pcb){
     
     log_info(logger, "## PID: %d - FETCH - Program Counter: %d", pcb->pid, pcb->pc);
     t_paquete* paquete_pid_pc = crear_paquete();
+    cambiar_opcode_paquete(paquete_pid_pc, FETCH);
     agregar_a_paquete(paquete_pid_pc, &pid, sizeof(int));
     agregar_a_paquete(paquete_pid_pc, &pc, sizeof(int));
     enviar_paquete(paquete_pid_pc, socket_memoria, logger);

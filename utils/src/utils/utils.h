@@ -27,6 +27,7 @@ typedef enum
     MENSAJE,
     OK,
     NO,
+    FETCH,
     OC_WRITE,
     OC_READ,
     OC_EXEC,

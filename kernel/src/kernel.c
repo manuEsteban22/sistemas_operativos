@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
     inicializar_planificador_cp(algoritmo_corto_plazo);
-    crear_proceso(256);
+    proceso_arranque(256, "instrucciones_0");
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);
@@ -129,6 +129,23 @@ t_config* iniciar_config(void){
             config_destroy(nuevo_config);
             exit(EXIT_FAILURE);
         }
+}
+
+void proceso_arranque(int tamanio_proceso, char* nombre_archivo){
+
+    int pid = crear_proceso(tamanio_proceso);
+
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_INIT);
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    agregar_a_paquete(paquete, &tamanio_proceso, sizeof(int));
+    agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo)+1);
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    cerrar_conexion_memoria(socket_memoria);
+    borrar_paquete(paquete);
+    log_trace(logger, "Proceso inicial (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config){

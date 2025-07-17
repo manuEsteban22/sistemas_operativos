@@ -13,7 +13,7 @@ void* manejar_conexion_cpu(void* arg) {
         }
 
         switch(codigo_operacion) {
-            case PAQUETE:
+            case FETCH:
                 log_trace(logger, "Llegó un FETCH");
                 mandar_instruccion(socket_cliente);         
                 break;
