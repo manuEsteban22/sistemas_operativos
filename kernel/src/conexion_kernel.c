@@ -271,7 +271,6 @@ void* hilo_main_cpu(void* args){
         
         int socket_cliente_dispatch = esperar_cliente(socket_dispatch, logger);
         sem_post(&cpus_disponibles);
-        log_error(logger, "ESTO SE ESTA EJECUTANDO");
         t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
         args_dispatch->socket = socket_cliente_dispatch;
         args_dispatch->nombre = "DISPATCH";

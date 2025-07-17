@@ -23,7 +23,6 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
 
 char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     int tamanio = (*(int*)instruccion->param2);
-
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
@@ -78,7 +77,7 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
 
 void init_proc(t_instruccion* instruccion, t_pcb* pcb){
     char* archivo_instrucciones = (char*)instruccion->param1;
-    int tamanio = (int)instruccion->param2;
+    int tamanio = atoi(instruccion->param2);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_INIT);

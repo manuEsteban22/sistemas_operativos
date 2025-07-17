@@ -208,6 +208,17 @@ int cantidad_marcos_libres()
     return marcos_libres;
 }
 
+bool entra_el_proceso(int tamanio){
+    int marcos_que_ocupa = tamanio / campos_config.tam_pagina;
+    int marcos_libres = cantidad_marcos_libres();
+    if(marcos_que_ocupa <= marcos_libres){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 void liberar_tabla(t_tabla_paginas* tabla, int nivel) 
 {
     for (int i = 0; i < campos_config.entradas_por_tabla; i++) {

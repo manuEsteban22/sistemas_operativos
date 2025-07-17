@@ -19,4 +19,8 @@ int obtener_marco(int pid, int nro_pagina);
 void dumpear_memoria(int pid);
 char* obtener_timestamp();
 
+#include <config_memoria.h>
+#include <memoria.h>
+#include <administracion_memoria.h>
+
 #endif

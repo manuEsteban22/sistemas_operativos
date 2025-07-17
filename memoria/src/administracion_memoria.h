@@ -5,6 +5,8 @@
 #include <commons/collections/dictionary.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <config_memoria.h>
+#include <instrucciones.h>
 
 // Forward declaration
 typedef struct t_tabla_paginas t_tabla_paginas;

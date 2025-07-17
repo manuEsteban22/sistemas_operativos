@@ -43,7 +43,7 @@ int cantidad_instrucciones(char* pid)
 
 int espacio_libre()
 {
-    const int tam_mem = campos_config.tam_memoria;
+    const int tam_mem = campos_config.tam_memoria;//no sive de nada esto
     return tam_mem;
 }
 
@@ -98,7 +98,7 @@ int mandar_instruccion(int socket_cliente)
 
     borrar_paquete(paquete);
 
-    log_info(logger, "Espacio libre: %d\n", espacio_libre());
+    //log_info(logger, "Espacio libre: %d\n", espacio_libre());
 
     list_destroy_and_destroy_elements(lista_paquete, free); 
     return 0;
