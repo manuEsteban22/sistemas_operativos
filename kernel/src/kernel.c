@@ -9,7 +9,9 @@ t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
 t_config* config;
-int PROCESOS_MEMORIA;
+int alfa;
+int estimacion_inicial;
+char* log_level;
 char* ip_memoria;
 char* puerto_memoria;
 char* puerto_dispatch;
@@ -34,8 +36,8 @@ t_dictionary* tabla_interrupt;
 t_queue* cpus_libres;
 
 int main(int argc, char* argv[]) {
-    logger = iniciar_logger();
     config = iniciar_config();
+    logger = iniciar_logger();
     tabla_pcbs = dictionary_create();
     dispositivos_io = dictionary_create();
     tabla_exec = dictionary_create();
@@ -101,7 +103,8 @@ int main(int argc, char* argv[]) {
 
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
-    nuevo_logger = log_create("kernel.log","LogKernel",true,LOG_LEVEL_TRACE);
+    t_log_level level = log_level_from_string(log_level);
+    nuevo_logger = log_create("kernel.log","LogKernel",true,level);
     return nuevo_logger;
 }
 
@@ -126,12 +129,12 @@ t_config* iniciar_config(void){
         algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
         algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
         tiempo_suspension = config_get_int_value(nuevo_config, "TIEMPO_SUSPENSION");
+        alfa = config_get_int_value(nuevo_config, "ALFA");
+        estimacion_inicial = config_get_int_value(nuevo_config, "ESTIMACION_INICIAL");
+        log_level = config_get_string_value(nuevo_config, "LOG_LEVEL");
 
-        log_trace(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
-        log_trace(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
         return nuevo_config;
     }   else {
-            log_error(logger, "Falta IP_MEMORIA en el config");
             config_destroy(nuevo_config);
             exit(EXIT_FAILURE);
         }
