@@ -17,7 +17,7 @@ extern int socket_interrupt;
 extern int socket_dispatch;
 extern t_dictionary* dispositivos_io; //
 extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
-extern t_dictionary* tabla_exec; // tiene pcb -> cpuid
+extern t_dictionary* tabla_exec; // tiene pid -> cpuid
 extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
 extern t_dictionary* tabla_interrupt; // tiene cpuid -> socket interrupt
 extern t_queue* cpus_libres; // tiene los cpuid libres

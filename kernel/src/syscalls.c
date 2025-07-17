@@ -80,6 +80,7 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
+    sem_post(&cpus_disponibles);
 
     list_destroy_and_destroy_elements(campos, free);
 }
@@ -112,8 +113,8 @@ void dump_memory(int socket_cpu){
 void iniciar_proceso(int socket_cpu){
     //pid, tamanio, nombre_archivo
     t_list* recibido = recibir_paquete(socket_cpu);
-    int* pid_anterior = list_get(recibido, 0);
-    int* tamanio_proceso = list_get(recibido, 1);
+    int pid_anterior = *((int*)list_get(recibido, 0));
+    int tamanio_proceso = *((int*)list_get(recibido, 1));
     char* nombre_archivo = list_get(recibido, 2);
 
     log_error(logger, "pid anterior %d, tamanio %d, nombre archivo %s", pid_anterior, tamanio_proceso, nombre_archivo);
@@ -122,12 +123,20 @@ void iniciar_proceso(int socket_cpu){
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_INIT);
-    agregar_a_paquete(paquete, pid, sizeof(int));
-    agregar_a_paquete(paquete, tamanio_proceso, sizeof(int));
-    agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo));
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    agregar_a_paquete(paquete, &tamanio_proceso, sizeof(int));
+    agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo)+1);
     socket_memoria = operacion_con_memoria();
     enviar_paquete(paquete, socket_memoria, logger);
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
-    log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, *tamanio_proceso);
+    log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+}
+
+void ejecutar_exit(int socket_cpu){
+    t_list* recibido = recibir_paquete(socket_cpu);
+    int pid = *((int*)list_get(recibido, 0));
+
+    t_pcb* pcb = obtener_pcb(pid);
+    finalizar_proceso(pcb);
 }

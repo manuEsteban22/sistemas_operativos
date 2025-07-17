@@ -63,6 +63,8 @@ int main(int argc, char* argv[]) {
     socket_dispatch = iniciar_servidor(puerto_dispatch, logger);
     socket_interrupt = iniciar_servidor(puerto_interrupt, logger);
 
+    iniciar_estructuras();
+
     // int* ptr_io = malloc(sizeof(int));
     // ptr_io = socket_io;
     int* ptr_dispatch = malloc(sizeof(int));
@@ -101,6 +103,10 @@ t_log* iniciar_logger(void){
     t_log* nuevo_logger;
     nuevo_logger = log_create("kernel.log","LogKernel",true,LOG_LEVEL_TRACE);
     return nuevo_logger;
+}
+
+void iniciar_estructuras(){
+    sem_init(&cpus_disponibles, 0, 0);
 }
 
 t_config* iniciar_config(void){

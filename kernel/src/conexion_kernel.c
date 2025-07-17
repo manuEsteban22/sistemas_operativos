@@ -72,6 +72,10 @@ void* manejar_servidor_cpu(void* arg){
                 log_trace(logger, "me llego syscall INIT_PROC");
                 iniciar_proceso(socket_cliente);
                 break;
+            case SYSCALL_EXIT:
+                log_trace(logger, "Recibi un EXIT");
+                ejecutar_exit(socket_cliente);
+                break;
             case ERROR:
                 break;
             default:
@@ -266,6 +270,8 @@ void* hilo_main_cpu(void* args){
     while(1){
         
         int socket_cliente_dispatch = esperar_cliente(socket_dispatch, logger);
+        sem_post(&cpus_disponibles);
+        log_error(logger, "ESTO SE ESTA EJECUTANDO");
         t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
         args_dispatch->socket = socket_cliente_dispatch;
         args_dispatch->nombre = "DISPATCH";

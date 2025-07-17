@@ -120,10 +120,23 @@ void finalizar_proceso(t_pcb* pcb){
         
     log_info(logger, "%d Finaliza el proceso", pcb->pid);
     log_metricas_estado(pcb);
-    borrar_pcb(pcb);
+    
 
     sem_post(&sem_plp);//Como se libera memoria mando una señal mas
-    
+    sem_post(&cpus_disponibles);
+    pthread_mutex_lock(&mutex_exec);
+
+    char* pid_str = string_itoa(pcb->pid);
+    int* cpu_id = dictionary_get(tabla_exec, pid_str);
+    dictionary_remove(tabla_exec, pid_str);
+
+    pthread_mutex_unlock(&mutex_exec);
+
+    borrar_pcb(pcb);
+    free(pid_str);
+    pthread_mutex_lock(&mutex_cpus_libres);
+    queue_push(cpus_libres, cpu_id);
+    pthread_mutex_unlock(&mutex_cpus_libres);
 }
 
 

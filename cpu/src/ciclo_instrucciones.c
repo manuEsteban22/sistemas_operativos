@@ -121,7 +121,6 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     switch (instruccion->identificador)
     {
     case NOOP:
-        //no hace nada
         log_info(logger, "## PID: %d - Ejecutando: NOOP", pid);
         pcb->pc++;
         break;

@@ -3,6 +3,7 @@
 #include <kernel.h>
 
 t_algoritmo_planificacion algoritmo_cp;
+sem_t cpus_disponibles;
 
 t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
     if (strcmp(algoritmo, "FIFO") == 0) return FIFO;
@@ -16,10 +17,9 @@ t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
 
 
 void inicializar_planificador_cp(char* algoritmo_planificacion_cp){
-    parsear_algoritmo_cp(algoritmo_planificacion_cp);
-}//????
+    parsear_algoritmo_cp(algoritmo_planificacion_cp);//???????????
+}
 
-//algoritmo_cp = parsear_algoritmo_cp(algoritmo_planificacion_cp);
 
 t_pcb* planificador_corto_plazo(){
     pthread_mutex_lock(&mutex_ready);
@@ -98,12 +98,16 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     enviar_paquete(paquete, socket_dispatch, logger);
     borrar_paquete(paquete);
 
-    
-    char* key = string_itoa(cpu_id);
+
+    char* pid_str = string_itoa(pcb->pid);
+    int* cpu_id_ptr = malloc(sizeof(int));
+    *cpu_id_ptr = cpu_id;
+
     pthread_mutex_lock(&mutex_exec);
-    dictionary_put(tabla_exec, key, pcb);
+    dictionary_put(tabla_exec, pid_str, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_exec);
-    free(key);
+    //free(cpu_id_ptr);
+    //free(pid_str);
 
     log_info(logger, "envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
 }
@@ -119,7 +123,10 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
             continue;
         }
 
-        // Buscás un CPU disponible — por ahora podés hardcodear socket_dispatch y cpu_id si solo tenés uno
+        sem_wait(&cpus_disponibles);
+        if(queue_is_empty(cpus_libres)){
+            log_error(logger, "No hay CPUs disponibles");
+        }
         pthread_mutex_lock(&mutex_cpus_libres);
         int* cpu_id_ptr = queue_pop(cpus_libres);
         pthread_mutex_unlock(&mutex_cpus_libres);
