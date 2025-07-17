@@ -20,8 +20,7 @@ void inicializar_cache() {
 }
 
 void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pcb) {
-    log_debug(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
-    log_debug(logger, "el contenido justo antes de escribir pagina es : %s", contenido);
+    log_trace(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
     char* pagina_a_enviar = calloc(1, tam_pagina);
     memcpy(pagina_a_enviar, contenido, strlen(contenido));
     t_paquete* paquete = crear_paquete();
@@ -55,7 +54,6 @@ char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
         char* pagina = malloc(tam_pagina);
         memcpy(pagina, contenido, tam_pagina);
 
-        log_trace(logger, "Se leyo una pagina de memoria con contenido %s", contenido);
         list_destroy_and_destroy_elements(recibido, free);
         return pagina;
     }
@@ -68,7 +66,6 @@ void cache_miss(int nro_pagina, t_pcb* pcb){
     int marco = direccion_fisica / tam_pagina;
 
     char* pagina_leida = leer_pagina_memoria(direccion_fisica, pcb);
-    log_debug(logger, "La pagina leida del miss contiene %s", pagina_leida);
 
     actualizar_cache(nro_pagina, marco, pagina_leida, false, pcb);
     free(pagina_leida);
@@ -186,7 +183,7 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
         pthread_mutex_unlock(&mutex_cache);
         return NULL;
     }
-    datos = malloc(tamanio + 1);
+    datos = malloc(tamanio);
     memcpy(datos, entrada->contenido + desplazamiento, tamanio);
     datos[tamanio] = '\0';
 
@@ -217,7 +214,7 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
             }
         }
         if(entrada != NULL){
-            memcpy(entrada->contenido + desplazamiento, datos, strlen(datos) + 1);
+            memcpy(entrada->contenido + desplazamiento, datos, strlen(datos));
             log_debug(logger, "Escribiendo en cache %d bytes en offset %d: '%s'", strlen(datos), desplazamiento, datos);
             entrada->modificado = true;
             entrada->usado = true;
@@ -231,7 +228,7 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
         int marco_local = direccion_fisica / tam_pagina;
         char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
         log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
-        memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
+        memcpy(pagina_completa + desplazamiento, datos, strlen(datos));
         log_debug(logger, "Escribiendo en cache %d bytes en offset %d: '%s'", strlen(datos), desplazamiento, datos);
         log_debug(logger, "debug escribir en cache, marco: %d", marco_local);
         actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
