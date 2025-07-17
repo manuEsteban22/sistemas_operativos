@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
     inicializar_planificador_cp(algoritmo_corto_plazo);
-    //crear_proceso(256);
+    crear_proceso(256);
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);
@@ -92,9 +92,7 @@ int main(int argc, char* argv[]) {
     pthread_detach(thread_planificador_mp);
 
     log_info(logger, "Kernel iniciado, esperando conexiones...");
-    while(1){
-        pause();
-    }
+    pause();
 
     return 0;
 }
@@ -119,17 +117,10 @@ t_config* iniciar_config(void){
         puerto_dispatch = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_DISPATCH");
         puerto_interrupt = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_INTERRUPT");
         puerto_io = config_get_string_value(nuevo_config, "PUERTO_ESCUCHA_IO");
-        PROCESOS_MEMORIA = config_get_int_value(nuevo_config, "PROCESOS_MEMORIA");
         algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
         algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
         tiempo_suspension = config_get_int_value(nuevo_config, "TIEMPO_SUSPENSION");
 
-        //log_info(logger, "no se pudo leer el archivo de config");
-        // log_info(logger, "la ip del server memoria es: %s", ip_memoria);
-        // log_info(logger, "el puerto del server memoria es: %s", puerto_memoria);
-        // log_info(logger, "el puerto del server dispatch es: %s", puerto_dispatch);
-        // log_info(logger, "el puerto del server interrupt es: %s", puerto_interrupt);
-        // log_info(logger, "el puerto del server io es: %s", puerto_io);
         log_trace(logger, "algoritmo de planificación largo plazo: %s", algoritmo_largo_plazo);
         log_trace(logger, "algoritmo de planificación corto plazo: %s", algoritmo_corto_plazo);
         return nuevo_config;

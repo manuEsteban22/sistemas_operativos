@@ -98,20 +98,7 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     enviar_paquete(paquete, socket_dispatch, logger);
     borrar_paquete(paquete);
 
-    // ------------ ESTO NO SE SI ESTA BIEN !!!! CHEQUEAR POR FAVOR
-
-    // t_paquete* paquete_mem = crear_paquete();
-    // cambiar_opcode_paquete(paquete_mem, OC_INIT);
-    // agregar_a_paquete(paquete_mem, &(pcb->pid), sizeof(int));
-    // agregar_a_paquete(paquete_mem, &(pcb->tamanio), sizeof(int));
-    // socket_memoria = operacion_con_memoria();
-    // enviar_paquete(paquete_mem, socket_memoria, logger);
-    // log_debug(logger, "Estoy esperando confirmacion por memoria para poner en EXEC");
-    // int respuesta = recibir_operacion(socket_memoria);
-    // cerrar_conexion_memoria(socket_memoria);
-    // borrar_paquete(paquete_mem);
-
-    //--------------------------------------------------------
+    
     char* key = string_itoa(cpu_id);
     pthread_mutex_lock(&mutex_exec);
     dictionary_put(tabla_exec, key, pcb);

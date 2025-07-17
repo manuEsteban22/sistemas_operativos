@@ -26,6 +26,7 @@ typedef enum
     PAQUETE,
     MENSAJE,
     OK,
+    NO,
     OC_WRITE,
     OC_READ,
     OC_EXEC,

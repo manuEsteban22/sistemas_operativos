@@ -24,8 +24,7 @@ extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_susp_blocked;
 extern pthread_mutex_t mutex_susp_ready;
 
-extern sem_t sem_procesos_en_new;
-extern sem_t sem_procesos_en_memoria;
+extern sem_t sem_plp;
 extern sem_t sem_procesos_ready;
 extern sem_t sem_procesos_en_blocked;
 

@@ -53,11 +53,12 @@ void* manejar_conexion_cpu(void* arg) {
 void manejar_conexion_kernel(int socket_cliente) {
     int codigo_operacion = recibir_operacion(socket_cliente);
     t_list* recibido;
+    int tamanio;
     switch(codigo_operacion) {
         case OC_INIT:
             recibido = recibir_paquete(socket_cliente);
             int pid = *((int*)list_get(recibido, 0));
-            int tamanio = *((int*)list_get(recibido, 1));
+            tamanio = *((int*)list_get(recibido, 1));
             char* nombre_archivo = list_get(recibido, 2);
             //char* pid_str = string_itoa(pid);
 
@@ -84,7 +85,8 @@ void manejar_conexion_kernel(int socket_cliente) {
         case ESPACIO_DISPONIBLE:
             recibido = recibir_paquete(socket_cliente);
             char* pid_str = list_get(recibido, 0);
-
+            tamanio = *((int*)list_get(recibido, 1));
+            log_trace(logger, "Kernel me pregunto si tenia espacio disponible");
             if (dictionary_has_key(tablas_por_pid, pid_str)) {
                 log_trace(logger, "PID %s ya tiene estructuras cargadas", pid_str);
                 free(pid_str);
@@ -94,8 +96,21 @@ void manejar_conexion_kernel(int socket_cliente) {
                 borrar_paquete(paquete);
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
+            }else{
+                //aca tiene que chequear si tiene espacio disponible para cargar un proceso en memoria
+                /*
+                if(hay espacio){
+                    manda ok
+                }else{
+                    manda no
+                }
+                */
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, OK);
+                enviar_paquete(paquete, socket_cliente, logger);
+                borrar_paquete(paquete);
+                list_destroy_and_destroy_elements(recibido, free);
             }
-            free(pid_str);
             break;
         case SOLICITUD_DUMP_MEMORY:
             log_trace(logger, "Se recibio solicitud de hacer un memory dump");

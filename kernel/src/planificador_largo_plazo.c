@@ -17,8 +17,7 @@ pthread_mutex_t mutex_blocked = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_susp_blocked = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_susp_ready = PTHREAD_MUTEX_INITIALIZER;
 
-sem_t sem_procesos_en_new;
-sem_t sem_procesos_en_memoria;
+sem_t sem_plp;
 sem_t sem_procesos_ready;
 sem_t sem_procesos_en_blocked;
 
@@ -45,8 +44,7 @@ void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
     cola_blocked = queue_create();
-    sem_init(&sem_procesos_en_new, 0, 0);
-    sem_init(&sem_procesos_en_memoria, 0, PROCESOS_MEMORIA);
+    sem_init(&sem_plp, 0, 0);
     sem_init(&sem_procesos_ready, 0, 0);
     sem_init(&sem_procesos_en_blocked, 0, 0);
 }
@@ -82,7 +80,7 @@ int crear_proceso(int tamanio_proceso){
             exit(EXIT_FAILURE);
     }
     pthread_mutex_unlock(&mutex_new);
-    sem_post(&sem_procesos_en_new);
+    sem_post(&sem_plp);
     return pcb->pid;
 }
 
@@ -124,8 +122,7 @@ void finalizar_proceso(t_pcb* pcb){
     log_metricas_estado(pcb);
     borrar_pcb(pcb);
 
-    sem_post(&sem_procesos_en_memoria);
-    sem_post(&sem_procesos_en_new);
+    sem_post(&sem_plp);//Como se libera memoria mando una señal mas
     
 }
 
@@ -150,6 +147,7 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
         log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
+        log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
         return false;
     }
 }
@@ -159,8 +157,7 @@ int estado_anterior;
 
     while(1){
         //chequeo que haya procesos en new y que haya espacio en memoria con dos wait
-        sem_wait(&sem_procesos_en_new);
-        sem_wait(&sem_procesos_en_memoria);
+        sem_wait(&sem_plp);
 
         t_pcb* pcb = NULL;
         //pcb = crear_pcb(pid, tamanio);
@@ -189,8 +186,7 @@ int estado_anterior;
 
             } else{
                 pthread_mutex_unlock(&mutex_susp_ready);
-                sem_post(&sem_procesos_en_new);
-                sem_post(&sem_procesos_en_memoria);
+                log_warning(logger, "## No hay suficiente espacio para ejecutar el proceso");
                 continue;
             }
 
@@ -205,7 +201,8 @@ int estado_anterior;
             pcb = queue_peek(cola_new);
 
             if(enviar_pedido_memoria(pcb)){//me fijo si puedo ejecutar el proximo proceso y lo paso a cola de ready
-                queue_pop (cola_new);
+                queue_pop(cola_new);
+                log_debug(logger, "debug 1");
                 pthread_mutex_unlock(&mutex_new);
 
                 estado_anterior = pcb->estado_actual;
@@ -219,20 +216,13 @@ int estado_anterior;
                 pthread_mutex_unlock(&mutex_ready);
 
             } else{
+                log_debug(logger, "debug 2");
                 pthread_mutex_unlock(&mutex_new);
-                sem_post(&sem_procesos_en_new);
-                sem_post(&sem_procesos_en_memoria);
             }
-        } 
-        
-        else {
+        } else {
+            log_debug(logger, "debug 4");
             pthread_mutex_unlock(&mutex_new);
             log_trace(logger, "la cola de new esta vacia");
-            
-            sem_post(&sem_procesos_en_new);
-            sem_post(&sem_procesos_en_memoria);
         }
-
-    //inicializar_proceso_en_memoria(pcb);
-}
+    }
 }
