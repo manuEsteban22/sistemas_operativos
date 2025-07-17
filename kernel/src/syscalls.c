@@ -86,13 +86,52 @@ void llamar_a_io(int socket_dispatch) {
 }
 
 void dump_memory(int socket_cpu){
-    t_list* recibido = recibir_paquete(socket_cpu);
+    int estado_anterior;
+
+    t_list* recibido = recibir_paquete(socket_dispatch);
     int* pid_ptr = list_get(recibido, 0);
+    int* pc_ptr = list_get(recibido, 1);
+    int* cpu_id_ptr = list_get(recibido, 2);
+
     int pid = *pid_ptr;
+    int pc = *pc_ptr;
+    int cpu_id = *cpu_id_ptr;
+
     log_trace(logger, "## DUMP MEMORY - PID %d", pid);
 
+    pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
+    pcb->pc = pc;
+
+    estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);
+    log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+    
+    asignar_timer_blocked(pcb);
+    queue_push(cola_blocked, pcb);
+    pthread_mutex_unlock(&mutex_blocked);
+
+    char* cpu_id_str = string_itoa(cpu_id);
+    int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+    socket_interrupt = *socket_interrupt_ptr;
+    free(cpu_id_str);
+
+    t_paquete* senial_bloqueante = crear_paquete();
+    cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
+    enviar_paquete(senial_bloqueante, socket_interrupt, logger);
+    borrar_paquete(senial_bloqueante);
+
+    t_paquete* confirmacion = crear_paquete();
+    cambiar_opcode_paquete(confirmacion, OK);
+    enviar_paquete(confirmacion, socket_dispatch, logger);
+    borrar_paquete(confirmacion);
+
+    int* nuevo_cpu_id = malloc(sizeof(int));
+    *nuevo_cpu_id = cpu_id;
+    pthread_mutex_lock(&mutex_cpus_libres);
+    queue_push(cpus_libres, nuevo_cpu_id);
+    pthread_mutex_unlock(&mutex_cpus_libres);
+    sem_post(&cpus_disponibles);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SOLICITUD_DUMP_MEMORY);
@@ -101,13 +140,22 @@ void dump_memory(int socket_cpu){
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 
-    if(recibir_operacion(socket_memoria) == MEMORY_DUMP){
-        cambiar_estado(pcb, READY);
-    }else{
-        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
-        cambiar_estado(pcb, EXIT);
-    }
     cerrar_conexion_memoria(socket_memoria);
+
+    if (recibir_operacion(socket_memoria) == MEMORY_DUMP){
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, READY);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+        
+    } else{
+        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, EXIT);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+        borrar_pcb(pcb);
+    }
+
+    list_destroy_and_destroy_elements(recibido, free);
 }
 
 void iniciar_proceso(int socket_cpu){
