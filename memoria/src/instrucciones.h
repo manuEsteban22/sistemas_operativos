@@ -1,14 +1,14 @@
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_
-#include <memoria.h>
-#include <atencion_kernel.h>
+
+#include <commons/collections/dictionary.h>
 
 extern t_dictionary* lista_de_instrucciones_por_pid;
 void cargar_instrucciones(int pid, char* nombre_archivo);
 char* obtener_instruccion(int pc, char* pid);
-int cantidad_instrucciones();
+int cantidad_instrucciones(char* pid);
 int espacio_libre();
-void liberar_memoria();
+void liberar_memoria(char* pid);
 int mandar_instruccion(int socket_cliente);
 int mandar_frame(int socket_cliente);
 int ejecutar_write(int socket_cliente);

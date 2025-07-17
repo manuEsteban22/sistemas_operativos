@@ -1,9 +1,9 @@
 #ifndef ATENCION_KERNEL_H_
 #define ATENCION_KERNEL_H_
-#include <administracion_memoria.h>
+
+#include "administracion_memoria.h"
 #include <commons/collections/list.h>
 #include <math.h>
-#include <commons/collections/dictionary.h>
 
 // Funciones públicas
 int cantidad_marcos_libres();
