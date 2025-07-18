@@ -36,10 +36,17 @@ char* obtener_instruccion(int pc, char* pid)
     return list_get(dictionary_get(lista_de_instrucciones_por_pid, pid), pc);
 }
 
-int cantidad_instrucciones(char* pid) 
-{   
-    return list_size(dictionary_get(lista_de_instrucciones_por_pid, pid));
+
+int cantidad_instrucciones(char* pid) {
+    t_list* instrucciones = dictionary_get(lista_de_instrucciones_por_pid, pid);
+    if (instrucciones == NULL) {
+        log_error(logger, "La lista de instrucciones es NULL en cantidad_instrucciones");
+        return 0;
+    }
+    return list_size(instrucciones);
 }
+
+
 
 int espacio_libre()
 {
@@ -202,7 +209,7 @@ int escribir_pagina_completa(int socket_cliente){
     char* pid_str = string_itoa(pid);
 
     log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
-    log_debug(logger, "Los datos a escribir en la pagina son", datos);
+    log_debug(logger, "Los datos a escribir en la pagina son %s", datos);
     memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
 
     t_paquete* paquete = crear_paquete();
@@ -222,7 +229,7 @@ void dumpear_memoria(int pid){
     char* timestamp = obtener_timestamp(); //fecha que lo identifica
     char* path = string_from_format("%s%d-%s.dmp", campos_config.dump_path, pid, timestamp);
     
-    FILE* archivo = fopen(path, "wb");
+    FILE* archivo = fopen(path, "w");
     if (!archivo) {
         log_error(logger, "No se pudo crear el dump para el proceso %d", pid);
         free(timestamp);
@@ -240,25 +247,26 @@ void dumpear_memoria(int pid){
         free(path);
         return;
     }
+    int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
     for (int i = 0; i < proceso->paginas_usadas; i++) {
+        //assert(i < proceso->paginas_usadas);
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, i);
-        log_trace(logger, "Entrada %d: ptr=%p", i, entrada);
-        if(!entrada || entrada == NULL){
-            log_error(logger, "Entrada NULL");
-        }
-        if (((uintptr_t)entrada) < 0x1000 || ((uintptr_t)entrada) > 0xFFFFFFFFFFFF) {
-            log_error(logger, "Puntero inválido en página %d: %p", i, entrada);
+        if(!entrada){
+            log_error(logger, "Entrada NULL para pagina %d", i);
             continue;
         }
-
-        log_trace(logger, "Presencia? ptr=%p", (void*)&entrada->presencia);
-        
-            
-        if(entrada->presencia){//Da segmentation fault
-            log_warning(logger, "Anduvo");
-            void* origen = memoria_usuario + entrada->marco * campos_config.tam_pagina;
-            fwrite(origen, 1, campos_config.tam_pagina, archivo);
+        if (!entrada->presencia) {
+            log_trace(logger, "Página %d no está en memoria principal", i);
+            continue;
         }
+        if (entrada->marco < 0 || entrada->marco >= marcos_totales) {
+            log_error(logger, "Marco inválido para página %d: %d", i, entrada->marco);
+            continue;
+        }
+        void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
+        log_trace(logger, "Dump página %d: marco %d @ %p", i, entrada->marco, origen);
+        fwrite(origen, 1, campos_config.tam_pagina, archivo);
+        
     }
     fclose(archivo);
     free(path);

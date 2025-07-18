@@ -1,14 +1,25 @@
 #include <atencion_kernel.h>
-
+#include <math.h>
 
 // busca pags libres, las asigna y arma tabla raiz
 
 void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
+    if (tam_proceso <= 0 || !nombre_archivo) {
+        log_error(logger, "Tamaño de proceso inválido: %d", tam_proceso);
+        return NULL;
+    }
+
     int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;
+
     t_proceso* proceso = malloc(sizeof(t_proceso));
+    if (!proceso) return NULL;
     memset(proceso, 0, sizeof(t_proceso));
     proceso->pid = pid;
     proceso->tabla_raiz = crear_tabla(0);
+    if (!proceso->tabla_raiz) {
+        free(proceso);
+        return NULL;
+    }
     proceso->paginas_usadas = pags_necesarias;
     proceso->accesos_memoria = 0;
     proceso->page_faults = 0;
@@ -16,6 +27,7 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
     memset(&proceso->metricas, 0, sizeof(t_metricas));
     log_trace(logger, "cargue el pid %s", pid_str);
     dictionary_put(tablas_por_pid, pid_str, proceso);
+    free(pid_str);
     cargar_instrucciones(pid, nombre_archivo); 
 
     for(int pagina = 0; pagina < pags_necesarias; pagina++){
@@ -145,24 +157,27 @@ int buscar_marco_libre()
 
 t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina){
 
+    if (!tabla_raiz) return NULL;
     t_tabla_paginas* actual = tabla_raiz;
-    int bits_por_nivel = log2(campos_config.entradas_por_tabla);
+    int bits_por_nivel = (int)log2(campos_config.entradas_por_tabla);
 
     for(int nivel = 0; nivel < campos_config.cantidad_niveles -1; nivel++){
         int indice = (nro_pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel - 1))) & ((1 << bits_por_nivel) - 1);
-        if (!actual->entradas[indice].siguiente_tabla) {
+        if (indice >= campos_config.entradas_por_tabla || !actual->entradas[indice].siguiente_tabla) {
             log_error(logger, "Tabla no creada");
             return NULL; 
         }
+
         actual = actual->entradas[indice].siguiente_tabla;
     }
 
     int indice_final = nro_pagina & ((1 << bits_por_nivel) - 1);
-    return &actual->entradas[indice_final];
-}
+    if (indice_final >= campos_config.entradas_por_tabla) {
+        log_error(logger, "Índice final %d inválido", indice_final);
+        return NULL;
+    }
 
-bool entrada_valida(t_entrada_tabla* entrada) {
-    return entrada != NULL && (entrada->presencia == 0 || entrada->presencia == 1);
+    return &actual->entradas[indice_final];
 }
 
 

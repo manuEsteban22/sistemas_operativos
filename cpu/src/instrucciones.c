@@ -7,7 +7,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     }
 
     char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos);
+    int size_datos = strlen(datos) + 1;
 
 
     t_paquete* paquete = crear_paquete();
