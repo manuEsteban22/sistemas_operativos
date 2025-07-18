@@ -30,21 +30,29 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
     free(pid_str);
     cargar_instrucciones(pid, nombre_archivo); 
 
-    for(int pagina = 0; pagina < pags_necesarias; pagina++){
+    for (int pagina = 0; pagina < pags_necesarias; pagina++) 
+    {
         int marco_libre = buscar_marco_libre();
-        if (marco_libre == -1){
-            log_error(logger, "Algo 1");
-            return NULL; //falta q haga algo
+        if (marco_libre == -1) 
+        {
+            log_error(logger, "No hay marcos libres para página %d de PID %d", pagina, pid);
+            liberar_proceso(proceso);
+            dictionary_remove_and_destroy(tablas_por_pid, pid_str, liberar_proceso);
+            
+            return NULL;
         }
         bitarray_set_bit(bitmap_marcos, marco_libre);
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina);
         if (!entrada) {
             log_error(logger, "No se pudo inicializar la entrada de la página %d para PID %d", pagina, pid);
+            liberar_proceso(proceso);
+            dictionary_remove_and_destroy(tablas_por_pid, pid_str, liberar_proceso);
+            
             return NULL;
         }
         entrada->presencia = true;
         entrada->marco = marco_libre;
-        log_trace(logger, "Se inicializo bien el bit de presencia");
+        log_trace(logger, "Página %d asignada a marco %d", pagina, marco_libre);
     }
     log_info(logger, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
     return proceso->tabla_raiz;
@@ -155,31 +163,50 @@ int buscar_marco_libre()
 
 // busca la entrada en cuestion
 
-t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina){
+t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina) {
+    if (!tabla_raiz) {
+        log_error(logger, "Tabla raíz NULL para página %d", nro_pagina);
+        return NULL;
+    }
 
-    if (!tabla_raiz) return NULL;
+    // Verificar que entradas_por_tabla sea una potencia de 2
+    int entradas_por_tabla = campos_config.entradas_por_tabla;
+    if ((entradas_por_tabla & (entradas_por_tabla - 1)) != 0) {
+        log_error(logger, "entradas_por_tabla (%d) no es una potencia de 2", entradas_por_tabla);
+        return NULL;
+    }
+
     t_tabla_paginas* actual = tabla_raiz;
-    int bits_por_nivel = (int)log2(campos_config.entradas_por_tabla);
+    int bits_por_nivel = (int)log2(entradas_por_tabla);
 
-    for(int nivel = 0; nivel < campos_config.cantidad_niveles -1; nivel++){
+    for (int nivel = 0; nivel < campos_config.cantidad_niveles - 1; nivel++) {
         int indice = (nro_pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel - 1))) & ((1 << bits_por_nivel) - 1);
-        if (indice >= campos_config.entradas_por_tabla || !actual->entradas[indice].siguiente_tabla) {
-            log_error(logger, "Tabla no creada");
-            return NULL; 
-        }
+        log_trace(logger, "Nivel %d, página %d, índice %d", nivel, nro_pagina, indice);
 
+        if (!actual) {
+            log_error(logger, "Tabla actual NULL en nivel %d para página %d", nivel, nro_pagina);
+            return NULL;
+        }
+        if (indice >= campos_config.entradas_por_tabla) {
+            log_error(logger, "Índice %d fuera de rango en nivel %d para página %d", indice, nivel, nro_pagina);
+            return NULL;
+        }
+        if (!actual->entradas[indice].siguiente_tabla) {
+            log_error(logger, "Siguiente tabla no existe en nivel %d, índice %d para página %d", nivel, indice, nro_pagina);
+            return NULL;
+        }
         actual = actual->entradas[indice].siguiente_tabla;
     }
 
     int indice_final = nro_pagina & ((1 << bits_por_nivel) - 1);
     if (indice_final >= campos_config.entradas_por_tabla) {
-        log_error(logger, "Índice final %d inválido", indice_final);
+        log_error(logger, "Índice final %d inválido para página %d", indice_final, nro_pagina);
         return NULL;
     }
 
+    log_trace(logger, "Entrada encontrada para página %d, índice final %d", nro_pagina, indice_final);
     return &actual->entradas[indice_final];
 }
-
 
 void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base){
 
@@ -252,18 +279,50 @@ bool entra_el_proceso(int tamanio){
     }
 }
 
-void liberar_tabla(t_tabla_paginas* tabla, int nivel) 
-{
+void liberar_tabla(t_tabla_paginas* tabla, int nivel) {
+    if (!tabla) {
+        return;
+    }
+
     for (int i = 0; i < campos_config.entradas_por_tabla; i++) {
         t_entrada_tabla* entrada = &tabla->entradas[i];
         if (nivel < campos_config.cantidad_niveles - 1) {
-            if (entrada->siguiente_tabla)
+            if (entrada->siguiente_tabla) {
                 liberar_tabla(entrada->siguiente_tabla, nivel + 1);
-        } else {
-            if (entrada->presencia) {
-                bitarray_clean_bit(bitmap_marcos, entrada->marco);
-                entrada->presencia = false;
+                entrada->siguiente_tabla = NULL;
             }
+        } else if (entrada->presencia) {
+            bitarray_clean_bit(bitmap_marcos, entrada->marco);
+            entrada->presencia = false;
+            entrada->marco = -1;
         }
     }
+
+    free(tabla->entradas);
+    tabla->entradas = NULL;
+    log_trace(logger, "Liberando tabla de nivel %d", nivel);
+    free(tabla);
+}
+
+void liberar_proceso(void* proceso_void) {
+    t_proceso* proceso = (t_proceso*)proceso_void;
+    if (!proceso) {
+        log_error(logger, "Intento de liberar un proceso NULL");
+        return;
+    }
+
+    if (proceso->tabla_raiz) {
+        liberar_tabla(proceso->tabla_raiz, 0);
+        proceso->tabla_raiz = NULL;
+    }
+
+    char* pid_str = string_itoa(proceso->pid);
+    t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
+    if (instrucciones) {
+        list_destroy_and_destroy_elements(instrucciones, free);
+    }
+    free(pid_str);
+
+    log_trace(logger, "Liberando proceso PID %d", proceso->pid);
+    free(proceso);
 }
