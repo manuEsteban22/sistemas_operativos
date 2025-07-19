@@ -17,5 +17,6 @@ bool entrada_valida(t_entrada_tabla* entrada);
 t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina);
 void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base);
 void suspender_pagina(int pid, int nro_pagina, int marco);
+void liberar_proceso(void* proceso_void);
 
 #endif

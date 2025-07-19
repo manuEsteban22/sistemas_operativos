@@ -10,6 +10,7 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
     }
 
     int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;
+    log_trace(logger, "pags necesarias %d", pags_necesarias);
 
     t_proceso* proceso = malloc(sizeof(t_proceso));
     if (!proceso) return NULL;
@@ -50,6 +51,7 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo){
             
             return NULL;
         }
+
         entrada->presencia = true;
         entrada->marco = marco_libre;
         log_trace(logger, "Página %d asignada a marco %d", pagina, marco_libre);
@@ -151,7 +153,6 @@ void* finalizar_proceso(int pid){
 int buscar_marco_libre() 
 {
     int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
-    
     for (int i = 0; i < cantidad_marcos; i++) {
         if (!bitarray_test_bit(bitmap_marcos, i)) {
             bitarray_set_bit(bitmap_marcos, i);
@@ -171,10 +172,6 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla_raiz, int nro_pagina) {
 
     // Verificar que entradas_por_tabla sea una potencia de 2
     int entradas_por_tabla = campos_config.entradas_por_tabla;
-    if ((entradas_por_tabla & (entradas_por_tabla - 1)) != 0) {
-        log_error(logger, "entradas_por_tabla (%d) no es una potencia de 2", entradas_por_tabla);
-        return NULL;
-    }
 
     t_tabla_paginas* actual = tabla_raiz;
     int bits_por_nivel = (int)log2(entradas_por_tabla);

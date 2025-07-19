@@ -255,6 +255,10 @@ void dumpear_memoria(int pid){
             log_error(logger, "Entrada NULL para pagina %d", i);
             continue;
         }
+        if ((void*)entrada < (void*)0x1000) { // dirección baja, probablemente inválida
+        log_error(logger, "Entrada inválida (puntero bajo) para pagina %d", i);
+        continue;
+        }
         if (!entrada->presencia) {
             log_trace(logger, "Página %d no está en memoria principal", i);
             continue;
