@@ -38,14 +38,17 @@ typedef struct {
 } t_proceso;
 
 // Definición de t_entrada_tabla y t_tabla_paginas
+typedef struct{
+    t_list entradas;
+}t_tabla_paginas;
+
 typedef struct {
+    int numero_entrada;
     bool presencia;
-    uint32_t marco;
+    int marco;
     t_tabla_paginas* siguiente_tabla;
 } t_entrada_tabla;
 
-struct t_tabla_paginas {
-    t_entrada_tabla* entradas;
-};
+
 
 #endif
