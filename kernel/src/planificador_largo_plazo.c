@@ -169,11 +169,9 @@ void planificador_largo_plazo(){
 int estado_anterior;
 
     while(1){
-        //chequeo que haya procesos en new y que haya espacio en memoria con dos wait
         sem_wait(&sem_plp);
 
         t_pcb* pcb = NULL;
-        //pcb = crear_pcb(pid, tamanio);
 
         log_trace(logger, "aca arranco el plani lp");
 

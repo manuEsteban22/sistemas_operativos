@@ -6,7 +6,6 @@
 
 extern t_log* logger;
 extern t_config* config;
-extern int PROCESOS_MEMORIA;
 extern char* ip_memoria;
 extern char* puerto_memoria;
 extern char* puerto_interrupt;
@@ -15,6 +14,8 @@ extern int socket_memoria;
 extern int socket_io;
 extern int socket_interrupt;
 extern int socket_dispatch;
+extern int alfa;
+extern int estimacion_inicial;
 extern t_dictionary* dispositivos_io; //
 extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
 extern t_dictionary* tabla_exec; // tiene pid -> cpuid
@@ -27,6 +28,7 @@ extern char* algoritmo_largo_plazo;
 extern char* algoritmo_corto_plazo;
 extern int tiempo_suspension;
 
+void iniciar_estructuras();
 
 typedef struct
 {

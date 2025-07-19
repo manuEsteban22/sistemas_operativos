@@ -66,6 +66,7 @@ void* manejar_servidor_cpu(void* arg){
                 llamar_a_io(socket_cliente);
                 break;
             case SYSCALL_DUMP_MEMORY:
+                log_trace(logger, "se va a correr un dump memory");  
                 dump_memory(socket_cliente);
                 log_trace(logger, "se corrio un dump memory");
             case SYSCALL_INIT:
@@ -271,7 +272,6 @@ void* hilo_main_cpu(void* args){
         
         int socket_cliente_dispatch = esperar_cliente(socket_dispatch, logger);
         sem_post(&cpus_disponibles);
-        log_error(logger, "ESTO SE ESTA EJECUTANDO");
         t_args_hilo* args_dispatch = malloc(sizeof(t_args_hilo));
         args_dispatch->socket = socket_cliente_dispatch;
         args_dispatch->nombre = "DISPATCH";

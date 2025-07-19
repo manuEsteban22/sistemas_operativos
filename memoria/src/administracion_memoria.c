@@ -18,8 +18,6 @@ void inicializar_memoria()
 
     cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    // bitmap_marcos = malloc(sizeof(bool) * cantidad_marcos);            
-    // memset(bitmap_marcos, false, sizeof(bool) * cantidad_marcos); 
 
     int tam_en_bytes = (cantidad_marcos + 7)/8;
 
@@ -37,17 +35,34 @@ t_tabla_paginas* crear_tabla(int nivel_actual)
 {
 
     t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
+    if (!tabla) {
+        log_error(logger, "Error al asignar memoria para tabla nivel %d", nivel_actual);
+        return NULL;
+    }
+    memset(tabla, 0, sizeof(t_tabla_paginas));
+
     tabla->entradas = malloc(sizeof(t_entrada_tabla) * campos_config.entradas_por_tabla);
+    if (!tabla->entradas) {
+        free(tabla);
+        log_error(logger, "Error al asignar entradas para tabla nivel %d", nivel_actual);
+        return NULL;
+    }
+    memset(tabla->entradas, 0, sizeof(t_entrada_tabla) * campos_config.entradas_por_tabla);
 
 
     for(int i = 0; i < campos_config.entradas_por_tabla; i++)
     {
         tabla->entradas[i].presencia = false;
-        tabla->entradas[i].marco = 0;
-        if (nivel_actual < campos_config.cantidad_niveles) {
+        tabla->entradas[i].marco = -1;
+        tabla->entradas[i].siguiente_tabla = NULL;
+        if (nivel_actual < campos_config.cantidad_niveles - 1) {
             tabla->entradas[i].siguiente_tabla = crear_tabla(nivel_actual + 1);
-        } else {
-            tabla->entradas[i].siguiente_tabla = NULL; // Último nivel
+
+            if (!tabla->entradas[i].siguiente_tabla) {
+                // Liberar toda la tabla si falla
+                liberar_tabla(tabla, nivel_actual);
+                return NULL;
+            }
         }
     }
     return tabla;
@@ -58,7 +73,6 @@ void* creacion_estructuras_administrativas()
    inicializar_memoria();
    tablas_por_pid = dictionary_create();
     lista_de_instrucciones_por_pid = dictionary_create();
-   //crear_tabla(0);
    return NULL;
 }
 

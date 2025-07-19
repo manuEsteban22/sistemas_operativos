@@ -60,19 +60,6 @@ void manejar_conexion_kernel(int socket_cliente) {
             int pid = *((int*)list_get(recibido, 0));
             tamanio = *((int*)list_get(recibido, 1));
             char* nombre_archivo = list_get(recibido, 2);
-            //char* pid_str = string_itoa(pid);
-
-            // if (dictionary_has_key(tablas_por_pid, pid_str)) {
-            //     log_trace(logger, "PID %d ya tiene estructuras cargadas", pid);
-            //     free(pid_str);
-            //     t_paquete* paquete = crear_paquete();
-            //     cambiar_opcode_paquete(paquete, OK);
-            //     enviar_paquete(paquete, socket_cliente, logger);
-            //     borrar_paquete(paquete);
-            //     list_destroy_and_destroy_elements(recibido, free);
-            //     break;
-            // }
-            //free(pid_str);
             log_trace(logger, "Llego una peticion de crear un proceso");
             log_trace(logger, "Proceso PID=%d - Tamanio=%d", pid, tamanio);
             inicializar_proceso(tamanio, pid, nombre_archivo);
@@ -97,18 +84,19 @@ void manejar_conexion_kernel(int socket_cliente) {
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
             }else{
-                //aca tiene que chequear si tiene espacio disponible para cargar un proceso en memoria
-                /*
-                if(hay espacio){
-                    manda ok
-                }else{
-                    manda no
-                }
-                */
+               if(entra_el_proceso(tamanio)){
                 t_paquete* paquete = crear_paquete();
                 cambiar_opcode_paquete(paquete, OK);
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
+               }else{
+                log_warning(logger, "El proceso no entraba en memoria");
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, NO);
+                enviar_paquete(paquete, socket_cliente, logger);
+                borrar_paquete(paquete);
+               }
+                
                 list_destroy_and_destroy_elements(recibido, free);
             }
             break;

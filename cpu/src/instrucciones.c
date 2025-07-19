@@ -7,7 +7,7 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
     }
 
     char* datos = (char*)instruccion->param2;
-    int size_datos = strlen(datos);
+    int size_datos = strlen(datos) + 1;
 
 
     t_paquete* paquete = crear_paquete();
@@ -23,7 +23,6 @@ void ejecutar_write(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb
 
 char* ejecutar_read(t_instruccion* instruccion, int direccion_fisica, t_pcb* pcb){
     int tamanio = (*(int*)instruccion->param2);
-
     t_paquete* paquete = crear_paquete();
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     agregar_a_paquete(paquete, &tamanio, sizeof(int));
@@ -78,7 +77,7 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
 
 void init_proc(t_instruccion* instruccion, t_pcb* pcb){
     char* archivo_instrucciones = (char*)instruccion->param1;
-    int tamanio = (int)instruccion->param2;
+    int tamanio = atoi(instruccion->param2);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_INIT);
@@ -90,12 +89,23 @@ void init_proc(t_instruccion* instruccion, t_pcb* pcb){
     return;
 }
 
-void dump_memory(t_pcb* pcb){
+void dump_memory(t_pcb* pcb, int cpu_id){
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, SYSCALL_DUMP_MEMORY);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
+    agregar_a_paquete(paquete, &cpu_id, sizeof(int));
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);
+
+    int respuesta = recibir_operacion(socket_kernel_dispatch);
+    if(respuesta == OK){
+        log_trace(logger, "Recibi confirmacion de DUMP de kernel");
+        return;
+    }
+    else{
+        log_error(logger, "No se recibio respuesta del DUMP de kernel");
+    }
 }
 
 void exit_syscall(t_pcb* pcb){

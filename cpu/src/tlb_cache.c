@@ -20,8 +20,7 @@ void inicializar_cache() {
 }
 
 void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pcb) {
-    log_debug(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
-    log_debug(logger, "el contenido justo antes de escribir pagina es : %s", contenido);
+    log_trace(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
     char* pagina_a_enviar = calloc(1, tam_pagina);
     memcpy(pagina_a_enviar, contenido, strlen(contenido));
     t_paquete* paquete = crear_paquete();
@@ -55,7 +54,6 @@ char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
         char* pagina = malloc(tam_pagina);
         memcpy(pagina, contenido, tam_pagina);
 
-        log_trace(logger, "Se leyo una pagina de memoria con contenido %s", contenido);
         list_destroy_and_destroy_elements(recibido, free);
         return pagina;
     }
@@ -68,7 +66,6 @@ void cache_miss(int nro_pagina, t_pcb* pcb){
     int marco = direccion_fisica / tam_pagina;
 
     char* pagina_leida = leer_pagina_memoria(direccion_fisica, pcb);
-    log_debug(logger, "La pagina leida del miss contiene %s", pagina_leida);
 
     actualizar_cache(nro_pagina, marco, pagina_leida, false, pcb);
     free(pagina_leida);
@@ -99,14 +96,16 @@ void actualizar_tlb(int pagina, int marco) {
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
     nueva_entrada->ultimo_acceso = ++contador_acceso;
+    t_entrada_tlb* victima = NULL;
 
     if (list_size(tlb) >= entradas_tlb) {
-        t_entrada_tlb* victima = NULL;
         if (strcmp(reemplazo_tlb, "FIFO") == 0) {
             victima = list_get(tlb, 0);
         } else if (strcmp(reemplazo_tlb, "LRU") == 0) {
-            int mas_antiguo = -1;
-            for(int i = 0; i<list_size(tlb);i++){
+            victima = list_get(tlb, 0);
+            int mas_antiguo = victima->ultimo_acceso;
+
+            for(int i = 1; i<list_size(tlb);i++){
                 t_entrada_tlb* entrada = list_get(tlb,i);
                 if(entrada->ultimo_acceso < mas_antiguo){
                     mas_antiguo = entrada->ultimo_acceso;
@@ -184,7 +183,7 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
         pthread_mutex_unlock(&mutex_cache);
         return NULL;
     }
-    datos = malloc(tamanio + 1);
+    datos = malloc(tamanio);
     memcpy(datos, entrada->contenido + desplazamiento, tamanio);
     datos[tamanio] = '\0';
 
@@ -215,7 +214,7 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
             }
         }
         if(entrada != NULL){
-            memcpy(entrada->contenido + desplazamiento, datos, strlen(datos) + 1);
+            memcpy(entrada->contenido + desplazamiento, datos, strlen(datos));
             log_debug(logger, "Escribiendo en cache %d bytes en offset %d: '%s'", strlen(datos), desplazamiento, datos);
             entrada->modificado = true;
             entrada->usado = true;
@@ -229,7 +228,7 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
         int marco_local = direccion_fisica / tam_pagina;
         char* pagina_completa = leer_pagina_memoria(nro_pagina, pcb);
         log_info(logger, "PID: %d - Cache Miss - Pagina: %d", pcb->pid, nro_pagina);
-        memcpy(pagina_completa + desplazamiento, datos, strlen(datos) + 1);
+        memcpy(pagina_completa + desplazamiento, datos, strlen(datos));
         log_debug(logger, "Escribiendo en cache %d bytes en offset %d: '%s'", strlen(datos), desplazamiento, datos);
         log_debug(logger, "debug escribir en cache, marco: %d", marco_local);
         actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
@@ -286,8 +285,6 @@ int encontrar_victima_cache(t_pcb* pcb) {
                     return victima;
                 }
                 if (vueltas == 1 && !entrada->usado && entrada->modificado) {
-                    // Escribir a memoria antes de reemplazar
-                    //log_error(logger, "voy a hacer un memory update con el contenido %s", (entrada->contenido));
                     
                     int victima = puntero_clock;
                     puntero_clock = (puntero_clock + 1) % entradas_cache;
