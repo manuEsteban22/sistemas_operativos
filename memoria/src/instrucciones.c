@@ -101,6 +101,7 @@ int mandar_instruccion(int socket_cliente)
     enviar_paquete(paquete, socket_cliente, logger);
 
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // yrsteajteazjntguesijk sxr4
+    log_error(logger, "alguna metrica es %d", proceso->metricas.cantidad_instrucciones_solicitadas);
     proceso->metricas.cantidad_instrucciones_solicitadas++;
 
     borrar_paquete(paquete);
@@ -226,7 +227,7 @@ int escribir_pagina_completa(int socket_cliente){
 }
 
 void dumpear_memoria(int pid){
-    char* timestamp = obtener_timestamp(); //fecha que lo identifica
+    char* timestamp = obtener_timestamp();
     char* path = string_from_format("%s%d-%s.dmp", campos_config.dump_path, pid, timestamp);
     
     FILE* archivo = fopen(path, "w");
@@ -234,12 +235,13 @@ void dumpear_memoria(int pid){
         log_error(logger, "No se pudo crear el dump para el proceso %d", pid);
         free(timestamp);
         free(path);
-        
         return;
     }
+
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     free(pid_str);
+
     if(!proceso){
         log_error(logger, "No se encontró el proceso %d", pid);
         fclose(archivo);
@@ -247,31 +249,31 @@ void dumpear_memoria(int pid){
         free(path);
         return;
     }
+
     int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
+
     for (int i = 0; i < proceso->paginas_usadas; i++) {
-        //assert(i < proceso->paginas_usadas);
-        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, i);
+        t_entrada_tabla* entrada = (t_entrada_tabla*) buscar_entrada(proceso->tabla_raiz, i);
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", i);
             continue;
         }
-        if ((void*)entrada < (void*)0x1000) { // dirección baja, probablemente inválida
-        log_error(logger, "Entrada inválida (puntero bajo) para pagina %d", i);
-        continue;
-        }
+
         if (!entrada->presencia) {
             log_trace(logger, "Página %d no está en memoria principal", i);
             continue;
         }
+
         if (entrada->marco < 0 || entrada->marco >= marcos_totales) {
             log_error(logger, "Marco inválido para página %d: %d", i, entrada->marco);
             continue;
         }
+
         void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
         log_trace(logger, "Dump página %d: marco %d @ %p", i, entrada->marco, origen);
         fwrite(origen, 1, campos_config.tam_pagina, archivo);
-        
     }
+
     fclose(archivo);
     free(path);
     free(timestamp);
@@ -290,23 +292,35 @@ int obtener_marco(int pid, int nro_pagina) {
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     free(pid_str);
+
     if (!proceso) {
         log_error(logger, "No se encontró el proceso %d", pid);
         return -1;
     }
+
     t_tabla_paginas* actual = proceso->tabla_raiz;
     int bits_por_nivel = log2(campos_config.entradas_por_tabla);
     int marco = -1;
+
     for (int nivel = 0; nivel < campos_config.cantidad_niveles; nivel++) {
         proceso->metricas.cantidad_accesos_tablas_de_paginas++;
-        usleep(campos_config.retardo_memoria * 1000); // retardo en microsegundos
+        usleep(campos_config.retardo_memoria * 1000);
+
         int indice = (nro_pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel - 1))) & ((1 << bits_por_nivel) - 1);
+        t_entrada_tabla* entrada = list_get(actual->entradas, indice);
+
+        if (!entrada) {
+            log_error(logger, "No se encontró la entrada %d en el nivel %d", indice, nivel);
+            return -1;
+        }
+
         if (nivel < campos_config.cantidad_niveles - 1) {
-            actual = actual->entradas[indice].siguiente_tabla;
+            actual = entrada->siguiente_tabla;
         } else {
-            marco = actual->entradas[indice].marco;
+            marco = entrada->marco;
         }
     }
+
     log_trace(logger, "Marco = %d", marco);
     return marco;
 }

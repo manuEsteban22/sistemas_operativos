@@ -8,15 +8,14 @@
 #include <config_memoria.h>
 #include <instrucciones.h>
 
-// Forward declaration
-typedef struct t_tabla_paginas t_tabla_paginas;
+
 
 extern void* memoria_usuario;
 extern t_bitarray* bitmap_marcos;
 extern t_dictionary* tablas_por_pid;
 
 void inicializar_memoria();
-t_tabla_paginas* crear_tabla(int nivel_actual);
+
 
 // Estructuras de métricas y proceso
 typedef struct {
@@ -28,6 +27,19 @@ typedef struct {
     int cantidad_escrituras_memoria;
 } t_metricas;
 
+
+// Definición de t_entrada_tabla y t_tabla_paginas
+typedef struct {
+    t_list* entradas;
+} t_tabla_paginas;
+
+typedef struct {
+    int numero_entrada;
+    bool presencia;
+    int marco;
+    t_tabla_paginas* siguiente_tabla;
+} t_entrada_tabla;
+
 typedef struct {
     int pid;
     t_tabla_paginas* tabla_raiz;
@@ -37,18 +49,6 @@ typedef struct {
     t_metricas metricas;
 } t_proceso;
 
-// Definición de t_entrada_tabla y t_tabla_paginas
-typedef struct{
-    t_list entradas;
-}t_tabla_paginas;
-
-typedef struct {
-    int numero_entrada;
-    bool presencia;
-    int marco;
-    t_tabla_paginas* siguiente_tabla;
-} t_entrada_tabla;
-
-
+t_tabla_paginas* crear_tabla(int nivel_actual);
 
 #endif
