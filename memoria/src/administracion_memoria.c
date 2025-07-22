@@ -99,12 +99,15 @@ t_tabla_paginas* crear_tabla(int nivel_actual) {
 
 void* creacion_estructuras_administrativas()
 {
+
     semaforos_por_pid = dictionary_create();
     iniciados_por_pid = dictionary_create();
     pthread_mutex_init(&mutex_semaforos, NULL);
-   inicializar_memoria();
-   tablas_por_pid = dictionary_create();
-   lista_de_instrucciones_por_pid = dictionary_create();
-   return NULL;
+
+    paginas_en_swap = list_create();
+    inicializar_memoria();
+    tablas_por_pid = dictionary_create();
+    lista_de_instrucciones_por_pid = dictionary_create();
+    return NULL;
 }
 
