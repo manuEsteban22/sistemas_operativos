@@ -32,6 +32,9 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
         int marco_libre = buscar_marco_libre();
 
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina, 0);
+        if (!entrada->presencia) {
+            log_trace(logger, "Página %d no está en memoria principal", pagina);
+        }
 
         bitarray_set_bit(bitmap_marcos, marco_libre);
         entrada->presencia = true;
@@ -186,6 +189,18 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_ac
     }
 
     if (nivel_actual == campos_config.cantidad_niveles - 1) {
+        
+        if(!entrada->presencia)
+        {
+            log_debug(logger, "false");
+        }
+        else if(entrada->presencia)
+        {
+            log_debug(logger, "true");
+        }else
+        {
+            log_debug(logger, "rari");
+        }
         return entrada;
     }
 

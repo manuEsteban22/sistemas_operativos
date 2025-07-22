@@ -276,25 +276,25 @@ void dumpear_memoria(int pid){
 
     int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    for (int i = 0; i < proceso->paginas_usadas; i++) {
-        t_entrada_tabla* entrada = (t_entrada_tabla*) buscar_entrada(proceso->tabla_raiz, i, 0);
+    for (int pagina = 0; pagina < proceso->paginas_usadas; pagina++) {
+        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina, 0);
         if(!entrada){
-            log_error(logger, "Entrada NULL para pagina %d", i);
-            continue;
+            log_error(logger, "Entrada NULL para pagina %d", pagina);
+            
         }
 
         if (!entrada->presencia) {
-            log_trace(logger, "Página %d no está en memoria principal", i);
-            continue;
+            log_trace(logger, "Página %d no está en memoria principal", pagina);
+            
         }
 
         if (entrada->marco < 0 || entrada->marco >= marcos_totales) {
-            log_error(logger, "Marco inválido para página %d: %d", i, entrada->marco);
-            continue;
+            log_error(logger, "Marco inválido para página %d: %d", pagina, entrada->marco);
+            
         }
 
         void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
-        log_trace(logger, "Dump página %d: marco %d @ %p", i, entrada->marco, origen);
+        log_trace(logger, "Dump página %d: marco %d @ %p", pagina, entrada->marco, origen);
         fwrite(origen, 1, campos_config.tam_pagina, archivo);
     }
 
