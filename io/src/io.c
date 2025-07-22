@@ -7,6 +7,7 @@ t_log* logger;
 t_config* config;
 char* ip_kernel;
 char* puerto_kernel;
+char* nombre_dispositivo;
 
 int main(int argc, char* argv[]) {
     int socket_kernel;
@@ -30,7 +31,7 @@ int main(int argc, char* argv[]) {
 
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
-    nuevo_logger = log_create("io.log","LogIO",true,LOG_LEVEL_INFO);
+    nuevo_logger = log_create("io.log","LogIO",true,LOG_LEVEL_TRACE);
     log_info(nuevo_logger, "Funciona logger IO :)");
     return nuevo_logger;
 }

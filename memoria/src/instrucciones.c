@@ -28,6 +28,7 @@ void cargar_instrucciones(int pid, char* nombre_archivo)
 
     fclose(archivo);
     dictionary_put(lista_de_instrucciones_por_pid, string_itoa(pid), lista_instrucciones);
+    log_debug(logger, "Agregue una lista de instrucciones al diccionario PID %d", pid);
 }
 
 char* obtener_instruccion(int pc, char* pid) 
@@ -40,7 +41,7 @@ char* obtener_instruccion(int pc, char* pid)
 int cantidad_instrucciones(char* pid) {
     t_list* instrucciones = dictionary_get(lista_de_instrucciones_por_pid, pid);
     if (instrucciones == NULL) {
-        log_error(logger, "La lista de instrucciones es NULL en cantidad_instrucciones");
+        log_error(logger, "La lista de instrucciones es NULL en cantidad_instrucciones para PID %s", pid);
         return 0;
     }
     return list_size(instrucciones);
@@ -56,6 +57,7 @@ int espacio_libre()
 
 void liberar_memoria(char* pid) 
 {
+    log_warning(logger, "Liberar memoria Pid %s", pid);
     list_destroy_and_destroy_elements(dictionary_get(lista_de_instrucciones_por_pid, pid), free);
 }
 
@@ -67,7 +69,29 @@ int mandar_instruccion(int socket_cliente)
     int pid = *((int*)list_get(lista_paquete, 0));
     int pc = *((int*) list_get(lista_paquete, 1));
     char* pid_str = string_itoa(pid);
+    bool iniciado = false;
 
+    pthread_mutex_lock(&mutex_semaforos);
+    sem_t* sem = dictionary_get(semaforos_por_pid, pid_str);
+    iniciado = dictionary_get(iniciados_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_semaforos);
+
+    while (sem == NULL) {
+        usleep(1000); 
+        pthread_mutex_lock(&mutex_semaforos);
+        sem = dictionary_get(semaforos_por_pid, pid_str);
+        iniciado = dictionary_get(iniciados_por_pid, pid_str);
+        pthread_mutex_unlock(&mutex_semaforos);
+    }
+
+    if (!iniciado){
+        sem_wait(sem);
+
+    }else{
+        log_trace(logger, "PID %d ya fue iniciado", pid);
+    }
+    
+    
     int cant = cantidad_instrucciones(pid_str);
 
     
@@ -253,7 +277,7 @@ void dumpear_memoria(int pid){
     int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
 
     for (int i = 0; i < proceso->paginas_usadas; i++) {
-        t_entrada_tabla* entrada = (t_entrada_tabla*) buscar_entrada(proceso->tabla_raiz, i);
+        t_entrada_tabla* entrada = (t_entrada_tabla*) buscar_entrada(proceso->tabla_raiz, i, 0);
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", i);
             continue;

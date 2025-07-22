@@ -1,5 +1,8 @@
 #include <conexiones_memoria.h>
 #include <pthread.h>
+t_dictionary* semaforos_por_pid; // key: char* PID, value: sem_t*
+t_dictionary* iniciados_por_pid;
+pthread_mutex_t mutex_semaforos;
 
 // Función para manejar conexiones PERSISTENTES de CPU
 void* manejar_conexion_cpu(void* arg) {
@@ -54,6 +57,7 @@ void manejar_conexion_kernel(int socket_cliente) {
     int codigo_operacion = recibir_operacion(socket_cliente);
     t_list* recibido;
     int tamanio;
+    char* pid_str;
     switch(codigo_operacion) {
         case OC_INIT:
             recibido = recibir_paquete(socket_cliente);
@@ -63,17 +67,26 @@ void manejar_conexion_kernel(int socket_cliente) {
             log_trace(logger, "Llego una peticion de crear un proceso");
             log_trace(logger, "Proceso PID=%d - Tamanio=%d", pid, tamanio);
             inicializar_proceso(tamanio, pid, nombre_archivo);
+            pid_str = string_itoa(pid);
+            sem_t* sem = malloc(sizeof(sem_t));
+            sem_init(sem, 0, 0);
+            pthread_mutex_lock(&mutex_semaforos);
+            dictionary_put(semaforos_por_pid, pid_str, sem);
+            dictionary_put(iniciados_por_pid, pid_str, true);
+            pthread_mutex_unlock(&mutex_semaforos);
+            sem_post(sem);
             t_paquete* paquete = crear_paquete();
             cambiar_opcode_paquete(paquete, OK);
             enviar_paquete(paquete, socket_cliente, logger);
             borrar_paquete(paquete);
+            free(pid_str);
             list_destroy_and_destroy_elements(recibido, free);
             break;
         case ESPACIO_DISPONIBLE:
             recibido = recibir_paquete(socket_cliente);
-            char* pid_str = list_get(recibido, 0);
+            pid_str = list_get(recibido, 0);
             tamanio = *((int*)list_get(recibido, 1));
-            log_trace(logger, "Kernel me pregunto si tenia espacio disponible");
+            log_trace(logger, "Kernel me pregunto si tenia espacio disponible - PID:(%s) - Tamanio: %d", pid_str, tamanio);
             if (dictionary_has_key(tablas_por_pid, pid_str)) {
                 log_trace(logger, "PID %s ya tiene estructuras cargadas", pid_str);
                 free(pid_str);
@@ -96,9 +109,10 @@ void manejar_conexion_kernel(int socket_cliente) {
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
                }
-                
+                log_debug(logger, "Aca anda 1");
                 list_destroy_and_destroy_elements(recibido, free);
             }
+            log_debug(logger, "aca anda 2");
             break;
         case SOLICITUD_DUMP_MEMORY:
             log_trace(logger, "Se recibio solicitud de hacer un memory dump");

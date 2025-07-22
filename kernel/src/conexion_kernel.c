@@ -146,8 +146,6 @@ void handshake_io(int socket_dispositivo){
 void* manejar_servidor_io(void* arg){
     int socket_cliente = *((int*) arg);
     free(arg);
-
-    int estado_anterior;
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
@@ -172,43 +170,7 @@ void* manejar_servidor_io(void* arg){
                 break;
 
             case FINALIZA_IO:
-                t_list* recibido = recibir_paquete(socket_cliente);
-                int* pid = list_get(recibido, 0);
-                log_trace(logger, "Recibi finalizacion de io - pid %d", *pid);
-                t_pcb* pcb = obtener_pcb(*pid);
-
-                if (pcb == NULL){
-                    log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
-                    list_destroy_and_destroy_elements(recibido, free);
-                    break;
-                }
-
-                if (pcb->estado_actual == SUSP_BLOCKED){
-
-                    pthread_mutex_lock(&mutex_susp_blocked);
-                    sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
-                    pthread_mutex_unlock(&mutex_susp_blocked);
-
-                    estado_anterior = pcb->estado_actual;
-                    cambiar_estado(pcb, SUSP_READY);
-                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-
-
-                    pthread_mutex_lock(&mutex_susp_ready);
-                    queue_push(cola_susp_ready, pcb);
-                    pthread_mutex_unlock(&mutex_susp_ready);
-
-                } else if (pcb->estado_actual == BLOCKED){
-                    estado_anterior = pcb->estado_actual;
-                    cambiar_estado(pcb, READY);
-                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-
-                    queue_push(cola_ready, pcb);
-                    log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
-                    sem_post(&sem_procesos_ready);
-
-                }
-                list_destroy_and_destroy_elements(recibido, free);
+                manejar_finaliza_io(socket_cliente);
                 break;
 
             case ERROR:

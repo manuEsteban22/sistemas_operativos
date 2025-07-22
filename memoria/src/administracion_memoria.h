@@ -51,4 +51,6 @@ typedef struct {
 
 t_tabla_paginas* crear_tabla(int nivel_actual);
 
+#include <conexiones_memoria.h>
+
 #endif

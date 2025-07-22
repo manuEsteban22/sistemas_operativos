@@ -1,5 +1,6 @@
 #include <syscalls.h>
 
+
 void llamar_a_io(int socket_dispatch) {
     int estado_anterior;
     t_list* campos = recibir_paquete(socket_dispatch);
@@ -70,6 +71,7 @@ void llamar_a_io(int socket_dispatch) {
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
+        agregar_a_paquete(paquete, &cpu_id, sizeof(int));
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
         log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
@@ -83,6 +85,78 @@ void llamar_a_io(int socket_dispatch) {
     sem_post(&cpus_disponibles);
 
     list_destroy_and_destroy_elements(campos, free);
+}
+
+void manejar_finaliza_io(int socket_io){
+    t_list* recibido = recibir_paquete(socket_io);
+    int* pid = list_get(recibido, 0);
+    char* nombre_dispositivo = list_get(recibido, 1);
+    int* cpu_id = list_get(recibido, 2);
+
+    log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s", *pid, nombre_dispositivo);
+    t_pcb* pcb = obtener_pcb(*pid);
+    int estado_anterior;
+
+    if (pcb == NULL){
+        log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
+        list_destroy_and_destroy_elements(recibido, free);
+        return;
+    }
+
+    if (pcb->estado_actual == SUSP_BLOCKED){
+
+        pthread_mutex_lock(&mutex_susp_blocked);
+        sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
+        pthread_mutex_unlock(&mutex_susp_blocked);
+
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, SUSP_READY);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
+
+        pthread_mutex_lock(&mutex_susp_ready);
+        queue_push(cola_susp_ready, pcb);
+        pthread_mutex_unlock(&mutex_susp_ready);
+
+    } else if (pcb->estado_actual == BLOCKED){
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, READY);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
+        queue_push(cola_ready, pcb);
+        log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
+        sem_post(&sem_procesos_ready);
+
+    }
+
+    t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
+    io->ocupado = false;
+
+    if (!queue_is_empty(io->cola_bloqueados)) {
+        t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
+
+        // Mandar a IO
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, SOLICITUD_IO);
+        agregar_a_paquete(paquete, &(siguiente->pid), sizeof(int));
+        agregar_a_paquete(paquete, &(siguiente->tiempo), sizeof(int));
+        enviar_paquete(paquete, io->socket_io, logger);
+        borrar_paquete(paquete);
+
+        io->ocupado = true;
+
+        pthread_mutex_lock(&mutex_cpus_libres);
+        queue_push(cpus_libres, cpu_id);
+        pthread_mutex_unlock(&mutex_cpus_libres);
+        sem_post(&cpus_disponibles);
+
+        log_trace(logger, "Despierto proceso PID %d para usar dispositivo %s", siguiente->pid, nombre_dispositivo);
+
+        free(siguiente);
+    }
+
+    list_destroy_and_destroy_elements(recibido, free);
+
 }
 
 void dump_memory(int socket_dispatch){
