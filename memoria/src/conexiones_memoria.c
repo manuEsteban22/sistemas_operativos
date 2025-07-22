@@ -119,9 +119,9 @@ void manejar_conexion_kernel(int socket_cliente) {
             log_debug(logger, "aca anda 2");
             break;
         case SOLICITUD_DUMP_MEMORY:
-            log_trace(logger, "Se recibio solicitud de hacer un memory dump");
             t_list* recibido_pid_dump = recibir_paquete(socket_cliente);
             int pid_dumpeo = *((int*)list_get(recibido_pid_dump, 0));
+            log_info(logger, "## PID: %d - Memory Dump solicitado", pid_dumpeo);
             dumpear_memoria(pid_dumpeo);
             //list_destroy_and_destroy_elements(recibido, free);
             break;

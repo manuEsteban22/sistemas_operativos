@@ -256,8 +256,7 @@ void dumpear_memoria(int pid){
     
     FILE* archivo = fopen(path, "w");
     if (!archivo) {
-        log_error(logger, "No se pudo crear el dump para el proceso %d", pid);
-        free(timestamp);
+       free(timestamp);
         free(path);
         return;
     }
@@ -297,7 +296,20 @@ void dumpear_memoria(int pid){
 
         void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
         log_trace(logger, "Dump página %d: marco %d @ %p", pagina, entrada->marco, origen);
-        fwrite(origen, 1, campos_config.tam_pagina, archivo);
+        fprintf(archivo, "Página %d (Marco %d):\n", pagina, entrada->marco);
+
+        uint8_t* bytes = (uint8_t*) origen;
+        for (int i = 0; i < campos_config.tam_pagina; i++) {
+        fprintf(archivo, "%02X ", bytes[i]);
+
+        
+        if ((i + 1) % 16 == 0) // para que queden separadas y lindas las cosas gracias gepeto
+        {     
+            fprintf(archivo, "\n");
+        }
+        }
+
+        fprintf(archivo, "\n\n");
     }
 
     fclose(archivo);
