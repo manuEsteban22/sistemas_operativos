@@ -264,9 +264,11 @@ void dumpear_memoria(int pid){
 
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
+    t_proceso* copia = malloc(sizeof(t_proceso));
+    copia = proceso;
     free(pid_str);
 
-    if(!proceso){
+    if(!copia){
         log_error(logger, "No se encontró el proceso %d", pid);
         fclose(archivo);
         free(timestamp);
@@ -276,8 +278,8 @@ void dumpear_memoria(int pid){
 
     int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    for (int pagina = 0; pagina < proceso->paginas_usadas; pagina++) {
-        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina, 0);
+    for (int pagina = 0; pagina < copia->paginas_usadas; pagina++) {
+        t_entrada_tabla* entrada = buscar_entrada(copia->tabla_raiz, pagina, 0);
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", pagina);
             
