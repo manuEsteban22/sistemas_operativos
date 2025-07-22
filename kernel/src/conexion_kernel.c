@@ -43,6 +43,7 @@ void* manejar_servidor_cpu(void* arg){
                     int* cpu_id_ptr = malloc(sizeof(int));
                     *cpu_id_ptr = cpu_id;
 
+                    log_warning(logger, "5- cpu aniadida %d", *cpu_id_ptr);
                     pthread_mutex_lock(&mutex_cpus_libres);
                     queue_push(cpus_libres, cpu_id_ptr);
                     pthread_mutex_unlock(&mutex_cpus_libres);

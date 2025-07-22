@@ -124,6 +124,7 @@ void finalizar_proceso(t_pcb* pcb){
 
     sem_post(&sem_plp);//Como se libera memoria mando una señal mas
     sem_post(&cpus_disponibles);
+
     pthread_mutex_lock(&mutex_exec);
 
     char* pid_str = string_itoa(pcb->pid);
@@ -132,10 +133,14 @@ void finalizar_proceso(t_pcb* pcb){
 
     pthread_mutex_unlock(&mutex_exec);
 
+    int* cpu_id_ptr_copy = malloc(sizeof(int));
+    *cpu_id_ptr_copy = *cpu_id;
+
     borrar_pcb(pcb);
     free(pid_str);
+    log_warning(logger, "4- cpu aniadida %d", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
-    queue_push(cpus_libres, cpu_id);
+    queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);
 }
 

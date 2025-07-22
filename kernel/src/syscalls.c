@@ -81,6 +81,7 @@ void llamar_a_io(int socket_dispatch) {
 
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
+    log_warning(logger, "2- cpu aniadida %d", *cpu_id_ptr);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -152,6 +153,7 @@ void manejar_finaliza_io(int socket_io){
         int* cpu_id_ptr = malloc(sizeof(int));
         *cpu_id_ptr = cpu_id;
 
+        log_warning(logger, "1- cpu aniadida %d", *cpu_id_ptr);
         pthread_mutex_lock(&mutex_cpus_libres);
         queue_push(cpus_libres, cpu_id_ptr);
         pthread_mutex_unlock(&mutex_cpus_libres);
@@ -159,7 +161,7 @@ void manejar_finaliza_io(int socket_io){
 
         log_trace(logger, "Despierto proceso PID %d para usar dispositivo %s", siguiente->pid, nombre_dispositivo);
 
-        free(cpu_id_ptr);
+        //free(cpu_id_ptr);
         free(siguiente);
     }
 
@@ -206,6 +208,8 @@ void dump_memory(int socket_dispatch){
 
     int* nuevo_cpu_id = malloc(sizeof(int));
     *nuevo_cpu_id = cpu_id;
+
+    log_warning(logger, "3- cpu aniadida %d", *nuevo_cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, nuevo_cpu_id);
     pthread_mutex_unlock(&mutex_cpus_libres);
