@@ -20,6 +20,9 @@ bool esperar_procesos(int cpu_id){
     }else if(opcode < 0){
         log_error(logger, "Se cerro la conexion con Kernel, OPCODE: %d", opcode);
         return false;
+    }else if(opcode == 0){
+        log_trace(logger, "OPCODE: %d", opcode);
+        return true;
     }
     else{
         log_error(logger, "No llego el opcode esperado: %d", opcode);

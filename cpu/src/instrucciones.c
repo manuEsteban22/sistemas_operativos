@@ -71,7 +71,9 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         return;
     }
     else{
-        log_error(logger, "No se recibio respuesta del IO de kernel");
+        log_error(logger, "No se recibio respuesta del IO de kernel, %d", respuesta);
+        recv(socket_kernel_dispatch, &respuesta, sizeof(int), MSG_WAITALL);
+        log_trace(logger, "Opcode %d", respuesta);
     }
 }
 
