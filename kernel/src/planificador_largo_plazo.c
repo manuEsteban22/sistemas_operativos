@@ -112,13 +112,13 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
 
 
 void finalizar_proceso(t_pcb* pcb){
-    //enviar_finalizacion_a_memoria(pcb->pid);
+    enviar_finalizacion_a_memoria(pcb->pid);
     
     pthread_mutex_lock(&mutex_procesos_en_memoria);
     procesos_en_memoria--;
     pthread_mutex_unlock(&mutex_procesos_en_memoria);
         
-    log_info(logger, "%d Finaliza el proceso", pcb->pid);
+    //log_info(logger, "%d Finaliza el proceso", pcb->pid);
     log_metricas_estado(pcb);
     
 
@@ -138,7 +138,6 @@ void finalizar_proceso(t_pcb* pcb){
 
     borrar_pcb(pcb);
     free(pid_str);
-    log_warning(logger, "4- cpu aniadida %d", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);

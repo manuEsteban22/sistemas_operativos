@@ -46,6 +46,7 @@ typedef enum
     OC_PAG_WRITE,
     OC_PAG_READ,
     ESPACIO_DISPONIBLE,
+    KILL_PROC,
     ERROR
 } op_code;
 typedef struct

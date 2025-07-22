@@ -224,6 +224,9 @@ void dump_memory(int socket_dispatch){
 
     cerrar_conexion_memoria(socket_memoria);
 
+    // pasar todo lo de abajo a una funcion recibir confirmacion dumpeo
+    //
+
     if (recibir_operacion(socket_memoria) == MEMORY_DUMP){
         estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, READY);
@@ -259,6 +262,20 @@ void iniciar_proceso(int socket_cpu){
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
     log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+}
+
+void enviar_finalizacion_a_memoria(int pid){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, KILL_PROC);
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    borrar_paquete(paquete);
+    if(recibir_operacion(socket_memoria) == OK){
+        log_info(logger, "## (%d) - Finaliza el proceso", pid);
+    }
+    cerrar_conexion_memoria(socket_memoria);
+    
 }
 
 void ejecutar_exit(int socket_cpu){

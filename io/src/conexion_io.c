@@ -44,13 +44,11 @@ int conectar_kernel(char* ip, char* puerto, char* nombre_dispositivo){
 
 void atender_solicitudes_io(int socket_kernel){
     while (1) {
-        log_debug(logger, "Prueba 123");
         int cod_op = recibir_operacion(socket_kernel);
         if (cod_op <= 0){
             log_error(logger, "Esta cerrado %d", cod_op);
             return;
         }
-        log_debug(logger, "Prueba %d", cod_op);
 
             switch(cod_op) {
                 case SOLICITUD_IO: {
@@ -76,7 +74,6 @@ void atender_solicitudes_io(int socket_kernel){
 }
 
 void enviar_finalizacion_io(int socket_kernel, int pid, int cpu_id, char* nombre_dispositivo){
-    log_debug(logger, "prueba CPU ID: %d", cpu_id);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, FINALIZA_IO);
     agregar_a_paquete(paquete, &pid, sizeof(int));
@@ -84,5 +81,5 @@ void enviar_finalizacion_io(int socket_kernel, int pid, int cpu_id, char* nombre
     agregar_a_paquete(paquete, &cpu_id, sizeof(int));
     enviar_paquete(paquete, socket_kernel, logger);
     borrar_paquete(paquete);
-    log_info(logger, "mandé que finalizo io");
+    log_trace(logger, "## Mande que finalizo IO, PID %d", pid);//no es log obligatorio
 }
