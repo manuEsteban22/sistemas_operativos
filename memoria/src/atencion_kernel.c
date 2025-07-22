@@ -1,7 +1,6 @@
 #include <atencion_kernel.h>
 #include <math.h>
 
-// busca pags libres, las asigna y arma tabla raiz
 t_metricas inicializar_metricas()
 {
     t_metricas metricas;
@@ -42,10 +41,11 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     }
 
     log_info(logger, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
-    return proceso->tabla_raiz;
+    
     proceso->metricas = inicializar_metricas();
     dictionary_put(tablas_por_pid, pid_str, proceso);
     free(pid_str);
+    return proceso->tabla_raiz;
 }
 
 void suspender_proceso(int pid){
@@ -180,11 +180,19 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_ac
 
     t_entrada_tabla* entrada = list_get(tabla->entradas, entrada_actual);
 
-    if (nivel_actual == campos_config.cantidad_niveles - 1)
-        return entrada;
-    
-    if (!entrada || !entrada->siguiente_tabla)
+    if (!entrada) {
+        log_error(logger, "Entrada inválida en nivel %d (entrada %d)", nivel_actual, entrada_actual);
         return NULL;
+    }
+
+    if (nivel_actual == campos_config.cantidad_niveles - 1) {
+        return entrada;
+    }
+
+    if (!entrada->siguiente_tabla) {
+        log_error(logger, "Entrada sin siguiente tabla en nivel %d (entrada %d)", nivel_actual, entrada_actual);
+        return NULL;
+    }
 
     return buscar_entrada(entrada->siguiente_tabla, pagina, nivel_actual + 1);
 }

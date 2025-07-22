@@ -70,6 +70,11 @@ void inicializar_memoria()
 t_tabla_paginas* crear_tabla(int nivel_actual) {
     t_tabla_paginas* tabla = malloc(sizeof(t_tabla_paginas));
     tabla->entradas = list_create();
+    if (!tabla->entradas) {
+    log_error(logger, "No se pudo crear la lista de entradas");
+    free(tabla);
+    return NULL;
+    }
 
     for (int i = 0; i < campos_config.entradas_por_tabla; i++) {
         t_entrada_tabla* entrada = malloc(sizeof(t_entrada_tabla));
@@ -77,10 +82,12 @@ t_tabla_paginas* crear_tabla(int nivel_actual) {
         entrada->presencia = false;
         entrada->marco = -1;
         entrada->siguiente_tabla = NULL;
+        log_error(logger, "Creando tabla de páginas en nivel %d", nivel_actual);
 
         if (nivel_actual < campos_config.cantidad_niveles - 1) {
             entrada->siguiente_tabla = crear_tabla(nivel_actual + 1);
         }
+        
 
         list_add(tabla->entradas, entrada);
     }
