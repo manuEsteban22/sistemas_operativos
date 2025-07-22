@@ -44,43 +44,45 @@ int conectar_kernel(char* ip, char* puerto, char* nombre_dispositivo){
 
 void atender_solicitudes_io(int socket_kernel){
     while (1) {
-    int cod_op = recibir_operacion(socket_kernel);
-    if (cod_op <= 0) break;
-
-        switch(cod_op) {
-            case SOLICITUD_IO: {
-                t_list* contenido = recibir_paquete(socket_kernel);
-                int* pid = list_get(contenido, 0);
-                int* tiempo_io = list_get(contenido, 1);
-                int* cpu_id = list_get(contenido, 2);
-
-                log_debug(logger, "Recibi el CPU ID %d", *cpu_id);
-                log_info(logger, "PID: %d - Inicio de IO - Tiempo: %d", *pid, *tiempo_io);
-                usleep(*tiempo_io * 1000);
-                log_info(logger, "PID: %d - Fin de IO", *pid);
-                enviar_finalizacion_io(socket_kernel, *pid, *cpu_id);
-                log_debug(logger, "aca no crasheo");
-                list_destroy_and_destroy_elements(contenido, free);
-                break;
-            }   
-            default:
-                log_error(logger, "Código de operación desconocido: %d", cod_op);
-                break;
+        log_debug(logger, "Prueba 123");
+        int cod_op = recibir_operacion(socket_kernel);
+        if (cod_op <= 0){
+            log_error(logger, "Esta cerrado %d", cod_op);
+            return;
         }
+        log_debug(logger, "Prueba %d", cod_op);
+
+            switch(cod_op) {
+                case SOLICITUD_IO: {
+                    t_list* contenido = recibir_paquete(socket_kernel);
+                    int* pid = list_get(contenido, 0);
+                    int* tiempo_io = list_get(contenido, 1);
+                    int* cpu_id = list_get(contenido, 2);
+                    char* dispositivo = list_get(contenido, 3);
+
+                    log_debug(logger, "Recibi el CPU ID %d", *cpu_id);
+                    log_info(logger, "PID: %d - Inicio de IO - Tiempo: %d", *pid, *tiempo_io);
+                    usleep(*tiempo_io * 1000);
+                    log_info(logger, "PID: %d - Fin de IO", *pid);
+                    enviar_finalizacion_io(socket_kernel, *pid, *cpu_id, dispositivo);
+                    list_destroy_and_destroy_elements(contenido, free);
+                    break;
+                }   
+                default:
+                    log_error(logger, "Código de operación desconocido: %d", cod_op);
+                    break;
+            }
     }
 }
 
-void enviar_finalizacion_io(int socket_kernel, int pid, int cpu_id){
-    log_debug(logger, "No hubo crash 1");
-    log_debug(logger, "prueba %d", cpu_id);
+void enviar_finalizacion_io(int socket_kernel, int pid, int cpu_id, char* nombre_dispositivo){
+    log_debug(logger, "prueba CPU ID: %d", cpu_id);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, FINALIZA_IO);
     agregar_a_paquete(paquete, &pid, sizeof(int));
     agregar_a_paquete(paquete, nombre_dispositivo, strlen(nombre_dispositivo));
     agregar_a_paquete(paquete, &cpu_id, sizeof(int));
-    log_debug(logger, "prueba 222");
     enviar_paquete(paquete, socket_kernel, logger);
-    log_debug(logger, "prueba 33");
     borrar_paquete(paquete);
     log_info(logger, "mandé que finalizo io");
 }

@@ -58,10 +58,11 @@ void manejar_conexion_kernel(int socket_cliente) {
     t_list* recibido;
     int tamanio;
     char* pid_str;
+    int pid;
     switch(codigo_operacion) {
         case OC_INIT:
             recibido = recibir_paquete(socket_cliente);
-            int pid = *((int*)list_get(recibido, 0));
+            pid = *((int*)list_get(recibido, 0));
             tamanio = *((int*)list_get(recibido, 1));
             char* nombre_archivo = list_get(recibido, 2);
             log_trace(logger, "Llego una peticion de crear un proceso");
@@ -84,8 +85,9 @@ void manejar_conexion_kernel(int socket_cliente) {
             break;
         case ESPACIO_DISPONIBLE:
             recibido = recibir_paquete(socket_cliente);
-            pid_str = list_get(recibido, 0);
+            pid = *((int*)list_get(recibido, 0));
             tamanio = *((int*)list_get(recibido, 1));
+            pid_str = string_itoa(pid);
             log_trace(logger, "Kernel me pregunto si tenia espacio disponible - PID:(%s) - Tamanio: %d", pid_str, tamanio);
             if (dictionary_has_key(tablas_por_pid, pid_str)) {
                 log_trace(logger, "PID %s ya tiene estructuras cargadas", pid_str);
@@ -95,6 +97,7 @@ void manejar_conexion_kernel(int socket_cliente) {
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
                 list_destroy_and_destroy_elements(recibido, free);
+                //free(pid_str);
                 break;
             }else{
                if(entra_el_proceso(tamanio)){
@@ -111,6 +114,7 @@ void manejar_conexion_kernel(int socket_cliente) {
                }
                 log_debug(logger, "Aca anda 1");
                 list_destroy_and_destroy_elements(recibido, free);
+                //free(pid_str);
             }
             log_debug(logger, "aca anda 2");
             break;

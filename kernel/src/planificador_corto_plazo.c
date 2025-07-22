@@ -136,7 +136,6 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
             continue;
         }
         int cpu_id = *cpu_id_ptr;
-        free(cpu_id_ptr);
 
         log_warning(logger,"cpu id: %d", cpu_id);//borrar
 

@@ -3,6 +3,5 @@
 #include<utils/utils.h>
 
 extern t_log* logger;
-extern char* nombre_dispositivo;
 
 #endif

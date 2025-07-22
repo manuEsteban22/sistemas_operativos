@@ -7,7 +7,7 @@ void llamar_a_io(int socket_dispatch) {
 
     char* pid_raw = list_get(campos, 0);
     char* pc_raw = list_get(campos, 1);
-    //char* size_disp_raw = list_get(campos, 2);
+    int size_disp = *((int*)list_get(campos, 2));
     char* dispositivo = list_get(campos, 3);
     char* tiempo_raw = list_get(campos, 4);
     char* cpuid_raw = list_get(campos, 5);
@@ -67,11 +67,13 @@ void llamar_a_io(int socket_dispatch) {
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
         io->ocupado = true;
+        log_error(logger, "size disp = %d", size_disp);
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
         agregar_a_paquete(paquete, &cpu_id, sizeof(int));
+        agregar_a_paquete(paquete, dispositivo, size_disp);
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
         log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
@@ -91,9 +93,9 @@ void manejar_finaliza_io(int socket_io){
     t_list* recibido = recibir_paquete(socket_io);
     int* pid = list_get(recibido, 0);
     char* nombre_dispositivo = list_get(recibido, 1);
-    int* cpu_id = list_get(recibido, 2);
+    int cpu_id = *((int*)list_get(recibido, 2));
 
-    log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s", *pid, nombre_dispositivo);
+    log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s - cpuid %d", *pid, nombre_dispositivo, cpu_id);
     t_pcb* pcb = obtener_pcb(*pid);
     int estado_anterior;
 
@@ -140,18 +142,24 @@ void manejar_finaliza_io(int socket_io){
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &(siguiente->pid), sizeof(int));
         agregar_a_paquete(paquete, &(siguiente->tiempo), sizeof(int));
+        agregar_a_paquete(paquete, &cpu_id, sizeof(int));
+        agregar_a_paquete(paquete, nombre_dispositivo, strlen(nombre_dispositivo) + 1);
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
 
         io->ocupado = true;
 
+        int* cpu_id_ptr = malloc(sizeof(int));
+        *cpu_id_ptr = cpu_id;
+
         pthread_mutex_lock(&mutex_cpus_libres);
-        queue_push(cpus_libres, cpu_id);
+        queue_push(cpus_libres, cpu_id_ptr);
         pthread_mutex_unlock(&mutex_cpus_libres);
         sem_post(&cpus_disponibles);
 
         log_trace(logger, "Despierto proceso PID %d para usar dispositivo %s", siguiente->pid, nombre_dispositivo);
 
+        free(cpu_id_ptr);
         free(siguiente);
     }
 
