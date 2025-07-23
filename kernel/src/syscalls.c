@@ -168,7 +168,6 @@ void manejar_finaliza_io(int socket_io){
 
         log_trace(logger, "Despierto proceso PID %d para usar dispositivo %s", siguiente->pid, nombre_dispositivo);
 
-        //free(cpu_id_ptr);
         free(siguiente);
     }
 
@@ -178,7 +177,7 @@ void manejar_finaliza_io(int socket_io){
         pcb->temporal_blocked = NULL;
     }
 
-    list_destroy_and_destroy_elements(recibido, free);
+    free(pid);
 
 }
 
@@ -220,6 +219,7 @@ void* esperar_confirmacion_dump(void* args_void){
         pcb->temporal_blocked = NULL;
     }
     cerrar_conexion_memoria(socket_memoria);
+    log_debug(logger, "Se recibio confirmacion de memory dump");
     return NULL;
 }
 

@@ -135,6 +135,7 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
             continue;
         }
         int cpu_id = *cpu_id_ptr;
+        free(cpu_id_ptr);
 
         log_debug(logger,"cpu id: %d", cpu_id);
 
@@ -151,7 +152,6 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
             log_error(logger, "No se encontró el socket dispatch para CPU %d", cpu_id);
             continue;
         }
-        //log_trace(logger, "la cpu corresponde al socket: %d segun pcp", *socket_dispatch_ptr);
         
 
         

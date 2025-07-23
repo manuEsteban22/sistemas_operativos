@@ -68,6 +68,7 @@ void* manejar_servidor_cpu(void* arg){
             case SYSCALL_DUMP_MEMORY:
                 log_trace(logger, "Me llego un Dump Memory");  
                 dump_memory(socket_cliente);
+                break;
             case SYSCALL_INIT:
                 log_info(logger, "Me llego syscall INIT_PROC");
                 iniciar_proceso(socket_cliente);
@@ -171,10 +172,8 @@ void* manejar_servidor_io(void* arg){
             case FINALIZA_IO:
                 manejar_finaliza_io(socket_cliente);
                 break;
-
             case ERROR:
                 break;
-
             default:
                 log_info(logger, "error en el recv");
                 break;
