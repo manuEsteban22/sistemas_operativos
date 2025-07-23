@@ -18,8 +18,8 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
 
     pcb->metricas_estado[NEW]++;//sumo 1 a las veces que pasó por estado NEW
 
-    pcb->estimacion_rafaga = config_get_double_value(config, "ESTIMACION_INICIAL");
-    pcb->rafaga_real_anterior = 0.0;
+    pcb->estimacion_rafaga = estimacion_inicial;
+    pcb->rafaga_real_anterior = 0;
 
     log_info(logger, "%d Se crea el proceso - Estado: NEW", pcb->pid);
 
@@ -51,7 +51,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->metricas_estado[nuevo_estado]++;
     //cambia el estado del pcb y suma 1 a la metrica de estado del estado nuevo
 
-     if (nuevo_estado == READY && (strcmp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"), "SJF_CON_DESALOJO") == 0)){
+    if (nuevo_estado == READY && (strcmp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"), "SJF_CON_DESALOJO") == 0)){
     chequear_sjf_con_desalojo(pcb);
     }
 
@@ -66,7 +66,7 @@ void borrar_pcb(t_pcb* pcb){
     free(pcb);
 }
 
-void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
+void actualizar_estimacion_rafaga(t_pcb* pcb) {
     if (pcb == NULL) {
         // devolver el valor inicial de la estimacion o un error (?)
         return;
@@ -75,9 +75,7 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
     int rafaga_real = temporal_gettime(pcb->temporal_estado);
     pcb->rafaga_real_anterior = rafaga_real;
 
-    double alpha = config_get_double_value(config, "ALPHA");
-
-    double nueva_estimacion = (alpha * rafaga_real) + ((1 - alpha) * pcb->estimacion_rafaga);
+    int nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
     pcb->estimacion_rafaga = nueva_estimacion;
 
     temporal_destroy(pcb->temporal_estado);
@@ -85,8 +83,8 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config) {
 }
 
 void chequear_sjf_con_desalojo(t_pcb* nuevo) {
-    if (strcmp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"), "SJF_CON_DESALOJO") != 0){
-    return;
+    if (algoritmo_corto_plazo != "SJF_CON_DESALOJO"){
+        return;
     }
 
         

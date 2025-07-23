@@ -37,6 +37,7 @@ void llamar_a_io(int socket_dispatch) {
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
 
+    actualizar_estimacion_rafaga(pcb);
     estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
@@ -183,6 +184,7 @@ void dump_memory(int socket_dispatch){
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
 
+    actualizar_estimacion_rafaga(pcb);
     estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
@@ -283,5 +285,6 @@ void ejecutar_exit(int socket_cpu){
     int pid = *((int*)list_get(recibido, 0));
 
     t_pcb* pcb = obtener_pcb(pid);
+    actualizar_estimacion_rafaga(pcb);
     finalizar_proceso(pcb);
 }

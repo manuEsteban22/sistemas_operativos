@@ -16,10 +16,6 @@ t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
 }
 
 
-void inicializar_planificador_cp(char* algoritmo_planificacion_cp){
-    parsear_algoritmo_cp(algoritmo_planificacion_cp);//???????????
-}
-
 
 t_pcb* planificador_corto_plazo(){
     pthread_mutex_lock(&mutex_ready);
@@ -32,7 +28,7 @@ t_pcb* planificador_corto_plazo(){
 
     t_pcb* pcb = NULL;
 
-    /*switch(algoritmo_cp){
+    switch(parsear_algoritmo_cp(algoritmo_corto_plazo)){
         case FIFO:
             pcb = queue_pop(cola_ready);
             break;
@@ -46,8 +42,8 @@ t_pcb* planificador_corto_plazo(){
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
-    }*/
-    pcb = queue_pop(cola_ready);//borrar
+    }
+    //pcb = queue_pop(cola_ready);//borrar
     pthread_mutex_unlock(&mutex_ready);
     log_trace(logger, "pcp saco un proceso de ready");
     return pcb;

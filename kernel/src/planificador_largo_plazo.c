@@ -25,7 +25,7 @@ sem_t sem_procesos_en_blocked;
 
 int pid_global = 0;
 
-void chequear_algoritmo_planificacion(char* algoritmo_largo_plazo){
+void chequear_algoritmo_planificacion(){
     if (strcmp(algoritmo_largo_plazo,"FIFO") == 0){
     enum_algoritmo_lp = FIFO;
     } else if(strcmp(algoritmo_largo_plazo,"PMCP") == 0){
@@ -36,10 +36,10 @@ void chequear_algoritmo_planificacion(char* algoritmo_largo_plazo){
     }
 }
 
-void inicializar_planificador_lp(char* algoritmo_largo_plazo){
-    printf("Presione Enter para iniciar la planificacion largo plazo\n");
+void inicializar_planificador_lp(){
+    log_info(logger, "Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
-    chequear_algoritmo_planificacion(algoritmo_largo_plazo);
+    chequear_algoritmo_planificacion();
     cola_new = queue_create();
     cola_ready = queue_create();
     cola_susp_ready = queue_create();
@@ -49,7 +49,7 @@ void inicializar_planificador_lp(char* algoritmo_largo_plazo){
     sem_init(&sem_procesos_en_blocked, 0, 0);
 }
 
-//para testear por ahora ponemos dsp tamanio_proceso 256 por ejemplo (o una potencia de 2)
+
 int crear_proceso(int tamanio_proceso){
     log_trace(logger, "Se creo un proceso");
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);

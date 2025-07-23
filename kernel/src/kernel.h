@@ -5,7 +5,6 @@
 #include<planificador_mediano_plazo.h>
 
 extern t_log* logger;
-extern t_config* config;
 extern char* ip_memoria;
 extern char* puerto_memoria;
 extern char* puerto_interrupt;

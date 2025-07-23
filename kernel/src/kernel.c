@@ -80,7 +80,6 @@ int main(int argc, char* argv[]) {
     pthread_detach(thread_io_main);
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
-    inicializar_planificador_cp(algoritmo_corto_plazo);
     proceso_arranque(256, "instrucciones_0");
 
     pthread_t thread_planificador_lp;
