@@ -63,15 +63,15 @@ t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
     while(!queue_is_empty(cola)){
         t_pcb* pcb_actual = queue_pop(cola);
         list_add(lista_aux, pcb_actual);
-
+        log_debug(logger, "El pcb actual es PID %d y tiene estimacion %f", pcb_actual->pid, pcb_actual->estimacion_rafaga);
         if(pcb_menor == NULL || pcb_actual->estimacion_rafaga < pcb_menor->estimacion_rafaga){
             pcb_menor = pcb_actual;
+            log_debug(logger, "Asigna PCB menor a PID: %d con estimacion %f", pcb_menor->pid, pcb_menor->estimacion_rafaga);
         }  
     }
 
     for(int i = 0; i < list_size(lista_aux); i++){
             t_pcb* pcb = list_get(lista_aux, i);
-
             if(pcb != pcb_menor){
                 queue_push(cola, pcb);
             }
@@ -136,7 +136,7 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
         }
         int cpu_id = *cpu_id_ptr;
 
-        log_warning(logger,"cpu id: %d", cpu_id);//borrar
+        log_debug(logger,"cpu id: %d", cpu_id);
 
         char* cpu_id_str = string_itoa(cpu_id);
         int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, cpu_id_str);

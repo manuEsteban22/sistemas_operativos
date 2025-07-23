@@ -9,8 +9,8 @@ t_log* iniciar_logger();
 t_config* iniciar_config();
 t_log* logger;
 t_config* config;
-int alfa;
-int estimacion_inicial;
+double alfa;
+double estimacion_inicial;
 char* log_level;
 char* ip_memoria;
 char* puerto_memoria;
@@ -79,7 +79,8 @@ int main(int argc, char* argv[]) {
     pthread_create(&thread_io_main, NULL, hilo_main_io, NULL);
     pthread_detach(thread_io_main);
     
-    inicializar_planificador_lp(algoritmo_largo_plazo);
+    inicializar_planificador_lp();
+    inicializar_planificador_mp();
     proceso_arranque(256, "instrucciones_0");
     sem_post(&sem_plp);
 
@@ -129,8 +130,8 @@ t_config* iniciar_config(void){
         algoritmo_largo_plazo = config_get_string_value(nuevo_config, "ALGORITMO_INGRESO_A_READY");
         algoritmo_corto_plazo = config_get_string_value(nuevo_config, "ALGORITMO_CORTO_PLAZO");
         tiempo_suspension = config_get_int_value(nuevo_config, "TIEMPO_SUSPENSION");
-        alfa = config_get_int_value(nuevo_config, "ALFA");
-        estimacion_inicial = config_get_int_value(nuevo_config, "ESTIMACION_INICIAL");
+        alfa = config_get_double_value(nuevo_config, "ALFA");
+        estimacion_inicial = config_get_double_value(nuevo_config, "ESTIMACION_INICIAL");
         log_level = config_get_string_value(nuevo_config, "LOG_LEVEL");
 
         return nuevo_config;

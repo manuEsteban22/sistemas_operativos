@@ -105,15 +105,9 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
         list_add(lista_aux, nuevo);
     }
     
-    log_warning(logger, "### ORDEN COMPLETO DE COLA DESPUÉS DE INSERTAR PID %d", nuevo->pid);
-    for (int i = 0; i < list_size(lista_aux); i++) {
-        t_pcb* pcb = list_get(lista_aux, i);
-        log_warning(logger, "    PID: %d | TAMANIO: %d", pcb->pid, pcb->tamanio);
-    }
-
     for (int i = 0; i < list_size(lista_aux); i++){
         t_pcb* pcb = list_get(lista_aux, i);
-        log_warning(logger, "PCB INSERTADO PID: %d - TAMANIO: %d", pcb->pid, pcb->tamanio);
+        log_trace(logger, "PCB INSERTADO PID: %d - TAMANIO: %d", pcb->pid, pcb->tamanio);
         queue_push(cola, pcb);
     }
 
@@ -232,7 +226,7 @@ int estado_anterior;
                 estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-                log_error(logger, "El planificador LP tomo el PID %d", pcb->pid);
+                log_trace(logger, "El planificador LP tomo el PID %d", pcb->pid);
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);

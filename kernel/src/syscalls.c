@@ -69,7 +69,6 @@ void llamar_a_io(int socket_dispatch) {
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
         io->ocupado = true;
-        log_error(logger, "size disp = %d", size_disp);
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
@@ -83,7 +82,6 @@ void llamar_a_io(int socket_dispatch) {
 
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
-    log_warning(logger, "2- cpu aniadida %d", *cpu_id_ptr);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -155,7 +153,6 @@ void manejar_finaliza_io(int socket_io){
         int* cpu_id_ptr = malloc(sizeof(int));
         *cpu_id_ptr = cpu_id;
 
-        log_warning(logger, "1- cpu aniadida %d", *cpu_id_ptr);
         pthread_mutex_lock(&mutex_cpus_libres);
         queue_push(cpus_libres, cpu_id_ptr);
         pthread_mutex_unlock(&mutex_cpus_libres);
@@ -165,6 +162,11 @@ void manejar_finaliza_io(int socket_io){
 
         //free(cpu_id_ptr);
         free(siguiente);
+    }
+
+    if(pcb->temporal_blocked != NULL){
+        log_error(logger, "COSA 2");
+        temporal_destroy(pcb->temporal_blocked);
     }
 
     list_destroy_and_destroy_elements(recibido, free);
@@ -212,7 +214,6 @@ void dump_memory(int socket_dispatch){
     int* nuevo_cpu_id = malloc(sizeof(int));
     *nuevo_cpu_id = cpu_id;
 
-    log_warning(logger, "3- cpu aniadida %d", *nuevo_cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, nuevo_cpu_id);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -242,6 +243,9 @@ void dump_memory(int socket_dispatch){
         log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
         borrar_pcb(pcb);
     }
+    //  if(pcb->temporal_blocked != NULL){
+    //     temporal_destroy(pcb->temporal_blocked);
+    // }
 
     list_destroy_and_destroy_elements(recibido, free);
 }

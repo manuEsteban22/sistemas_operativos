@@ -1,5 +1,8 @@
 #include<planificador_mediano_plazo.h>
 
+void inicializar_planificador_mp(){
+    cola_susp_blocked = queue_create();
+}
 
 void planificador_mediano_plazo(){
     int estado_anterior;

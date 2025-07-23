@@ -75,9 +75,10 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
     double rafaga_real = temporal_gettime(pcb->temporal_estado);
     pcb->rafaga_real_anterior = rafaga_real;
 
+    log_error(logger, "Se actualizo la estimacion de PID %d - Rafaga %f - Estimacion previa %f", pcb->pid, pcb->rafaga_real_anterior, pcb->estimacion_rafaga);
     double nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
     pcb->estimacion_rafaga = nueva_estimacion;
-
+    log_error(logger, "Nueva estimacion = %f", nueva_estimacion);
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
 }
@@ -118,7 +119,7 @@ void asignar_timer_blocked(t_pcb* pcb){
     if (pcb->temporal_blocked != NULL) {
         temporal_destroy(pcb->temporal_blocked);
     }
-
+    log_error(logger, "COSA 1");
     pcb->temporal_blocked = temporal_create();
     sem_post(&sem_procesos_en_blocked);
 }

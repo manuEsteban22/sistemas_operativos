@@ -13,8 +13,8 @@ extern int socket_memoria;
 extern int socket_io;
 extern int socket_interrupt;
 extern int socket_dispatch;
-extern int alfa;
-extern int estimacion_inicial;
+extern double alfa;
+extern double estimacion_inicial;
 extern t_dictionary* dispositivos_io; //
 extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
 extern t_dictionary* tabla_exec; // tiene pid -> cpuid

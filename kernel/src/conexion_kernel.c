@@ -43,7 +43,6 @@ void* manejar_servidor_cpu(void* arg){
                     int* cpu_id_ptr = malloc(sizeof(int));
                     *cpu_id_ptr = cpu_id;
 
-                    log_warning(logger, "5- cpu aniadida %d", *cpu_id_ptr);
                     pthread_mutex_lock(&mutex_cpus_libres);
                     queue_push(cpus_libres, cpu_id_ptr);
                     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -67,15 +66,14 @@ void* manejar_servidor_cpu(void* arg){
                 llamar_a_io(socket_cliente);
                 break;
             case SYSCALL_DUMP_MEMORY:
-                log_trace(logger, "se va a correr un dump memory");  
+                log_trace(logger, "Me llego un Dump Memory");  
                 dump_memory(socket_cliente);
-                log_trace(logger, "se corrio un dump memory");
             case SYSCALL_INIT:
-                log_trace(logger, "me llego syscall INIT_PROC");
+                log_info(logger, "Me llego syscall INIT_PROC");
                 iniciar_proceso(socket_cliente);
                 break;
             case SYSCALL_EXIT:
-                log_trace(logger, "Recibi un EXIT");
+                log_info(logger, "Recibi un EXIT");
                 ejecutar_exit(socket_cliente);
                 break;
             case ERROR:
