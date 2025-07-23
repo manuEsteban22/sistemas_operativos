@@ -43,8 +43,9 @@ void llamar_a_io(int socket_dispatch) {
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-    pthread_mutex_lock(&mutex_blocked);
     asignar_timer_blocked(pcb);
+
+    pthread_mutex_lock(&mutex_blocked);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
     char* cpu_id_str = string_itoa(cpu_id);
@@ -127,7 +128,13 @@ void manejar_finaliza_io(int socket_io){
         cambiar_estado(pcb, READY);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
+        pthread_mutex_lock(&mutex_blocked);
+        queue_pop(cola_blocked);
+        pthread_mutex_unlock(&mutex_blocked);
+
+        pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
+        pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
         sem_post(&sem_procesos_ready);
 

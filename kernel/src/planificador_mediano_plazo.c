@@ -12,9 +12,9 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
-    if (!queue_is_empty(cola_blocked)){
+        pthread_mutex_lock(&mutex_blocked);
+        if (!queue_is_empty(cola_blocked)){
             t_pcb* pcb = queue_peek(cola_blocked); 
-            log_warning(logger, "Aca esta el error %d", pcb->pid);
             int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
 
             if (tiempo_bloqueado >= tiempo_suspension){
@@ -36,6 +36,7 @@ void planificador_mediano_plazo(){
             }
 
         }
+        pthread_mutex_unlock(&mutex_blocked);
     }
 }
 
