@@ -31,9 +31,9 @@ extern sem_t sem_procesos_en_blocked;
 extern int pid_global;
 
 void finalizar_proceso(t_pcb* pcb);
-void inicializar_planificador_lp(char* algoritmo_planificacion_lp);
+void inicializar_planificador_lp();
 bool enviar_pedido_memoria(t_pcb* pcb);
-void chequear_algoritmo_planificacion (char* algoritmo_planificacion_lp);
+void chequear_algoritmo_planificacion();
 void planificador_largo_plazo();
 int crear_proceso(int tamanio_proceso);
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo);

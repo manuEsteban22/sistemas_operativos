@@ -34,11 +34,11 @@ t_pcb* planificador_corto_plazo(){
             break;
         case SJF_SIN_DESALOJO:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SJF”, pcb->pid);
+            log_info(logger, "%d Desalojado por algoritmo SJF", pcb->pid);
             break;
         case SJF_CON_DESALOJO:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SRT”, pcb->pid);
+            log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;

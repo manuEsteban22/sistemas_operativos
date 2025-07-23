@@ -36,7 +36,7 @@ void chequear_algoritmo_planificacion(){
     }
 }
 
-void inicializar_planificador_lp(){
+void inicializar_planificador_lp(algoritmo_largo_plazo){
     log_info(logger, "Presione Enter para iniciar la planificacion largo plazo\n");
     getchar();
     chequear_algoritmo_planificacion();

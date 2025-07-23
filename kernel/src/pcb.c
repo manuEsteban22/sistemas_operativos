@@ -51,7 +51,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->metricas_estado[nuevo_estado]++;
     //cambia el estado del pcb y suma 1 a la metrica de estado del estado nuevo
 
-    if (nuevo_estado == READY && (strcmp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"), "SJF_CON_DESALOJO") == 0)){
+    if (nuevo_estado == READY && (strcmp(algoritmo_corto_plazo, "SJF_CON_DESALOJO") == 0)){
     chequear_sjf_con_desalojo(pcb);
     }
 
