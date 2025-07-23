@@ -9,6 +9,11 @@ typedef struct {
     int tiempo;
 } t_pcb_io;
 
+typedef struct {
+    int pid;
+    int socket_memoria;
+} t_args_dump;
+
 void llamar_a_io(int socket_cpu);
 void dump_memory(int socket_cpu);
 void iniciar_proceso(int socket_cpu);

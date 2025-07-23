@@ -16,7 +16,7 @@ int ejecutar_read(int socket_cliente);
 int leer_pagina_completa(int socket_cliente);
 int escribir_pagina_completa(int socket_cliente);
 int obtener_marco(int pid, int nro_pagina);
-void dumpear_memoria(int pid);
+void dumpear_memoria(int pid, int socket_cliente);
 char* obtener_timestamp();
 
 #include <config_memoria.h>

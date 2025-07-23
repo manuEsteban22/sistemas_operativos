@@ -126,7 +126,7 @@ void asignar_timer_blocked(t_pcb* pcb){
     sem_post(&sem_procesos_en_blocked);
 }
 
-//saca un pcb de la cola de susp_blocked mediante el pid
+//saca un pcb de la cola de susp_blocked o blocked mediante el pid
 t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid){
     t_list* aux = list_create();
     t_pcb* pcb_encontrado = NULL;

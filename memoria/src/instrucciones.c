@@ -250,7 +250,7 @@ int escribir_pagina_completa(int socket_cliente){
     return 0;
 }
 
-void dumpear_memoria(int pid){
+void dumpear_memoria(int pid, int socket_cliente){
     char* timestamp = obtener_timestamp();
     char* path = string_from_format("%s%d-%s.dmp", campos_config.dump_path, pid, timestamp);
     
@@ -316,6 +316,12 @@ void dumpear_memoria(int pid){
     free(path);
     free(timestamp);
     log_info(logger, "Dump de memoria del proceso %d generado", pid);
+
+    t_paquete* confirmacion = crear_paquete();
+    cambiar_opcode_paquete(confirmacion, MEMORY_DUMP);
+    enviar_paquete(confirmacion, socket_cliente, logger);
+    borrar_paquete(confirmacion);
+    return;
 }
 
 char* obtener_timestamp() {

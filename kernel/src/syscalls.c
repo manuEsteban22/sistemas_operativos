@@ -129,7 +129,7 @@ void manejar_finaliza_io(int socket_io){
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
         pthread_mutex_lock(&mutex_blocked);
-        queue_pop(cola_blocked);
+        sacar_pcb_de_cola(cola_blocked, pcb->pid);
         pthread_mutex_unlock(&mutex_blocked);
 
         pthread_mutex_lock(&mutex_ready);
@@ -180,6 +180,47 @@ void manejar_finaliza_io(int socket_io){
 
     list_destroy_and_destroy_elements(recibido, free);
 
+}
+
+void* esperar_confirmacion_dump(void* args_void){
+    t_args_dump* args = (t_args_dump*) args_void;
+    int pid = args->pid;
+    int socket_memoria = args->socket_memoria;
+    free(args);
+
+    int respuesta = recibir_operacion(socket_memoria);
+    int estado_anterior;
+
+    t_pcb* pcb = obtener_pcb(pid);
+
+    if (respuesta == MEMORY_DUMP){
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, READY);
+        log_debug(logger, "El dump memory se llevo a cabo correctamente");
+        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+        
+        pthread_mutex_lock(&mutex_blocked);
+        sacar_pcb_de_cola(cola_blocked, pid);
+        pthread_mutex_unlock(&mutex_blocked);
+
+        pthread_mutex_lock(&mutex_ready);
+        queue_push(cola_ready, pcb);
+        pthread_mutex_unlock(&mutex_ready);
+
+        sem_post(&sem_procesos_ready);
+    } else{
+        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
+        estado_anterior = pcb->estado_actual;
+        cambiar_estado(pcb, EXIT);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+        borrar_pcb(pcb);
+    }
+    if(pcb->temporal_blocked != NULL){
+        temporal_destroy(pcb->temporal_blocked);
+        pcb->temporal_blocked = NULL;
+    }
+    cerrar_conexion_memoria(socket_memoria);
+    return NULL;
 }
 
 void dump_memory(int socket_dispatch){
@@ -235,29 +276,20 @@ void dump_memory(int socket_dispatch){
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
 
-    cerrar_conexion_memoria(socket_memoria);
+    //cerrar_conexion_memoria(socket_memoria);
+    //esto no va a ser necesario ya que lo va a cerrar cuando reciba el dumpeo
 
-    // pasar todo lo de abajo a una funcion recibir confirmacion dumpeo
-    //
+    t_args_dump* args = malloc(sizeof(t_args_dump));
+    args->socket_memoria = socket_memoria;
+    args->pid = pid;
 
-    if (recibir_operacion(socket_memoria) == MEMORY_DUMP){
-        estado_anterior = pcb->estado_actual;
-        cambiar_estado(pcb, READY);
-        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        
-    } else{
-        log_error(logger, "No se logró llevar a cabo el MEMORY DUMP");
-        estado_anterior = pcb->estado_actual;
-        cambiar_estado(pcb, EXIT);
-        log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        borrar_pcb(pcb);
-    }
-    //  if(pcb->temporal_blocked != NULL){
-    //     temporal_destroy(pcb->temporal_blocked);
-    // }
+    pthread_t hilo_confirmacion_dump;
+    pthread_create(&hilo_confirmacion_dump, NULL, esperar_confirmacion_dump, (void*) args);
+    pthread_detach(hilo_confirmacion_dump);
 
-    list_destroy_and_destroy_elements(recibido, free);
 }
+
+
 
 void iniciar_proceso(int socket_cpu){
     t_list* recibido = recibir_paquete(socket_cpu);

@@ -45,20 +45,14 @@ int main(int argc, char* argv[]) {
     tabla_interrupt = dictionary_create();
     cpus_libres = queue_create();
 
-    /*
+    
     if(argc < 3){
-        log_error(logger, "faltaron argumentos en la ejecucion");
+        log_error(logger, "Faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
     }
     char* archivo_pseudocodigo = argv[1];
     int tamanio_proceso = atoi(argv[2]);
-
-    inicializar_planificador_lp(algoritmo_planificacion);
-
-    crear_proceso(tamanio_proceso);
-
-    planificador_largo_plazo();
-    */
+    
     
     //Inicio los servidores de dispatch, interrupt e I/O
     socket_io = iniciar_servidor(puerto_io, logger);
@@ -81,7 +75,7 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp();
     inicializar_planificador_mp();
-    proceso_arranque(256, "instrucciones_0");
+    proceso_arranque(tamanio_proceso, archivo_pseudocodigo);
     sem_post(&sem_plp);
 
     pthread_t thread_planificador_lp;

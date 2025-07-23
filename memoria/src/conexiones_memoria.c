@@ -132,8 +132,7 @@ void manejar_conexion_kernel(int socket_cliente) {
             t_list* recibido_pid_dump = recibir_paquete(socket_cliente);
             int pid_dumpeo = *((int*)list_get(recibido_pid_dump, 0));
             log_info(logger, "## PID: %d - Memory Dump solicitado", pid_dumpeo);
-            dumpear_memoria(pid_dumpeo);
-            list_destroy_and_destroy_elements(recibido, free);
+            dumpear_memoria(pid_dumpeo, socket_cliente);
             break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
