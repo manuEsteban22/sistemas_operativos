@@ -81,6 +81,7 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp(algoritmo_largo_plazo);
     proceso_arranque(256, "instrucciones_0");
+    sem_post(&sem_plp);
 
     pthread_t thread_planificador_lp;
     pthread_create(&thread_planificador_lp, NULL, (void*)planificador_largo_plazo, NULL);

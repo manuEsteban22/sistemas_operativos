@@ -8,8 +8,8 @@ sem_t cpus_disponibles;
 t_algoritmo_planificacion parsear_algoritmo_cp(char* algoritmo){
     if (strcmp(algoritmo, "FIFO") == 0) return FIFO;
     if (strcmp(algoritmo, "PMCP") == 0) return PMCP;
-    if (strcmp(algoritmo, "SJF_SIN_DESALOJO") == 0) return SJF_SIN_DESALOJO;
-    if (strcmp(algoritmo, "SJF_CON_DESALOJO") == 0) return SJF_CON_DESALOJO;
+    if (strcmp(algoritmo, "SJF") == 0) return SJF;
+    if (strcmp(algoritmo, "SRT") == 0) return SRT;
 
     log_error(logger, "Algoritmo inválido: %s", algoritmo);
     exit(EXIT_FAILURE);
@@ -32,18 +32,20 @@ t_pcb* planificador_corto_plazo(){
         case FIFO:
             pcb = queue_pop(cola_ready);
             break;
-        case SJF_SIN_DESALOJO:
+        case SJF:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SJF”, pcb->pid);
+            log_info(logger, "%d Desalojado por algoritmo SJF", pcb->pid);
             break;
-        case SJF_CON_DESALOJO:
+        case SRT:
             pcb = planificar_sjf_sin_desalojo(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SRT”, pcb->pid);
+            log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
+        case PMCP:
+            log_error(logger, "Proceso mas chico primero no es un algoritmo valido de pcp");
+            break;
     }
-    //pcb = queue_pop(cola_ready);//borrar
     pthread_mutex_unlock(&mutex_ready);
     log_trace(logger, "pcp saco un proceso de ready");
     return pcb;
@@ -112,6 +114,7 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
     log_trace(logger, "arranque a correr pcp");
     while (1) {
         sem_wait(&sem_procesos_ready);
+        sem_wait(&cpus_disponibles);
         log_trace(logger, "arranque una vuelta de pcp");
         t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
         if (pcb == NULL) {
@@ -119,7 +122,7 @@ void* planificador_corto_plazo_loop(int socket_dispatch) {
             continue;
         }
 
-        sem_wait(&cpus_disponibles);
+        
         if(queue_is_empty(cpus_libres)){
             log_error(logger, "No hay CPUs disponibles");
         }

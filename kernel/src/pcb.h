@@ -25,8 +25,8 @@ typedef struct
     t_estado_proceso estado_actual;
     t_temporal* temporal_estado;
     int tamanio;
-    int estimacion_rafaga;
-    int rafaga_real_anterior;
+    double estimacion_rafaga;
+    double rafaga_real_anterior;
     t_temporal* temporal_blocked;
 } t_pcb;
 
@@ -41,7 +41,7 @@ t_pcb* obtener_pcb(int pid);
 t_pcb* crear_pcb(int pid, int tamanio_proceso);
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);
-void actualizar_estimacion_rafaga(t_pcb* pcb, t_config* config);
+void actualizar_estimacion_rafaga(t_pcb* pcb);
 void chequear_sjf_con_desalojo(t_pcb* nuevo);
 void asignar_timer_blocked(t_pcb* pcb);
 t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid);

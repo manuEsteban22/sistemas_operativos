@@ -37,6 +37,7 @@ void llamar_a_io(int socket_dispatch) {
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
 
+    temporal_stop(pcb->temporal_estado);
     actualizar_estimacion_rafaga(pcb);
     estado_anterior = pcb->estado_actual;
     cambiar_estado(pcb, BLOCKED);

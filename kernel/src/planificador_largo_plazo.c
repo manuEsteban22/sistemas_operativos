@@ -63,15 +63,18 @@ int crear_proceso(int tamanio_proceso){
     switch(enum_algoritmo_lp){
         case FIFO:
             queue_push(cola_new, pcb);
+            log_debug(logger, "Proceso cargado segun FIFO");
+            sem_post(&sem_plp);//provisorio
             break;
         case PMCP:
+            log_debug(logger, "Proceso cargado segun PMCP");
             insertar_en_orden_por_memoria(cola_new, pcb);
             break;
-        case SJF_SIN_DESALOJO:
+        case SJF:
             log_warning(logger, "no se usa sjf sin desalojo en planificador largo plazo");
             exit(EXIT_FAILURE);
             break;
-        case SJF_CON_DESALOJO:
+        case SRT:
             log_warning(logger, "no se usa sjf con desalojo en planificador largo plazo");
             exit(EXIT_FAILURE);
             break;
@@ -80,7 +83,7 @@ int crear_proceso(int tamanio_proceso){
             exit(EXIT_FAILURE);
     }
     pthread_mutex_unlock(&mutex_new);
-    sem_post(&sem_plp);
+    //sem_post(&sem_plp);
     return pcb->pid;
 }
 
@@ -99,11 +102,18 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
     }
 
     if (!insertado){
-        list_add(lista_aux, nuevo); 
+        list_add(lista_aux, nuevo);
+    }
+    
+    log_warning(logger, "### ORDEN COMPLETO DE COLA DESPUÉS DE INSERTAR PID %d", nuevo->pid);
+    for (int i = 0; i < list_size(lista_aux); i++) {
+        t_pcb* pcb = list_get(lista_aux, i);
+        log_warning(logger, "    PID: %d | TAMANIO: %d", pcb->pid, pcb->tamanio);
     }
 
     for (int i = 0; i < list_size(lista_aux); i++){
         t_pcb* pcb = list_get(lista_aux, i);
+        log_warning(logger, "PCB INSERTADO PID: %d - TAMANIO: %d", pcb->pid, pcb->tamanio);
         queue_push(cola, pcb);
     }
 
@@ -222,7 +232,7 @@ int estado_anterior;
                 estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-
+                log_error(logger, "El planificador LP tomo el PID %d", pcb->pid);
 
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);

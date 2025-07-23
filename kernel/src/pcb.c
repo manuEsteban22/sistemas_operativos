@@ -51,7 +51,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->metricas_estado[nuevo_estado]++;
     //cambia el estado del pcb y suma 1 a la metrica de estado del estado nuevo
 
-    if (nuevo_estado == READY && (strcmp(config_get_string_value(config, "ALGORITMO_CORTO_PLAZO"), "SJF_CON_DESALOJO") == 0)){
+    if (nuevo_estado == READY && (strcmp(algoritmo_corto_plazo, "SRT") == 0)){
     chequear_sjf_con_desalojo(pcb);
     }
 
@@ -72,10 +72,10 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
         return;
     }
 
-    int rafaga_real = temporal_gettime(pcb->temporal_estado);
+    double rafaga_real = temporal_gettime(pcb->temporal_estado);
     pcb->rafaga_real_anterior = rafaga_real;
 
-    int nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
+    double nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
     pcb->estimacion_rafaga = nueva_estimacion;
 
     temporal_destroy(pcb->temporal_estado);
@@ -83,7 +83,7 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
 }
 
 void chequear_sjf_con_desalojo(t_pcb* nuevo) {
-    if (algoritmo_corto_plazo != "SJF_CON_DESALOJO"){
+    if (algoritmo_corto_plazo != "SRT"){
         return;
     }
 

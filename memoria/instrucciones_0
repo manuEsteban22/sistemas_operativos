@@ -1,3 +1,7 @@
 NOOP
-DUMP_MEMORY
+WRITE 0 HOLA
+READ 0 4
+INIT_PROC instrucciones_1 32
+INIT_PROC instrucciones_3 64
+INIT_PROC instrucciones_4 16
 EXIT
