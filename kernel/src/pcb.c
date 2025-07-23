@@ -8,6 +8,7 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     pcb->tamanio = tamanio_proceso;
     pcb->estado_actual = NEW;
     pcb->temporal_estado = temporal_create();
+    pcb->temporal_blocked = NULL;
     //Inicializo el pcb en estado NEW y creo el cronometro
 
     for(int i = 0; i < CANTIDAD_ESTADOS; i++) {
@@ -118,8 +119,9 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 void asignar_timer_blocked(t_pcb* pcb){
     if (pcb->temporal_blocked != NULL) {
         temporal_destroy(pcb->temporal_blocked);
+        pcb->temporal_blocked = NULL;
     }
-    log_error(logger, "COSA 1");
+    log_error(logger, "COSA 1 PID %d", pcb->pid);
     pcb->temporal_blocked = temporal_create();
     sem_post(&sem_procesos_en_blocked);
 }

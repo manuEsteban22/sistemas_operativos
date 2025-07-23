@@ -33,7 +33,7 @@ void llamar_a_io(int socket_dispatch) {
         return;
     }
 
-    pthread_mutex_lock(&mutex_blocked);
+    
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
 
@@ -43,6 +43,7 @@ void llamar_a_io(int socket_dispatch) {
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
+    pthread_mutex_lock(&mutex_blocked);
     asignar_timer_blocked(pcb);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
@@ -165,8 +166,9 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(pcb->temporal_blocked != NULL){
-        log_error(logger, "COSA 2");
+        log_error(logger, "COSA 2 PID %d", pcb->pid);
         temporal_destroy(pcb->temporal_blocked);
+        pcb->temporal_blocked = NULL;
     }
 
     list_destroy_and_destroy_elements(recibido, free);

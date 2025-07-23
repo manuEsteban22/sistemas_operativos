@@ -14,7 +14,7 @@ void planificador_mediano_plazo(){
 
     if (!queue_is_empty(cola_blocked)){
             t_pcb* pcb = queue_peek(cola_blocked); 
-
+            log_warning(logger, "Aca esta el error %d", pcb->pid);
             int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
 
             if (tiempo_bloqueado >= tiempo_suspension){
