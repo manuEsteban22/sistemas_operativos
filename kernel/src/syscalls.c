@@ -45,6 +45,7 @@ void llamar_a_io(int socket_dispatch) {
 
     asignar_timer_blocked(pcb);
 
+    log_debug(logger, "Se bloquea el proceso PID %d", pcb->pid);
     pthread_mutex_lock(&mutex_blocked);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
@@ -53,6 +54,7 @@ void llamar_a_io(int socket_dispatch) {
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);
 
+    log_debug(logger, "Mando una interrupcion desde IO");
     t_paquete* senial_bloqueante = crear_paquete();
     cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
     enviar_paquete(senial_bloqueante, socket_interrupt, logger);
@@ -79,7 +81,7 @@ void llamar_a_io(int socket_dispatch) {
         agregar_a_paquete(paquete, dispositivo, size_disp);
         enviar_paquete(paquete, io->socket_io, logger);
         borrar_paquete(paquete);
-        log_trace(logger, "Dispositivo PID %d enviado a IO", pid);
+        log_trace(logger, "Proceso PID %d enviado a IO", pid);
     }
 
     int* cpu_id_ptr = malloc(sizeof(int));
@@ -235,6 +237,7 @@ void dump_memory(int socket_dispatch){
 
     pthread_mutex_lock(&mutex_blocked);
     t_pcb* pcb = obtener_pcb(pid);
+    pc++;
     pcb->pc = pc;
 
     actualizar_estimacion_rafaga(pcb);
@@ -251,6 +254,7 @@ void dump_memory(int socket_dispatch){
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);
 
+    log_debug(logger, "Mando una interrupcion desde dump memory");
     t_paquete* senial_bloqueante = crear_paquete();
     cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
     enviar_paquete(senial_bloqueante, socket_interrupt, logger);

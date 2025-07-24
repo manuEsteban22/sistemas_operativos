@@ -135,11 +135,11 @@ void handshake_io(int socket_dispositivo){
     nuevo_io->cola_bloqueados = queue_create();
     nuevo_io->ocupado = false;
 
-    dictionary_put(dispositivos_io, strdup(nombre_dispositivo), nuevo_io);
+    dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
 
     log_info(logger, "Se registró el dispositivo IO [%s] en el diccionario", nombre_dispositivo);
 
-    free(nombre_dispositivo);
+    //free(nombre_dispositivo); no hay que hacerlo porque queda en el dictionary de disp
     return;
 }
 
@@ -158,7 +158,7 @@ void* manejar_servidor_io(void* arg){
 
         switch (codigo_operacion){
             case CERRADO:
-                log_info(logger, "termino la conexion con exito");
+                log_info(logger, "Termino la conexion con exito");
                 break;
 
             case HANDSHAKE:

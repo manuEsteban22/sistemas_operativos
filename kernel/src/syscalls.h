@@ -19,6 +19,6 @@ void dump_memory(int socket_cpu);
 void iniciar_proceso(int socket_cpu);
 void ejecutar_exit(int socket_cpu);
 void enviar_finalizacion_a_memoria(int pid);
-
+void manejar_finaliza_io(int socket_io);
 
 #endif

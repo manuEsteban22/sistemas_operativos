@@ -104,8 +104,8 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     pthread_mutex_lock(&mutex_exec);
     dictionary_put(tabla_exec, pid_str, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_exec);
-    //free(cpu_id_ptr);
-    //free(pid_str);
+    free(pid_str);//hay que ver si esto es corrrecto 
+    //porque capaz libera memoria que se va a usar
 
     log_info(logger, "Envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
 }

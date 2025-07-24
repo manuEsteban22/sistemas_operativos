@@ -15,7 +15,7 @@ extern int socket_interrupt;
 extern int socket_dispatch;
 extern double alfa;
 extern double estimacion_inicial;
-extern t_dictionary* dispositivos_io; //
+extern t_dictionary* dispositivos_io; // tiene nombre del io -> struct io
 extern t_dictionary* tabla_pcbs; // tiene pcb -> pid
 extern t_dictionary* tabla_exec; // tiene pid -> cpuid
 extern t_dictionary* tabla_dispatch; // tiene cpuid -> socket dispatch
