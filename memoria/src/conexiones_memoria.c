@@ -112,11 +112,9 @@ void manejar_conexion_kernel(int socket_cliente) {
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
                }
-                log_debug(logger, "Aca anda 1");
                 list_destroy_and_destroy_elements(recibido, free);
                 //free(pid_str);
             }
-            log_debug(logger, "aca anda 2");
             break;
         case KILL_PROC:
             recibido = recibir_paquete(socket_cliente);

@@ -17,7 +17,7 @@ void llamar_a_io(int socket_dispatch) {
     int tiempo = *(int*)tiempo_raw;
     int cpu_id = *(int*)cpuid_raw;
 
-    log_info(logger, "recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
+    log_info(logger, "Recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
 
