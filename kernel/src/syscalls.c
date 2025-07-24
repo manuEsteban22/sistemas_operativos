@@ -22,7 +22,7 @@ void llamar_a_io(int socket_dispatch) {
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
 
     if(io == NULL) {
-        log_error(logger, "dispositivo IO [%s] no existe. Enviando proceso a EXIT", dispositivo);
+        log_error(logger, "dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
         t_pcb* pcb = obtener_pcb(pid);
         estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, EXIT);

@@ -166,14 +166,32 @@ void matar_io (int socket_cliente){
         log_info(logger, "Dispositivo [%s] desconectado", nombre);
         t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
 
-        if(dispositivo->pid_ocupado != NULL){
+        if(dispositivo->ocupado){
             t_pcb* pcb = obtener_pcb(dispositivo->pid_ocupado);
-            cambiar_estado(pcb, EXIT);
+            if(pcb != NULL){
+                int estado_anterior = pcb->estado_actual;
+                cambiar_estado(pcb, EXIT);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+                borrar_pcb(pcb);
+            }
+            
             //limpiar cola de bloqueados tambien
             //osea pasarlos a exit
         }
-
+        while(!queue_is_empty(dispositivo->cola_bloqueados)){
+            t_pcb_io* pcb_io = queue_pop(dispositivo->cola_bloqueados);
+            t_pcb* pcb = obtener_pcb(pcb_io->pid);
+            if(pcb != NULL){
+                int estado_anterior = pcb->estado_actual;
+                cambiar_estado(pcb, EXIT);
+                log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+                borrar_pcb(pcb);
+            }
+            free(pcb_io);
+        }
+        queue_destroy(dispositivo->cola_bloqueados);
         dictionary_remove(dispositivos_io, nombre);
+        free(dispositivo);
         free(nombre);
     } else{
         log_error(logger, "No se encontro un IO con socket %d", socket_cliente);
