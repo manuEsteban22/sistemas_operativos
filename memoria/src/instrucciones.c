@@ -118,6 +118,8 @@ int mandar_instruccion(int socket_cliente)
     return -1;
     }
 
+    usleep(campos_config.retardo_memoria * 1000);
+
     int tamanio = strlen(instruccion) + 1;
     log_info(logger, "## PID: %s - Obtener instrucción: %d - Instrucción: %s", pid_str, pc, instruccion);
     agregar_a_paquete(paquete, instruccion, tamanio);
@@ -160,6 +162,9 @@ int ejecutar_read(int socket_cliente){
     char* pid_str = string_itoa(pid);
 
     void* leido = malloc(tamanio);
+
+    usleep(campos_config.retardo_memoria * 1000);
+
     memcpy(leido, memoria_usuario + direccion_fisica, tamanio);
 
     log_info(logger, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
@@ -187,6 +192,8 @@ int ejecutar_write(int socket_cliente){
     int tamanio = strlen(datos) + 1;
     char* pid_str = string_itoa(pid);
 
+    usleep(campos_config.retardo_memoria * 1000);
+
     memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
 
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // aaaaaaaaaaaaaaaaaaaaaaaaaakhfysxky
@@ -208,6 +215,9 @@ int leer_pagina_completa(int socket_cliente){
     char* pid_str = string_itoa(pid);
 
     char* buffer = malloc(campos_config.tam_pagina);
+
+    usleep(campos_config.retardo_memoria * 1000);
+
     memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
     log_debug(logger, "Contenido de la pagina : %s", buffer);
 
@@ -235,6 +245,9 @@ int escribir_pagina_completa(int socket_cliente){
 
     log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
     log_debug(logger, "Los datos a escribir en la pagina son %s", datos);
+
+    usleep(campos_config.retardo_memoria * 1000);
+
     memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
 
     t_paquete* paquete = crear_paquete();
