@@ -153,7 +153,7 @@ char* buscar_io_por_socket(int socket_io){
         t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, key);
         if(dispositivo != NULL && dispositivo->socket_io == socket_io){
             nombre = strdup(key);
-            break
+            break;
         }
     }
     list_destroy(keys);
