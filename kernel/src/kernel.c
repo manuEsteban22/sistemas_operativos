@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     // int* ptr_io = malloc(sizeof(int));
     // ptr_io = socket_io;
     int* ptr_dispatch = malloc(sizeof(int));
-    ptr_dispatch = socket_dispatch;
+    *ptr_dispatch = socket_dispatch;
 
 
     pthread_create(&thread_principal, NULL, hilo_main_cpu, NULL);

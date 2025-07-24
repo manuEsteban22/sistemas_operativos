@@ -134,12 +134,12 @@ void finalizar_proceso(t_pcb* pcb){
     char* pid_str = string_itoa(pcb->pid);
     int* cpu_id = dictionary_get(tabla_exec, pid_str);
     dictionary_remove(tabla_exec, pid_str);
-
     pthread_mutex_unlock(&mutex_exec);
 
     int* cpu_id_ptr_copy = malloc(sizeof(int));
     *cpu_id_ptr_copy = *cpu_id;
-
+    free(cpu_id);
+    
     borrar_pcb(pcb);
     free(pid_str);
     pthread_mutex_lock(&mutex_cpus_libres);

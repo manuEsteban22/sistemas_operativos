@@ -107,11 +107,13 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     //free(cpu_id_ptr);
     //free(pid_str);
 
-    log_info(logger, "envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
+    log_info(logger, "Envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
 }
 
-void* planificador_corto_plazo_loop(int socket_dispatch) {
-    log_trace(logger, "arranque a correr pcp");
+void* planificador_corto_plazo_loop(int* socket_ptr) {
+    int socket_dispatch = *socket_ptr;
+    free(socket_ptr);
+    log_trace(logger, "Arranque a correr pcp");
     while (1) {
         sem_wait(&sem_procesos_ready);
         sem_wait(&cpus_disponibles);
