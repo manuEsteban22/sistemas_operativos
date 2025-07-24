@@ -73,6 +73,7 @@ void llamar_a_io(int socket_dispatch) {
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
         io->ocupado = true;
+        io->pid_ocupado = pid;
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
@@ -144,6 +145,7 @@ void manejar_finaliza_io(int socket_io){
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     io->ocupado = false;
+    io->pid_ocupado = NULL;
 
     if (!queue_is_empty(io->cola_bloqueados)) {
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
@@ -159,6 +161,7 @@ void manejar_finaliza_io(int socket_io){
         borrar_paquete(paquete);
 
         io->ocupado = true;
+        io->pid_ocupado = siguiente->pid;
 
         int* cpu_id_ptr = malloc(sizeof(int));
         *cpu_id_ptr = cpu_id;

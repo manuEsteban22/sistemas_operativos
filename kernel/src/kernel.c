@@ -27,6 +27,7 @@ pthread_t thread_principal;
 char *algoritmo_largo_plazo;
 char *algoritmo_corto_plazo;
 t_dictionary* dispositivos_io;
+t_dictionary* tabla_sockets_io;
 t_dictionary* tabla_pcbs;
 t_dictionary* tabla_exec;
 pthread_mutex_t mutex_exec = PTHREAD_MUTEX_INITIALIZER;

@@ -134,6 +134,7 @@ void handshake_io(int socket_dispositivo){
     nuevo_io->socket_io = socket_dispositivo;
     nuevo_io->cola_bloqueados = queue_create();
     nuevo_io->ocupado = false;
+    nuevo_io->pid_ocupado = NULL;
 
     dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
 
@@ -143,24 +144,57 @@ void handshake_io(int socket_dispositivo){
     return;
 }
 
+char* buscar_io_por_socket(int socket_io){
+    t_list* keys = dictionary_keys(dispositivos_io);
+    char* nombre = NULL;
+
+    for(int i = 0; i < list_size(keys); i++){
+        char* key = list_get(keys, i);
+        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, key);
+        if(dispositivo != NULL && dispositivo->socket_io == socket_io){
+            nombre = strdup(key);
+            break
+        }
+    }
+    list_destroy(keys);
+    return nombre;
+}
+
+void matar_io (int socket_cliente){
+    char* nombre = buscar_io_por_socket(socket_cliente);
+    if(nombre != NULL){
+        log_info(logger, "Dispositivo [%s] desconectado", nombre);
+        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
+
+        if(dispositivo->pid_ocupado != NULL){
+            t_pcb* pcb = obtener_pcb(dispositivo->pid_ocupado);
+            cambiar_estado(pcb, EXIT);
+            //limpiar cola de bloqueados tambien
+            //osea pasarlos a exit
+        }
+
+        dictionary_remove(dispositivos_io, nombre);
+        free(nombre);
+    } else{
+        log_error(logger, "No se encontro un IO con socket %d", socket_cliente);
+    }
+}
+
 void* manejar_servidor_io(void* arg){
     int socket_cliente = *((int*) arg);
     free(arg);
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
-        if(codigo_operacion == -1){
-            log_info(logger, "Se cerró la conexion de IO");
+        if(codigo_operacion <= 0){
+            log_info(logger, "Se cerró la conexion de IO, Socket %d", socket_cliente);
+            matar_io(socket_cliente);
             break;
         }
 
         log_info(logger, "IO Código de operación recibido: %d", codigo_operacion);
 
         switch (codigo_operacion){
-            case CERRADO:
-                log_info(logger, "Termino la conexion con exito");
-                break;
-
             case HANDSHAKE:
                 handshake_io(socket_cliente);
                 break;

@@ -39,6 +39,7 @@ typedef struct {
     int socket_io;
     t_queue* cola_bloqueados;
     bool ocupado;
+    int pid_ocupado;
 } t_dispositivo_io;
 
 #endif
