@@ -102,7 +102,11 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     *cpu_id_ptr = cpu_id;
 
     pthread_mutex_lock(&mutex_exec);
+    int* viejo_valor = dictionary_get(tabla_exec, pid_str);
+    if (viejo_valor != NULL) free(viejo_valor);
+
     dictionary_put(tabla_exec, pid_str, cpu_id_ptr);
+    
     pthread_mutex_unlock(&mutex_exec);
     free(pid_str);//hay que ver si esto es corrrecto 
     //porque capaz libera memoria que se va a usar
