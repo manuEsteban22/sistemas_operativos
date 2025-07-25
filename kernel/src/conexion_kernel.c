@@ -118,7 +118,6 @@ void handshake_io(int socket_dispositivo){
     send(socket_dispositivo, &respuesta, sizeof(int),0);
     log_info(logger, "Envie OK a IO");
 
-    char* nombre_dispositivo;
     op_code op = recibir_operacion(socket_dispositivo);
 
 
@@ -127,20 +126,107 @@ void handshake_io(int socket_dispositivo){
         return;
     }
 
-    nombre_dispositivo = recibir_mensaje(socket_dispositivo);
+    char* nombre_dispositivo = recibir_mensaje(socket_dispositivo);
     log_info(logger, "Conexion de IO: %s", nombre_dispositivo);
 
-    t_dispositivo_io* nuevo_io = malloc(sizeof(t_dispositivo_io));
-    nuevo_io->socket_io = socket_dispositivo;
-    nuevo_io->cola_bloqueados = queue_create();
-    nuevo_io->ocupado = false;
+    t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
+    if(io == NULL){
+        io = malloc(sizeof(t_dispositivo_io));
+        io->sockets_io = list_create();
+        io->cola_bloqueados = queue_create();
+        pthread_mutex_init(&io->mutex_dispositivos, NULL);
+        dictionary_put(dispositivos_io, nombre_dispositivo, io);
+    }
+    t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
+    pthread_mutex_lock(&io->mutex_dispositivos);
+    nueva_instancia->socket = socket_dispositivo;
+    nueva_instancia->ocupado = false;
+    nueva_instancia->pid_ocupado = -1;
+    list_add(io->sockets_io, nueva_instancia);
+    pthread_mutex_unlock(&io->mutex_dispositivos);
 
-    dictionary_put(dispositivos_io, nombre_dispositivo, nuevo_io);
-
-    log_info(logger, "Se registró el dispositivo IO [%s] en el diccionario", nombre_dispositivo);
-
-    //free(nombre_dispositivo); no hay que hacerlo porque queda en el dictionary de disp
+    log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nueva_instancia->socket, nombre_dispositivo);
     return;
+}
+
+char* buscar_io_por_socket(int socket_io){
+    t_list* keys = dictionary_keys(dispositivos_io);
+    char* nombre = NULL;
+
+    for(int i = 0; i < list_size(keys); i++){
+        char* key = list_get(keys, i);
+        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, key);
+        for(int j = 0; j < list_size(dispositivo->sockets_io); j++){
+            t_instancia_io* instancia = list_get(dispositivo->sockets_io, j);
+            if(instancia->socket == socket_io){
+                nombre = strdup(key);
+                break;
+            }
+        }
+        if(nombre != NULL)break;
+    }
+    list_destroy(keys);
+    return nombre;
+}
+
+t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
+    log_debug(logger, "Hay %d instancias", list_size(dispositivo->sockets_io));
+    pthread_mutex_lock(&dispositivo->mutex_dispositivos);
+    for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
+        t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
+        if (!instancia->ocupado){
+            pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
+            log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
+            return instancia;
+        }
+    }
+    pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
+    return NULL;
+}
+
+void borrar_socket_io(t_dispositivo_io* dispositivo, int socket_a_borrar){
+    for(int i = 0; i < list_size(dispositivo->sockets_io); i++){
+        t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
+        if(instancia->socket == socket_a_borrar){
+            list_remove_and_destroy_element(dispositivo->sockets_io, i, free);
+            return;
+        }
+    }
+}
+
+
+void matar_io (int socket_cliente){
+    char* nombre = buscar_io_por_socket(socket_cliente);
+    if(nombre != NULL){
+        log_info(logger, "Se desconecto un dispositivo [%s] de socket (%d)", nombre, socket_cliente);
+        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
+        borrar_socket_io(dispositivo, socket_cliente);
+
+
+        if(list_is_empty(dispositivo->sockets_io)){
+            log_info(logger, "No quedan instancias para el dispositivo [%s]", nombre);
+
+            while(!queue_is_empty(dispositivo->cola_bloqueados)){
+                t_pcb_io* pcb_io = queue_pop(dispositivo->cola_bloqueados);
+                t_pcb* pcb = obtener_pcb(pcb_io->pid);
+                if(pcb != NULL){
+                    int estado_anterior = pcb->estado_actual;
+                    cambiar_estado(pcb, EXIT);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+                    borrar_pcb(pcb);
+                }
+                free(pcb_io);
+            }
+            list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
+            queue_destroy(dispositivo->cola_bloqueados);
+            dictionary_remove(dispositivos_io, nombre);
+            free(dispositivo);
+        }
+        
+        free(nombre);
+    } else{
+        log_error(logger, "No se encontro un IO con socket %d", socket_cliente);
+    }
 }
 
 void* manejar_servidor_io(void* arg){
@@ -149,18 +235,15 @@ void* manejar_servidor_io(void* arg){
     while(1){
         int codigo_operacion = recibir_operacion(socket_cliente);
 
-        if(codigo_operacion == -1){
-            log_info(logger, "Se cerró la conexion de IO");
+        if(codigo_operacion <= 0){
+            log_info(logger, "Se cerró la conexion de IO, Socket %d", socket_cliente);
+            matar_io(socket_cliente);
             break;
         }
 
         log_info(logger, "IO Código de operación recibido: %d", codigo_operacion);
 
         switch (codigo_operacion){
-            case CERRADO:
-                log_info(logger, "Termino la conexion con exito");
-                break;
-
             case HANDSHAKE:
                 handshake_io(socket_cliente);
                 break;

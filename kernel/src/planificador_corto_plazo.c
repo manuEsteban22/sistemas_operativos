@@ -114,55 +114,56 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     log_info(logger, "Envie el proceso PID=%d a CPU - PC=%d", (pcb->pid), (pcb->pc));
 }
 
-void* planificador_corto_plazo_loop(int* socket_ptr) {
-    int socket_dispatch = *socket_ptr;
-    free(socket_ptr);
-    log_trace(logger, "Arranque a correr pcp");
+void* planificador_corto_plazo_loop(void* _) {
+    log_trace(logger, "Arranqué el PCP");
+
     while (1) {
         sem_wait(&sem_procesos_ready);
-        sem_wait(&cpus_disponibles);
-        log_trace(logger, "arranque una vuelta de pcp");
-        t_pcb* pcb = planificador_corto_plazo();  // elige un PCB de READY
-        if (pcb == NULL) {
-            log_trace(logger, "el pcb que agarro de ready es null");
-            continue;
+
+        while (true) {
+            if (queue_is_empty(cpus_libres)) break;
+            log_debug(logger, "PCP: CPUs libres: %d - READY size: %d", queue_size(cpus_libres), queue_size(cola_ready));
+
+            pthread_mutex_lock(&mutex_ready);
+            bool ready_empty = queue_is_empty(cola_ready);
+            pthread_mutex_unlock(&mutex_ready);
+            if (ready_empty) break;
+
+            sem_wait(&cpus_disponibles); 
+
+            t_pcb* pcb = planificador_corto_plazo();
+            if (pcb == NULL) {
+                log_trace(logger, "No había PCB en READY");
+                sem_post(&cpus_disponibles); 
+                break;
+            }
+
+            pthread_mutex_lock(&mutex_cpus_libres);
+            int* cpu_id_ptr = queue_pop(cpus_libres);
+            pthread_mutex_unlock(&mutex_cpus_libres);
+
+            if (!cpu_id_ptr) {
+                log_error(logger, "No hay CPU disponible aunque lo parezca");
+                sem_post(&cpus_disponibles);
+                continue;
+            }
+
+            int cpu_id = *cpu_id_ptr;
+            free(cpu_id_ptr);
+
+            char* cpu_id_str = string_itoa(cpu_id);
+            int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, cpu_id_str);
+            free(cpu_id_str);
+
+            if (!socket_dispatch_ptr) {
+                log_error(logger, "No se encontró el socket dispatch para CPU %d", cpu_id);
+                sem_post(&cpus_disponibles);
+                continue;
+            }
+
+            ejecutar_proceso(pcb, *socket_dispatch_ptr, cpu_id);
         }
-
-        
-        if(queue_is_empty(cpus_libres)){
-            log_error(logger, "No hay CPUs disponibles");
-        }
-        pthread_mutex_lock(&mutex_cpus_libres);
-        int* cpu_id_ptr = queue_pop(cpus_libres);
-        pthread_mutex_unlock(&mutex_cpus_libres);
-
-        if (cpu_id_ptr == NULL) {
-            log_error(logger, "No se encontró la CPU asignada al PCB");
-            continue;
-        }
-        int cpu_id = *cpu_id_ptr;
-        free(cpu_id_ptr);
-
-        log_debug(logger,"cpu id: %d", cpu_id);
-
-        char* cpu_id_str = string_itoa(cpu_id);
-        int* socket_dispatch_ptr = dictionary_get(tabla_dispatch, cpu_id_str);
-        free(cpu_id_str);
-
-        if (tabla_dispatch == NULL) {
-            log_error(logger, "Tabla dispatch no inicializada");
-            continue;
-        }
-
-        if (socket_dispatch_ptr == NULL) {
-            log_error(logger, "No se encontró el socket dispatch para CPU %d", cpu_id);
-            continue;
-        }
-        
-
-        
-        ejecutar_proceso(pcb, *socket_dispatch_ptr, cpu_id);
-        log_trace(logger, "termino una vuelta pcp");
     }
+
     return NULL;
 }

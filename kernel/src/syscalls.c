@@ -22,7 +22,7 @@ void llamar_a_io(int socket_dispatch) {
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
 
     if(io == NULL) {
-        log_error(logger, "dispositivo IO [%s] no existe. Enviando proceso a EXIT", dispositivo);
+        log_error(logger, "dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
         t_pcb* pcb = obtener_pcb(pid);
         estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, EXIT);
@@ -49,6 +49,7 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_blocked);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
+
     char* cpu_id_str = string_itoa(cpu_id);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
     socket_interrupt = *socket_interrupt_ptr;
@@ -65,23 +66,29 @@ void llamar_a_io(int socket_dispatch) {
     enviar_paquete(confirmacion, socket_dispatch, logger);
     borrar_paquete(confirmacion);
 
-    if(io->ocupado) {
+
+    t_instancia_io* instancia = obtener_instancia_disponible(io);
+    if(instancia == NULL) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);
         t_pcb_io* bloqueado = malloc(sizeof(t_pcb_io));
         bloqueado->pid = pid;
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
-        io->ocupado = true;
+        pthread_mutex_lock(&io->mutex_dispositivos);
+        instancia->ocupado = true;
+        instancia->pid_ocupado = pid;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
+
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
         agregar_a_paquete(paquete, &pid, sizeof(int));
         agregar_a_paquete(paquete, &tiempo, sizeof(int));
         agregar_a_paquete(paquete, &cpu_id, sizeof(int));
-        agregar_a_paquete(paquete, dispositivo, size_disp);
-        enviar_paquete(paquete, io->socket_io, logger);
+        agregar_a_paquete(paquete, dispositivo, strlen(dispositivo) + 1);
+        enviar_paquete(paquete, instancia->socket, logger);
         borrar_paquete(paquete);
-        log_trace(logger, "Proceso PID %d enviado a IO", pid);
+        log_trace(logger, "Proceso PID %d enviado a IO por socket %d", pid, instancia->socket);
     }
 
     int* cpu_id_ptr = malloc(sizeof(int));
@@ -90,7 +97,11 @@ void llamar_a_io(int socket_dispatch) {
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
     sem_post(&cpus_disponibles);
-
+    pthread_mutex_lock(&mutex_ready);
+    if(!queue_is_empty(cola_ready)){
+        sem_post(&sem_procesos_ready);
+    }
+    pthread_mutex_unlock(&mutex_ready);
     list_destroy_and_destroy_elements(campos, free);
 }
 
@@ -102,13 +113,14 @@ void manejar_finaliza_io(int socket_io){
 
     log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s - cpuid %d", *pid, nombre_dispositivo, cpu_id);
     t_pcb* pcb = obtener_pcb(*pid);
-    int estado_anterior;
-
+    
     if (pcb == NULL){
         log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
         list_destroy_and_destroy_elements(recibido, free);
         return;
     }
+
+    int estado_anterior = pcb->estado_actual;
 
     if (pcb->estado_actual == SUSP_BLOCKED){
 
@@ -116,37 +128,60 @@ void manejar_finaliza_io(int socket_io){
         sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
         pthread_mutex_unlock(&mutex_susp_blocked);
 
-        estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, SUSP_READY);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-
 
         pthread_mutex_lock(&mutex_susp_ready);
         queue_push(cola_susp_ready, pcb);
         pthread_mutex_unlock(&mutex_susp_ready);
 
     } else if (pcb->estado_actual == BLOCKED){
-        estado_anterior = pcb->estado_actual;
-        cambiar_estado(pcb, READY);
-        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-
         pthread_mutex_lock(&mutex_blocked);
         sacar_pcb_de_cola(cola_blocked, pcb->pid);
         pthread_mutex_unlock(&mutex_blocked);
 
+        cambiar_estado(pcb, READY);
+        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
         pthread_mutex_unlock(&mutex_ready);
-        log_info(logger, "%d Finalizo IO y pasa a READY", pcb->pid);
+        log_info(logger, "## (%d) finalizó IO y pasa a READY", pcb->pid);
         sem_post(&sem_procesos_ready);
 
     }
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
-    io->ocupado = false;
+    t_instancia_io* instancia = NULL;
+
+    for(int i = 0; i < list_size(io->sockets_io); i++){
+        t_instancia_io* actual = list_get(io->sockets_io, i);
+        if(actual->socket == socket_io){
+            instancia = actual;
+            break;
+        }
+    }
+
+    if(instancia != NULL){
+        pthread_mutex_lock(&io->mutex_dispositivos);
+        instancia->ocupado = false;
+        instancia->pid_ocupado = -1;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
+    }
+
+    t_instancia_io* libre = obtener_instancia_disponible(io);
 
     if (!queue_is_empty(io->cola_bloqueados)) {
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
+        //t_instancia_io* libre = obtener_instancia_disponible(io);
+
+        if(libre == NULL){
+            log_error(logger, "No quedan instancias del dispositivo [%s]", nombre_dispositivo);
+            log_debug(logger, "Este caso no se deberia dar");//no se contempla pasar procesos a exit
+            free(siguiente);
+            list_destroy_and_destroy_elements(recibido, free);
+            return;
+        }
 
         // Mandar a IO
         t_paquete* paquete = crear_paquete();
@@ -155,10 +190,13 @@ void manejar_finaliza_io(int socket_io){
         agregar_a_paquete(paquete, &(siguiente->tiempo), sizeof(int));
         agregar_a_paquete(paquete, &cpu_id, sizeof(int));
         agregar_a_paquete(paquete, nombre_dispositivo, strlen(nombre_dispositivo) + 1);
-        enviar_paquete(paquete, io->socket_io, logger);
+        enviar_paquete(paquete, libre->socket, logger);
         borrar_paquete(paquete);
 
-        io->ocupado = true;
+        pthread_mutex_lock(&io->mutex_dispositivos);
+        libre->ocupado = true;
+        libre->pid_ocupado = siguiente->pid;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
 
         int* cpu_id_ptr = malloc(sizeof(int));
         *cpu_id_ptr = cpu_id;
@@ -174,13 +212,12 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(pcb->temporal_blocked != NULL){
-        log_error(logger, "COSA 2 PID %d", pcb->pid);
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
 
     free(pid);
-
+    list_destroy_and_destroy_elements(recibido, free);
 }
 
 void* esperar_confirmacion_dump(void* args_void){
