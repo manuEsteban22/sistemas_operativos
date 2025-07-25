@@ -16,6 +16,7 @@ bool esperar_procesos(int cpu_id){
         list_destroy_and_destroy_elements(recibido, free);
 
         iniciar_ciclo_de_instrucciones(pcb, cpu_id);
+        free(pcb);
         return true;
     }else if(opcode < 0){
         log_error(logger, "Se cerro la conexion con Kernel, OPCODE: %d", opcode);

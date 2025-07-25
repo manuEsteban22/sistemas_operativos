@@ -13,11 +13,16 @@ void planificador_mediano_plazo(){
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
         pthread_mutex_lock(&mutex_blocked);
+        log_debug(logger, "Aca no hay segfault - 1");
         if (!queue_is_empty(cola_blocked)){
+            log_debug(logger, "Aca no hay segfault - 2");
             t_pcb* pcb = queue_peek(cola_blocked); 
+            log_debug(logger, "Aca no hay segfault - 3");
             int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
+            log_debug(logger, "Aca no hay segfault - 4");
 
             if (tiempo_bloqueado >= tiempo_suspension){
+                log_debug(logger, "Aca no hay segfault - 5");
                 queue_pop(cola_blocked); 
 
                 estado_anterior = pcb->estado_actual;

@@ -8,7 +8,8 @@ void llamar_a_io(int socket_dispatch) {
     char* pid_raw = list_get(campos, 0);
     char* pc_raw = list_get(campos, 1);
     int size_disp = *((int*)list_get(campos, 2));
-    char* dispositivo = list_get(campos, 3);
+    char* dispositivo_raw = list_get(campos, 3);
+    char* dispositivo = string_duplicate(dispositivo_raw);
     char* tiempo_raw = list_get(campos, 4);
     char* cpuid_raw = list_get(campos, 5);
 
@@ -52,6 +53,12 @@ void llamar_a_io(int socket_dispatch) {
 
     char* cpu_id_str = string_itoa(cpu_id);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+    if(!socket_interrupt_ptr){
+        log_error(logger, "No se encontro el socket_interrupt para CPU ID %d", cpu_id);
+        list_destroy_and_destroy_elements(campos, free);
+        free(cpu_id_str);
+        return;
+    }
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);
 
@@ -90,7 +97,7 @@ void llamar_a_io(int socket_dispatch) {
         borrar_paquete(paquete);
         log_trace(logger, "Proceso PID %d enviado a IO por socket %d", pid, instancia->socket);
     }
-
+    free(dispositivo);
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
     pthread_mutex_lock(&mutex_cpus_libres);
