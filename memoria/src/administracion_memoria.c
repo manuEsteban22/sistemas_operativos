@@ -46,7 +46,6 @@ t_tabla_paginas* crear_tabla(int nivel_actual) {
         entrada->presencia = false;
         entrada->marco = -1;
         entrada->siguiente_tabla = NULL;
-        log_error(logger, "Creando tabla de páginas en nivel %d", nivel_actual);
 
         if (nivel_actual < campos_config.cantidad_niveles - 1) {
             entrada->siguiente_tabla = crear_tabla(nivel_actual + 1);
