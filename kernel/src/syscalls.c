@@ -145,7 +145,7 @@ void manejar_finaliza_io(int socket_io){
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     io->ocupado = false;
-    io->pid_ocupado = NULL;
+    io->pid_ocupado = -1;
 
     if (!queue_is_empty(io->cola_bloqueados)) {
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);

@@ -36,7 +36,7 @@ typedef struct
 } t_args_hilo;
 
 typedef struct {
-    int socket_io;
+    t_list* sockets_io;
     t_queue* cola_bloqueados;
     bool ocupado;
     int pid_ocupado;
