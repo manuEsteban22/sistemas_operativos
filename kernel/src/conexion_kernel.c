@@ -132,17 +132,19 @@ void handshake_io(int socket_dispositivo){
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     if(io == NULL){
         io = malloc(sizeof(t_dispositivo_io));
-        io->socket_io = list_create();
+        io->sockets_io = list_create();
         io->cola_bloqueados = queue_create();
-        io->ocupado = false;
-        io->pid_ocupado = -1;
+        //io->ocupado = false;
+        //io->pid_ocupado = -1;
         dictionary_put(dispositivos_io, nombre_dispositivo, io);
     }
-    int* socket_guardado = malloc(sizeof(int));
-    *socket_guardado = socket_dispositivo;
-    list_add(io->sockets_io, socket_guardado);
+    t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
+    nueva_instancia->socket = socket_dispositivo;
+    nueva_instancia->ocupado = false;
+    nueva_instancia->pid_ocupado = -1;
+    list_add(io->sockets_io, nueva_instancia);
 
-    log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nombre_dispositivo);
+    log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nueva_instancia->socket, nombre_dispositivo);
     return;
 }
 
@@ -154,8 +156,8 @@ char* buscar_io_por_socket(int socket_io){
         char* key = list_get(keys, i);
         t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, key);
         for(int j = 0; j < list_size(dispositivo->sockets_io); j++){
-            int* socket = list_get(dispositivo->sockets_io, j);
-            if(*socket == socket_io){
+            t_instancia_io* instancia = list_get(dispositivo->sockets_io, j);
+            if(instancia->socket == socket_io){
                 nombre = strdup(key);
                 break;
             }
@@ -166,10 +168,20 @@ char* buscar_io_por_socket(int socket_io){
     return nombre;
 }
 
+t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
+    for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
+        t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
+        if (!instancia->ocupado){
+            return instancia;
+        }
+    }
+    return NULL;
+}
+
 void borrar_socket_io(t_dispositivo_io* dispositivo, int socket_a_borrar){
     for(int i = 0; i < list_size(dispositivo->sockets_io); i++){
-        int* socket = list_get(dispositivo->sockets_io, i);
-        if(*socket == socket_a_borrar){
+        t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
+        if(instancia->socket == socket_a_borrar){
             list_remove_and_destroy_element(dispositivo->sockets_io, i, free);
             return;
         }
@@ -187,15 +199,6 @@ void matar_io (int socket_cliente){
 
         if(list_is_empty(dispositivo->sockets_io)){
             log_info(logger, "No quedan instancias para el dispositivo [%s]", nombre);
-            if(dispositivo->ocupado){
-                t_pcb* pcb = obtener_pcb(dispositivo->pid_ocupado);
-                if(pcb != NULL){
-                    int estado_anterior = pcb->estado_actual;
-                    cambiar_estado(pcb, EXIT);
-                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-                    borrar_pcb(pcb);
-                }
-            }
 
             while(!queue_is_empty(dispositivo->cola_bloqueados)){
                 t_pcb_io* pcb_io = queue_pop(dispositivo->cola_bloqueados);

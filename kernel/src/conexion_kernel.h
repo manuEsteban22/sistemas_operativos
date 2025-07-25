@@ -14,4 +14,5 @@ bool handshake_memoria(int socket);
 int conectar_memoria(char* ip, char* puerto);
 int operacion_con_memoria();
 void cerrar_conexion_memoria(int socket);
+int obtener_socket_disponible(t_dispositivo_io* io);
 #endif
