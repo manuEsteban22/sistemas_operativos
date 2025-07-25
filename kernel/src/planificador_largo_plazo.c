@@ -112,6 +112,7 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
     }
 
     list_destroy(lista_aux);
+    sem_post(&sem_plp);
 }
 
 

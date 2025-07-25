@@ -134,15 +134,16 @@ void handshake_io(int socket_dispositivo){
         io = malloc(sizeof(t_dispositivo_io));
         io->sockets_io = list_create();
         io->cola_bloqueados = queue_create();
-        //io->ocupado = false;
-        //io->pid_ocupado = -1;
+        pthread_mutex_init(&io->mutex_dispositivos, NULL);
         dictionary_put(dispositivos_io, nombre_dispositivo, io);
     }
     t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
+    pthread_mutex_lock(&io->mutex_dispositivos);
     nueva_instancia->socket = socket_dispositivo;
     nueva_instancia->ocupado = false;
     nueva_instancia->pid_ocupado = -1;
     list_add(io->sockets_io, nueva_instancia);
+    pthread_mutex_unlock(&io->mutex_dispositivos);
 
     log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nueva_instancia->socket, nombre_dispositivo);
     return;
@@ -169,12 +170,17 @@ char* buscar_io_por_socket(int socket_io){
 }
 
 t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
+    log_debug(logger, "Hay %d instancias", list_size(dispositivo->sockets_io));
+    pthread_mutex_lock(&dispositivo->mutex_dispositivos);
     for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if (!instancia->ocupado){
+            pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
+            log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
             return instancia;
         }
     }
+    pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
     return NULL;
 }
 

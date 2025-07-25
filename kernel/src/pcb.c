@@ -121,7 +121,6 @@ void asignar_timer_blocked(t_pcb* pcb){
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
-    log_error(logger, "COSA 1 PID %d", pcb->pid);
     pcb->temporal_blocked = temporal_create();
     sem_post(&sem_procesos_en_blocked);
 }

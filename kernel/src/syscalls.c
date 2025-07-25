@@ -75,8 +75,10 @@ void llamar_a_io(int socket_dispatch) {
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
+        pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->ocupado = true;
         instancia->pid_ocupado = pid;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
 
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
@@ -95,7 +97,11 @@ void llamar_a_io(int socket_dispatch) {
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
     sem_post(&cpus_disponibles);
-
+    pthread_mutex_lock(&mutex_ready);
+    if(!queue_is_empty(cola_ready)){
+        sem_post(&sem_procesos_ready);
+    }
+    pthread_mutex_unlock(&mutex_ready);
     list_destroy_and_destroy_elements(campos, free);
 }
 
@@ -157,13 +163,17 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(instancia != NULL){
+        pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->ocupado = false;
         instancia->pid_ocupado = -1;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
     }
+
+    t_instancia_io* libre = obtener_instancia_disponible(io);
 
     if (!queue_is_empty(io->cola_bloqueados)) {
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
-        t_instancia_io* libre = obtener_instancia_disponible(io);
+        //t_instancia_io* libre = obtener_instancia_disponible(io);
 
         if(libre == NULL){
             log_error(logger, "No quedan instancias del dispositivo [%s]", nombre_dispositivo);
@@ -183,8 +193,10 @@ void manejar_finaliza_io(int socket_io){
         enviar_paquete(paquete, libre->socket, logger);
         borrar_paquete(paquete);
 
+        pthread_mutex_lock(&io->mutex_dispositivos);
         libre->ocupado = true;
         libre->pid_ocupado = siguiente->pid;
+        pthread_mutex_unlock(&io->mutex_dispositivos);
 
         int* cpu_id_ptr = malloc(sizeof(int));
         *cpu_id_ptr = cpu_id;
@@ -200,7 +212,6 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(pcb->temporal_blocked != NULL){
-        log_error(logger, "COSA 2 PID %d", pcb->pid);
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
