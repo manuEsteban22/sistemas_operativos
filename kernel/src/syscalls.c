@@ -31,6 +31,7 @@ void llamar_a_io(int socket_dispatch) {
 
         borrar_pcb(pcb);
         list_destroy_and_destroy_elements(campos, free);
+        free(dispositivo);
         return;
     }
 
