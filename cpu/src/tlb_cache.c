@@ -183,7 +183,7 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
         pthread_mutex_unlock(&mutex_cache);
         return NULL;
     }
-    datos = malloc(tamanio);
+    datos = malloc(tamanio + 1);
     memcpy(datos, entrada->contenido + desplazamiento, tamanio);
     datos[tamanio] = '\0';
 

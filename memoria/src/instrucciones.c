@@ -127,7 +127,6 @@ int mandar_instruccion(int socket_cliente)
     enviar_paquete(paquete, socket_cliente, logger);
 
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // yrsteajteazjntguesijk sxr4
-    log_error(logger, "alguna metrica es %d", proceso->metricas.cantidad_instrucciones_solicitadas);
     proceso->metricas.cantidad_instrucciones_solicitadas++;
 
     borrar_paquete(paquete);

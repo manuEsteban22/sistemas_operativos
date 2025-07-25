@@ -2,8 +2,9 @@
 #include <cpu.h>
 #include <conexion_cpu.h>
 
+char* log_level;
+t_config* iniciar_config(int id);
 t_log* iniciar_logger(int id);
-t_config* iniciar_config();
 t_log* logger;
 t_config* config;
 char* ip_kernel;
@@ -25,12 +26,17 @@ int socket_memoria;
 
 int main(int argc, char* argv[]) {
     if(argc < 2){
-        log_error(logger, "faltaron argumentos en la ejecucion");
+        printf("Faltaron argumentos en la ejecucion");
         return EXIT_FAILURE;
     }
     int cpu_id = atoi(argv[1]);
+    config = iniciar_config(cpu_id);
     logger = iniciar_logger(cpu_id);
-    config = iniciar_config();
+
+    log_info(logger, "la ip del kernel es: %s", ip_kernel);
+    log_info(logger, "el puerto del kernel de dispatch es: %s", puerto_kernel_dispatch);
+    log_info(logger, "el puerto del kernel de interrupt es: %s", puerto_kernel_interrupt);
+
     socket_kernel_dispatch = conectar_kernel(ip_kernel, puerto_kernel_dispatch, "DISPATCH", cpu_id);
     socket_kernel_interrupt = conectar_kernel(ip_kernel, puerto_kernel_interrupt, "INTERRUPT", cpu_id);
 
@@ -45,16 +51,22 @@ int main(int argc, char* argv[]) {
 
 t_log* iniciar_logger(int id){
     t_log* nuevo_logger;
+    t_log_level log_level_enum = log_level_from_string(log_level);
     char* log_file = string_from_format("cpu%d.log", id);
-    nuevo_logger = log_create(log_file,"LogCPU",true,LOG_LEVEL_TRACE);
-    log_info(nuevo_logger, "funciona logger cpu :)");
+    nuevo_logger = log_create(log_file,"LogCPU",true,log_level_enum);
     free(log_file);
     return nuevo_logger;
 }
 
-t_config* iniciar_config(void){
+t_config* iniciar_config(int id){
+    char* nombre_archivo = malloc(32);
+    sprintf(nombre_archivo, "CPU%d.config", id);
     t_config* nuevo_config;
-    nuevo_config = config_create("cpu.config");
+    nuevo_config = config_create(nombre_archivo);
+    if(nuevo_config == NULL){
+        printf("No se encontro el archivo de config");
+        return NULL;
+    }
     if(config_has_property(nuevo_config, "IP_KERNEL")){
         ip_kernel = config_get_string_value(nuevo_config, "IP_KERNEL");
         puerto_kernel_dispatch = config_get_string_value(nuevo_config, "PUERTO_KERNEL_DISPATCH");
@@ -66,11 +78,10 @@ t_config* iniciar_config(void){
         entradas_cache = config_get_int_value(nuevo_config, "ENTRADAS_CACHE");
         reemplazo_cache = config_get_string_value(nuevo_config,"REEMPLAZO_CACHE");
         retardo_cache = config_get_int_value(nuevo_config, "RETARDO_CACHE");
-    }
-    else{log_info(logger, "no se pudo leer el archivo de config");}
-    log_info(logger, "la ip del kernel es: %s", ip_kernel);
-    log_info(logger, "el puerto del kernel de dispatch es: %s", puerto_kernel_dispatch);
-    log_info(logger, "el puerto del kernel de interrupt es: %s", puerto_kernel_interrupt);
+        log_level = config_get_string_value(nuevo_config, "LOG_LEVEL");
+    } else{return NULL;}
+    
+    free(nombre_archivo);
     return nuevo_config;
 }
 
