@@ -7,7 +7,6 @@ typedef struct
     int pid;
     int pc;
     int tamanio;
-    //t_list* instrucciones;
 } t_pcb;
 
 

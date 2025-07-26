@@ -33,11 +33,11 @@ t_pcb* planificador_corto_plazo(){
             pcb = queue_pop(cola_ready);
             break;
         case SJF:
-            pcb = planificar_sjf_sin_desalojo(cola_ready);
+            pcb = planificar_sjf(cola_ready);
             log_info(logger, "%d Desalojado por algoritmo SJF", pcb->pid);
             break;
         case SRT:
-            pcb = planificar_sjf_sin_desalojo(cola_ready);
+            pcb = planificar_sjf(cola_ready);
             log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
             // probablemente despues de cada proceso hay que actualizar la
             // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
@@ -51,7 +51,7 @@ t_pcb* planificador_corto_plazo(){
     return pcb;
 }
 
-t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
+t_pcb* planificar_sjf(t_queue* cola){
 
     if(queue_is_empty(cola)){
         return NULL;
@@ -71,10 +71,10 @@ t_pcb* planificar_sjf_sin_desalojo(t_queue* cola){
     }
 
     for(int i = 0; i < list_size(lista_aux); i++){
-            t_pcb* pcb = list_get(lista_aux, i);
-            if(pcb != pcb_menor){
-                queue_push(cola, pcb);
-            }
+        t_pcb* pcb = list_get(lista_aux, i);
+        if(pcb != pcb_menor){
+            queue_push(cola, pcb);
+        }
     }
 
     list_destroy(lista_aux);

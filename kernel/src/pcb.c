@@ -121,6 +121,24 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             int socket_interrupt = *socket_interrupt_ptr;
             enviar_interrupcion_a_cpu(socket_interrupt);
             log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
+
+            pthread_mutex_lock(&mutex_exec);
+            int* cpu_id = dictionary_remove(tabla_exec, ejecutando->pid);
+            pthread_mutex_unlock(&mutex_exec);
+            
+            ejecutando->estimacion_rafaga = estimacion_restante;
+            pthread_mutex_lock(&mutex_ready);
+            queue_push(cola_ready, ejecutando);
+            pthread_mutex_unlock(&mutex_ready);
+            
+            pthread_mutex_lock(&mutex_cpus_libres);
+            queue_push(cpus_libres, cpu_id);
+            pthread_mutex_unlock(&mutex_cpus_libres);
+            //pushear ejecutando a ready
+            //pushear a la cola de cpus libres tambien
+            //popear ejecutando de tabla exec
+            sem_post(&cpus_disponibles);
+            sem_post(&sem_procesos_ready);
         } else {
             log_error(logger, "No se encontró socket de interrupción para CPU %d", *cpu_id);
         }
