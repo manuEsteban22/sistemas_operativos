@@ -149,6 +149,7 @@ void handshake_io(int socket_dispositivo){
     pthread_mutex_unlock(&io->mutex_dispositivos);
 
     log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nueva_instancia->socket, nombre_dispositivo);
+    free(nombre_dispositivo);
     return;
 }
 
