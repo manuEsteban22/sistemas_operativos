@@ -141,6 +141,7 @@ void handshake_io(int socket_dispositivo){
         log_error(logger, "que carajo pasa aca");
     }
     t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
+    log_debug(logger, "Nueva instancia creada en %p", nueva_instancia);
     pthread_mutex_lock(&io->mutex_dispositivos);
     nueva_instancia->socket = socket_dispositivo;
     nueva_instancia->ocupado = false;
@@ -149,7 +150,7 @@ void handshake_io(int socket_dispositivo){
     pthread_mutex_unlock(&io->mutex_dispositivos);
 
     log_info(logger, "Se registró el socket (%d) para dispositivo IO [%s]", nueva_instancia->socket, nombre_dispositivo);
-    free(nombre_dispositivo);
+    //free(nombre_dispositivo);
     return;
 }
 
@@ -186,6 +187,10 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
         if (!instancia->ocupado){
             pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
             log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
+            if(instancia->ocupado){
+                log_error(logger, "true");
+            } else{log_error(logger, "false");}
+            log_error(logger, "La instancia tiene pid_ocupado %d", instancia->pid_ocupado);
             return instancia;
         }
         

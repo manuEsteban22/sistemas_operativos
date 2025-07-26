@@ -21,4 +21,5 @@ void ejecutar_exit(int socket_cpu);
 void enviar_finalizacion_a_memoria(int pid);
 void manejar_finaliza_io(int socket_io);
 
+#include <conexion_kernel.h>
 #endif

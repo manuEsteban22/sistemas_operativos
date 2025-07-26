@@ -74,6 +74,15 @@ void llamar_a_io(int socket_dispatch) {
     borrar_paquete(confirmacion);
 
     t_instancia_io* instancia = obtener_instancia_disponible(io);
+    
+    
+    //logeo innecesario a borrar-----------------
+    log_debug(logger, "Instancia obtenida: %p", instancia);
+    log_debug(logger, "esto lo paso");
+    log_debug(logger, "Instancia socket = %d", instancia->socket);
+    //hasta aca------------------
+
+
     log_debug(logger, "prueba 1");
     if(instancia == NULL) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);
@@ -85,11 +94,8 @@ void llamar_a_io(int socket_dispatch) {
         log_debug(logger, "prueba 2");
 
         pthread_mutex_lock(&io->mutex_dispositivos);
-        log_debug(logger, "prueba 3");
         instancia->ocupado = true;
-        log_debug(logger, "prueba 4");
         instancia->pid_ocupado = pid;
-        log_debug(logger, "prueba 5");
         pthread_mutex_unlock(&io->mutex_dispositivos);
         log_debug(logger, "prueba 6");
 
