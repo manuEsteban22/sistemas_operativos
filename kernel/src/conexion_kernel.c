@@ -54,7 +54,9 @@ void* manejar_servidor_cpu(void* arg){
                     *socket_interrupt_ptr = socket_cliente;
 
                     char* cpu_id_str = string_itoa(cpu_id);
+                    pthread_mutex_lock(&mutex_interrupt);
                     dictionary_put(tabla_interrupt, cpu_id_str, socket_interrupt_ptr);
+                    pthread_mutex_unlock(&mutex_interrupt);
                     log_trace(logger, "Socket INTERRUPT guardado: %d", socket_cliente);
                     free(cpu_id_str);
                 }
@@ -110,8 +112,13 @@ bool handshake_memoria(int socket){
     return false;
 }
 
-void enviar_interrupcion_a_cpu (){
-    //aca hay que mandar un oc interrupt
+void enviar_interrupcion_a_cpu(int socket_interrupt){
+    log_debug(logger, "Mando una interrupcion desde IO");
+    t_paquete* senial_bloqueante = crear_paquete();
+    cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
+    enviar_paquete(senial_bloqueante, socket_interrupt, logger);
+    borrar_paquete(senial_bloqueante);
+    return;
 }
 
 void handshake_io(int socket_dispositivo){

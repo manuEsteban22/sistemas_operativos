@@ -52,7 +52,9 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
+    pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+    pthread_mutex_unlock(&mutex_interrupt);
     if(!socket_interrupt_ptr){
         log_error(logger, "No se encontro el socket_interrupt para CPU ID %d", cpu_id);
         list_destroy_and_destroy_elements(campos, free);
@@ -305,7 +307,9 @@ void dump_memory(int socket_dispatch){
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
+    pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+    pthread_mutex_unlock(&mutex_interrupt);
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);
 

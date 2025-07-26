@@ -94,11 +94,39 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     if (!hay_proceso_en_exec()){
         return;
     }
-
+    
     t_pcb* ejecutando = obtener_proceso_en_exec();
+    
+    double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
+    double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_ejecutando;
 
-    if (nuevo->estimacion_rafaga < ejecutando->estimacion_rafaga) {
-        enviar_interrupcion_a_cpu();
+    if(estimacion_restante < 0){
+        log_debug(logger, "La estimacion restante fue menor a 0");
+        estimacion_restante = 0;
+    }
+    log_debug(logger, "PID %d (ejecutando) - Estimación restante: %.2f", ejecutando->pid, estimacion_restante);
+    log_debug(logger, "PID %d (nuevo) - Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
+
+    
+    //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
+    if (nuevo->estimacion_rafaga < estimacion_restante) {
+        pthread_mutex_lock(&mutex_exec);
+        int* cpu_id = dictionary_get(tabla_exec, ejecutando->pid);
+        pthread_mutex_unlock(&mutex_exec);
+
+        pthread_mutex_lock(&mutex_interrupt);
+        int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id);
+        pthread_mutex_unlock(&mutex_interrupt);
+        if(socket_interrupt_ptr != NULL){
+            int socket_interrupt = *socket_interrupt_ptr;
+            enviar_interrupcion_a_cpu(socket_interrupt);
+            log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
+        } else {
+            log_error(logger, "No se encontró socket de interrupción para CPU %d", *cpu_id);
+        }
+        
+
+        
         // y hay que replanificar
     }
 }
@@ -112,8 +140,9 @@ t_pcb* obtener_proceso_en_exec(){
             pcb_en_exec = pcb;
         }
     }
-
+    pthread_mutex_lock(&mutex_tabla_pcbs);
     dictionary_iterator(tabla_pcbs, buscar_exec);
+    pthread_mutex_unlock(&mutex_tabla_pcbs);
     return pcb_en_exec;
 }
 
