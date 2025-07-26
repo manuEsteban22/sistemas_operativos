@@ -74,13 +74,6 @@ void llamar_a_io(int socket_dispatch) {
     borrar_paquete(confirmacion);
 
     t_instancia_io* instancia = obtener_instancia_disponible(io);
-    
-    
-    //logeo innecesario a borrar-----------------
-    log_debug(logger, "Instancia obtenida: %p", instancia);
-    log_debug(logger, "esto lo paso");
-    log_debug(logger, "Instancia socket = %d", instancia->socket);
-    //hasta aca------------------
 
 
     log_debug(logger, "prueba 1");
@@ -235,10 +228,11 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(pcb->temporal_blocked != NULL){
-        temporal_destroy(pcb->temporal_blocked);
-        pcb->temporal_blocked = NULL;
+        if(estado_anterior == BLOCKED){
+            temporal_destroy(pcb->temporal_blocked);
+            pcb->temporal_blocked = NULL;
+        }
     }
-
     free(pid);
     list_destroy(recibido);
     //list_destroy_and_destroy_elements(recibido, free); esto estaba liberando cosas que iban a un diccionario creo

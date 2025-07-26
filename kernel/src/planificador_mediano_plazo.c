@@ -17,8 +17,21 @@ void planificador_mediano_plazo(){
         if (!queue_is_empty(cola_blocked)){
             log_debug(logger, "Aca no hay segfault - 2");
             t_pcb* pcb = queue_peek(cola_blocked); 
+            
+            if (pcb == NULL) {
+                log_error(logger, "ERROR: La PCB en cola_blocked es NULL");
+                pthread_mutex_unlock(&mutex_blocked);
+                continue;
+            }
+            if (pcb->temporal_blocked == NULL) {
+                log_error(logger, "ERROR: temporal_blocked de la PCB PID %d es NULL", pcb->pid);
+                pthread_mutex_unlock(&mutex_blocked);
+                continue;
+            }
+
             log_debug(logger, "Aca no hay segfault - 3");
-            int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
+
+            int64_t tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
             log_debug(logger, "Aca no hay segfault - 4");
 
             if (tiempo_bloqueado >= tiempo_suspension){
