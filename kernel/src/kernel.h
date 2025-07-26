@@ -23,6 +23,7 @@ extern t_dictionary* tabla_interrupt; // tiene cpuid -> socket interrupt
 extern t_queue* cpus_libres; // tiene los cpuid libres
 extern pthread_mutex_t mutex_cpus_libres;
 extern pthread_mutex_t mutex_exec;
+extern pthread_mutex_t mutex_tabla_pcbs;
 extern char* algoritmo_largo_plazo;
 extern char* algoritmo_corto_plazo;
 extern int tiempo_suspension;

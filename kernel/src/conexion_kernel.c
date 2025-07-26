@@ -110,6 +110,9 @@ bool handshake_memoria(int socket){
     return false;
 }
 
+void enviar_interrupcion_a_cpu (){
+    //aca hay que mandar un oc interrupt
+}
 
 void handshake_io(int socket_dispositivo){
     log_info(logger, "recibi un handshake de io");

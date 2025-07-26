@@ -55,7 +55,9 @@ int crear_proceso(int tamanio_proceso){
     t_pcb* pcb = crear_pcb(pid_global, tamanio_proceso);
     pid_global++;
     char* pid_str = string_itoa(pcb->pid);
+    pthread_mutex_lock(&mutex_tabla_pcbs);
     dictionary_put(tabla_pcbs, pid_str, pcb);
+    pthread_mutex_unlock(&mutex_tabla_pcbs);
     free(pid_str);
 
     pthread_mutex_lock(&mutex_new);

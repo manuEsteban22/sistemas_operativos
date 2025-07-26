@@ -132,6 +132,9 @@ void manejar_conexion_kernel(int socket_cliente) {
             log_info(logger, "## PID: %d - Memory Dump solicitado", pid_dumpeo);
             dumpear_memoria(pid_dumpeo, socket_cliente);
             break;
+        case OC_SUSP:
+            log_info(logger, "Recibi solicitud de hacer un susp");
+            break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
             break;

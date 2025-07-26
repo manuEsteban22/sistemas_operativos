@@ -30,7 +30,9 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
 //para ver a que pcb esta asignado dicho pid
 t_pcb* obtener_pcb(int pid) {
     char* pid_str = string_itoa(pid);
+    pthread_mutex_lock(&mutex_tabla_pcbs);
     t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
+    pthread_mutex_unlock(&mutex_tabla_pcbs);
     if (pcb == NULL) {
         log_error(logger, "Error para obtener PCB NULL");
     }
@@ -69,7 +71,7 @@ void borrar_pcb(t_pcb* pcb){
 
 void actualizar_estimacion_rafaga(t_pcb* pcb) {
     if (pcb == NULL) {
-        // devolver el valor inicial de la estimacion o un error (?)
+        log_error(logger, "No se pudo actualizar la estimacion, el PCB es NULL");
         return;
     }
 
@@ -85,36 +87,49 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
 }
 
 void chequear_sjf_con_desalojo(t_pcb* nuevo) {
-    if (algoritmo_corto_plazo != "SRT"){
+    if (strcmp(algoritmo_corto_plazo, "SRT") != 0){
         return;
     }
 
-        
+    if (!hay_proceso_en_exec()){
+        return;
+    }
 
-    // if (!hay_proceso_en_exec()){
-    //     return;
-    // }
+    t_pcb* ejecutando = obtener_proceso_en_exec();
 
-    //t_pcb* ejecutando = obtener_proceso_en_ejecucion();
-
-    // if (nuevo->estimacion_rafaga < ejecutando->estimacion_rafaga) {
-    //     enviar_interrupcion_a_cpu();
-    //     // y hay que replanificar
-    // }
+    if (nuevo->estimacion_rafaga < ejecutando->estimacion_rafaga) {
+        enviar_interrupcion_a_cpu();
+        // y hay que replanificar
+    }
 }
 
 
-// bool hay_proceso_en_exec(){
-//     bool hay_exec = false;
-    
-//     void buscar_exec(char* key, void* pcb){
-//         if (((t_pcb*) pcb)->estado_actual == EXEC)
-//             hay_exec = true;
-//     }
+t_pcb* obtener_proceso_en_exec(){
+    t_pcb* pcb_en_exec = NULL;
 
-//     dictionary_iterator(tabla_pcbs, buscar_exec);
-//     return hay_exec;
-// }
+    void buscar_exec(char* key, void* pcb){
+        if (((t_pcb*) pcb)->estado_actual == EXEC){
+            pcb_en_exec = pcb;
+        }
+    }
+
+    dictionary_iterator(tabla_pcbs, buscar_exec);
+    return pcb_en_exec;
+}
+
+bool hay_proceso_en_exec(){
+    bool hay_exec = false;
+    
+    void buscar_exec(char* key, void* pcb){
+        if (((t_pcb*) pcb)->estado_actual == EXEC){
+            hay_exec = true;
+        }
+    }
+    pthread_mutex_lock(&mutex_tabla_pcbs);
+    dictionary_iterator(tabla_pcbs, buscar_exec);
+    pthread_mutex_unlock(&mutex_tabla_pcbs);
+    return hay_exec;
+}
 
 void asignar_timer_blocked(t_pcb* pcb){
     if (pcb->temporal_blocked != NULL) {
