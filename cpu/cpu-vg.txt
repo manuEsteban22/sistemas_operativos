@@ -4,3 +4,25 @@
 ==94120== Command: ./bin/cpu 1
 ==94120== Parent PID: 6582
 ==94120== 
+==94120== 
+==94120== HEAP SUMMARY:
+==94120==     in use at exit: 1,480 bytes in 48 blocks
+==94120==   total heap usage: 9,701 allocs, 9,653 frees, 296,373 bytes allocated
+==94120== 
+==94120== 12 bytes in 1 blocks are definitely lost in loss record 4 of 18
+==94120==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==94120==    by 0x10DEE0: esperar_procesos (procesos.c:12)
+==94120==    by 0x10DFD1: bucle_esperar_procesos (procesos.c:36)
+==94120==    by 0x10C994: main (cpu.c:47)
+==94120== 
+==94120== LEAK SUMMARY:
+==94120==    definitely lost: 12 bytes in 1 blocks
+==94120==    indirectly lost: 0 bytes in 0 blocks
+==94120==      possibly lost: 0 bytes in 0 blocks
+==94120==    still reachable: 1,468 bytes in 47 blocks
+==94120==         suppressed: 0 bytes in 0 blocks
+==94120== Reachable blocks (those to which a pointer was found) are not shown.
+==94120== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==94120== 
+==94120== For lists of detected and suppressed errors, rerun with: -s
+==94120== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

@@ -5,13 +5,12 @@ void llamar_a_io(int socket_dispatch) {
     int estado_anterior;
     t_list* campos = recibir_paquete(socket_dispatch);
 
-    char* pid_raw = list_get(campos, 0);
-    char* pc_raw = list_get(campos, 1);
-    int size_disp = *((int*)list_get(campos, 2));
-    char* dispositivo_raw = list_get(campos, 3);
-    char* dispositivo = string_duplicate(dispositivo_raw);
-    char* tiempo_raw = list_get(campos, 4);
-    char* cpuid_raw = list_get(campos, 5);
+    int* pid_raw = list_get(campos, 0);
+    int* pc_raw = list_get(campos, 1);
+    int* size_disp = list_get(campos, 2);
+    char* dispositivo = list_get(campos, 3);
+    int* tiempo_raw = list_get(campos, 4);
+    int* cpuid_raw = list_get(campos, 5);
 
     int pid = *(int*)pid_raw;
     int pc = *(int*)pc_raw;
@@ -73,8 +72,8 @@ void llamar_a_io(int socket_dispatch) {
     enviar_paquete(confirmacion, socket_dispatch, logger);
     borrar_paquete(confirmacion);
 
-
     t_instancia_io* instancia = obtener_instancia_disponible(io);
+    log_debug(logger, "prueba 1");
     if(instancia == NULL) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);
         t_pcb_io* bloqueado = malloc(sizeof(t_pcb_io));
@@ -82,10 +81,16 @@ void llamar_a_io(int socket_dispatch) {
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
+        log_debug(logger, "prueba 2");
+
         pthread_mutex_lock(&io->mutex_dispositivos);
+        log_debug(logger, "prueba 3");
         instancia->ocupado = true;
+        log_debug(logger, "prueba 4");
         instancia->pid_ocupado = pid;
+        log_debug(logger, "prueba 5");
         pthread_mutex_unlock(&io->mutex_dispositivos);
+        log_debug(logger, "prueba 6");
 
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
@@ -97,19 +102,24 @@ void llamar_a_io(int socket_dispatch) {
         borrar_paquete(paquete);
         log_trace(logger, "Proceso PID %d enviado a IO por socket %d", pid, instancia->socket);
     }
-    free(dispositivo);
+    log_debug(logger, "Aca nada 1");
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
+    log_debug(logger, "Aca nada 2");
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
+    log_debug(logger, "Aca nada 3");
     sem_post(&cpus_disponibles);
     pthread_mutex_lock(&mutex_ready);
     if(!queue_is_empty(cola_ready)){
         sem_post(&sem_procesos_ready);
     }
     pthread_mutex_unlock(&mutex_ready);
+    log_debug(logger, "Aca nada 4");
     list_destroy_and_destroy_elements(campos, free);
+    log_debug(logger, "Aca nada 5");
+    
 }
 
 void manejar_finaliza_io(int socket_io){
@@ -180,7 +190,6 @@ void manejar_finaliza_io(int socket_io){
 
     if (!queue_is_empty(io->cola_bloqueados)) {
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
-        //t_instancia_io* libre = obtener_instancia_disponible(io);
 
         if(libre == NULL){
             log_error(logger, "No quedan instancias del dispositivo [%s]", nombre_dispositivo);
@@ -224,7 +233,8 @@ void manejar_finaliza_io(int socket_io){
     }
 
     free(pid);
-    list_destroy_and_destroy_elements(recibido, free);
+    list_destroy(recibido);
+    //list_destroy_and_destroy_elements(recibido, free); esto estaba liberando cosas que iban a un diccionario creo
 }
 
 void* esperar_confirmacion_dump(void* args_void){

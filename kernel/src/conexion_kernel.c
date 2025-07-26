@@ -131,11 +131,14 @@ void handshake_io(int socket_dispositivo){
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     if(io == NULL){
+        log_error(logger, "Se creo por primera vez el dispositivo");
         io = malloc(sizeof(t_dispositivo_io));
         io->sockets_io = list_create();
         io->cola_bloqueados = queue_create();
         pthread_mutex_init(&io->mutex_dispositivos, NULL);
         dictionary_put(dispositivos_io, nombre_dispositivo, io);
+    } else if (io != NULL){
+        log_error(logger, "que carajo pasa aca");
     }
     t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
     pthread_mutex_lock(&io->mutex_dispositivos);
@@ -173,14 +176,21 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
     log_debug(logger, "Hay %d instancias", list_size(dispositivo->sockets_io));
     pthread_mutex_lock(&dispositivo->mutex_dispositivos);
     for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
+        log_error(logger, "Obteniendo instancia [%d] de %d", i, list_size(dispositivo->sockets_io));
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
+        if(!instancia){
+            log_error(logger, "ERROR: instancia es NULL en indice %d", i);
+            continue;
+        }
         if (!instancia->ocupado){
             pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
             log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
             return instancia;
         }
+        
     }
     pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
+    log_warning(logger, "No se encontro una instancia libre");
     return NULL;
 }
 
@@ -188,6 +198,7 @@ void borrar_socket_io(t_dispositivo_io* dispositivo, int socket_a_borrar){
     for(int i = 0; i < list_size(dispositivo->sockets_io); i++){
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if(instancia->socket == socket_a_borrar){
+            log_error(logger, "Esto no se esta corriendo no");
             list_remove_and_destroy_element(dispositivo->sockets_io, i, free);
             return;
         }
@@ -217,6 +228,7 @@ void matar_io (int socket_cliente){
                 }
                 free(pcb_io);
             }
+            log_error(logger, "Esto tampoco se esta corriendo no");
             list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
             queue_destroy(dispositivo->cola_bloqueados);
             dictionary_remove(dispositivos_io, nombre);
