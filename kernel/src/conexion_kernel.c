@@ -239,11 +239,16 @@ void matar_io (int socket_cliente){
                 }
                 free(pcb_io);
             }
-            log_error(logger, "Esto tampoco se esta corriendo no");
             list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
             queue_destroy(dispositivo->cola_bloqueados);
-            dictionary_remove(dispositivos_io, nombre);
+            pthread_mutex_lock(&mutex_dispositivos);
+            t_dispositivo_io* io_a_borrar = dictionary_remove(dispositivos_io, nombre);
+            pthread_mutex_unlock(&mutex_dispositivos);
             free(dispositivo);
+            list_destroy_and_destroy_elements(io_a_borrar->sockets_io, free);
+            queue_clean_and_destroy_elements(io_a_borrar->cola_bloqueados, free);
+            pthread_mutex_destroy(&io_a_borrar->mutex_dispositivos);
+            free(io_a_borrar);
         }
         
         free(nombre);

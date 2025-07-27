@@ -65,8 +65,31 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
 
 void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
+    char* pid_str = string_itoa(pcb->pid);
+
+    pthread_mutex_lock(&mutex_exec);
+    int* cpu_id = dictionary_remove(tabla_exec, pid_str);
+    pthread_mutex_unlock(&mutex_exec);
+
+    if(cpu_id != NULL){
+        log_error(logger, "SE ESTAN BORRANDO MAL LOS VALORES DE LA TABLA EXEC");
+        free(cpu_id);
+    }
+
+    pthread_mutex_lock(&mutex_tabla_pcbs);
+    t_pcb* pcb_borrar = dictionary_remove(tabla_pcbs, pid_str);
+    pthread_mutex_unlock(&mutex_tabla_pcbs);
+
+    free(pid_str);
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
+
+    // if(pcb_borrar != NULL){
+    //     log_error(logger, "SE ESTAN BORRANDO MAL LOS VALORES DE LA TABLA PCBS");
+    //     //temporal_destroy(pcb_borrar->temporal_estado);
+    //     free(pcb_borrar);
+    // }
+
 }
 
 void actualizar_estimacion_rafaga(t_pcb* pcb) {
@@ -110,13 +133,19 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
-        log_debug(logger, "hasta aca paso");
         char* pid_str = string_itoa(ejecutando->pid);
         pthread_mutex_lock(&mutex_exec);
         int* cpu_id_ptr = dictionary_get(tabla_exec, pid_str);
         pthread_mutex_unlock(&mutex_exec);
-        log_debug(logger, "hasta aca paso 2");
+        
+        if(cpu_id_ptr == NULL){
+            log_error(logger, "chequear_sjf: no existe exec para PID %d", ejecutando->pid);
+            free(pid_str);
+            return;
+        }
+
         int cpu_id = *cpu_id_ptr;
+        free(pid_str);
 
         char* cpu_id_str = string_itoa(cpu_id);
         pthread_mutex_lock(&mutex_interrupt);
@@ -134,6 +163,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             pthread_mutex_unlock(&mutex_exec);
             
             ejecutando->estimacion_rafaga = estimacion_restante;
+            log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, ejecutando);
             pthread_mutex_unlock(&mutex_ready);

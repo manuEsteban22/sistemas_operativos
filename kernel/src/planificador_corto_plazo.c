@@ -62,6 +62,7 @@ t_pcb* planificar_sjf(t_queue* cola){
 
     while(!queue_is_empty(cola)){
         t_pcb* pcb_actual = queue_pop(cola);
+        
         list_add(lista_aux, pcb_actual);
         log_debug(logger, "El pcb actual es PID %d y tiene estimacion %f", pcb_actual->pid, pcb_actual->estimacion_rafaga);
         if(pcb_menor == NULL || pcb_actual->estimacion_rafaga < pcb_menor->estimacion_rafaga){
@@ -78,6 +79,7 @@ t_pcb* planificar_sjf(t_queue* cola){
     }
 
     list_destroy(lista_aux);
+    log_error(logger, "aca se hace un pop a cola de ready de PID %d", pcb_menor->pid);
     return pcb_menor;    
 }
 

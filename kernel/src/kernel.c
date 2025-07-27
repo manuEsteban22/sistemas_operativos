@@ -34,6 +34,7 @@ pthread_mutex_t mutex_exec = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cpus_libres = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_tabla_pcbs = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_interrupt = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_dispositivos = PTHREAD_MUTEX_INITIALIZER;
 t_dictionary* tabla_dispatch;
 t_dictionary* tabla_interrupt;
 t_queue* cpus_libres;

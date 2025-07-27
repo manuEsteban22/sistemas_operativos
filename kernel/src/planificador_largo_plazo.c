@@ -135,8 +135,7 @@ void finalizar_proceso(t_pcb* pcb){
     pthread_mutex_lock(&mutex_exec);
 
     char* pid_str = string_itoa(pcb->pid);
-    int* cpu_id = dictionary_get(tabla_exec, pid_str);
-    dictionary_remove(tabla_exec, pid_str);
+    int* cpu_id = dictionary_remove(tabla_exec, pid_str);
     pthread_mutex_unlock(&mutex_exec);
 
     int* cpu_id_ptr_copy = malloc(sizeof(int));
@@ -200,7 +199,7 @@ int estado_anterior;
                 cambiar_estado(pcb, READY);
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-
+                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);
@@ -232,6 +231,7 @@ int estado_anterior;
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
                 log_trace(logger, "El planificador LP tomo el PID %d", pcb->pid);
 
+                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);

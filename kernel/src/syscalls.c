@@ -162,6 +162,7 @@ void manejar_finaliza_io(int socket_io){
         cambiar_estado(pcb, READY);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
+        log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
         pthread_mutex_unlock(&mutex_ready);
@@ -262,6 +263,7 @@ void* esperar_confirmacion_dump(void* args_void){
         sacar_pcb_de_cola(cola_blocked, pid);
         pthread_mutex_unlock(&mutex_blocked);
 
+        log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
         pthread_mutex_unlock(&mutex_ready);
