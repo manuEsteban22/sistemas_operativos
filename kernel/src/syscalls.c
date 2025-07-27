@@ -376,8 +376,9 @@ void iniciar_proceso(int socket_cpu){
     enviar_paquete(paquete, socket_memoria, logger);
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
-    list_destroy_and_destroy_elements(recibido, free);
     log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+
+    list_destroy_and_destroy_elements(recibido, free);    
 }
 
 void enviar_finalizacion_a_memoria(int pid){

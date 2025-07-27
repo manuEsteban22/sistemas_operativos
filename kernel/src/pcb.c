@@ -113,10 +113,11 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         log_debug(logger, "hasta aca paso");
         char* pid_str = string_itoa(ejecutando->pid);
         pthread_mutex_lock(&mutex_exec);
-        int* cpu_id = dictionary_get(tabla_exec, pid_str);
+        int* cpu_id_ptr = dictionary_get(tabla_exec, pid_str);
         pthread_mutex_unlock(&mutex_exec);
         log_debug(logger, "hasta aca paso 2");
-        
+        int cpu_id = *cpu_id_ptr;
+
         char* cpu_id_str = string_itoa(cpu_id);
         pthread_mutex_lock(&mutex_interrupt);
         int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
@@ -147,7 +148,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             sem_post(&cpus_disponibles);
             sem_post(&sem_procesos_ready);
         } else {
-            log_error(logger, "No se encontró socket de interrupción para CPU %d", *cpu_id);
+            log_error(logger, "No se encontró socket de interrupción para CPU %d", cpu_id);
         }
         
 
