@@ -396,9 +396,11 @@ void enviar_finalizacion_a_memoria(int pid){
 
 void ejecutar_exit(int socket_cpu){
     t_list* recibido = recibir_paquete(socket_cpu);
-    int pid = *((int*)list_get(recibido, 0));
+    int* pid_raw = list_get(recibido, 0);
+    int pid = *pid_raw;
 
     t_pcb* pcb = obtener_pcb(pid);
     actualizar_estimacion_rafaga(pcb);
     finalizar_proceso(pcb);
+    list_destroy_and_destroy_elements(recibido, free);
 }
