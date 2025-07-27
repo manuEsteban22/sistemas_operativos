@@ -1,6 +1,6 @@
 #ifndef CONEXION_KERNEL_H_
 #define CONEXION_KERNEL_H_
-
+#include<kernel.h>
 
 
 void* manejar_servidor_cpu(void* arg);
@@ -15,7 +15,6 @@ void cerrar_conexion_memoria(int socket);
 t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo);
 
 #include<utils/utils.h>
-#include<kernel.h>
 #include<planificador_largo_plazo.h>
 #include<syscalls.h>
 #endif

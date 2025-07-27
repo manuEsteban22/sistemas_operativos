@@ -78,10 +78,10 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
     double rafaga_real = temporal_gettime(pcb->temporal_estado);
     pcb->rafaga_real_anterior = rafaga_real;
 
-    log_error(logger, "Se actualizo la estimacion de PID %d - Rafaga %f - Estimacion previa %f", pcb->pid, pcb->rafaga_real_anterior, pcb->estimacion_rafaga);
+    log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga %f - Estimacion previa %f", pcb->pid, pcb->rafaga_real_anterior, pcb->estimacion_rafaga);
     double nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
     pcb->estimacion_rafaga = nueva_estimacion;
-    log_error(logger, "Nueva estimacion = %f", nueva_estimacion);
+    log_debug(logger, "Nueva estimacion = %f", nueva_estimacion);
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
 }
@@ -110,15 +110,21 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
+        log_debug(logger, "hasta aca paso");
+        char* pid_str = string_itoa(ejecutando->pid);
         pthread_mutex_lock(&mutex_exec);
-        int* cpu_id = dictionary_get(tabla_exec, ejecutando->pid);
+        int* cpu_id = dictionary_get(tabla_exec, pid_str);
         pthread_mutex_unlock(&mutex_exec);
-
+        log_debug(logger, "hasta aca paso 2");
+        
+        char* cpu_id_str = string_itoa(cpu_id);
         pthread_mutex_lock(&mutex_interrupt);
-        int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id);
+        int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
         pthread_mutex_unlock(&mutex_interrupt);
+        log_debug(logger, "hasta aca paso 3");
         if(socket_interrupt_ptr != NULL){
             int socket_interrupt = *socket_interrupt_ptr;
+            log_debug(logger, "hasta aca paso 4");
             enviar_interrupcion_a_cpu(socket_interrupt);
             log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
 
@@ -131,6 +137,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             queue_push(cola_ready, ejecutando);
             pthread_mutex_unlock(&mutex_ready);
             
+            log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id);
             pthread_mutex_lock(&mutex_cpus_libres);
             queue_push(cpus_libres, cpu_id);
             pthread_mutex_unlock(&mutex_cpus_libres);

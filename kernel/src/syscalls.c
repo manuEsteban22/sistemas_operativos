@@ -78,7 +78,6 @@ void llamar_a_io(int socket_dispatch) {
     t_instancia_io* instancia = obtener_instancia_disponible(io);
 
 
-    log_debug(logger, "prueba 1");
     if(instancia == NULL) {
         log_info(logger, "Dispositivo ocupado, mando PID: %d a cola bloqueados", pid);
         t_pcb_io* bloqueado = malloc(sizeof(t_pcb_io));
@@ -86,13 +85,11 @@ void llamar_a_io(int socket_dispatch) {
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
-        log_debug(logger, "prueba 2");
 
         pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->ocupado = true;
         instancia->pid_ocupado = pid;
         pthread_mutex_unlock(&io->mutex_dispositivos);
-        log_debug(logger, "prueba 6");
 
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
@@ -104,31 +101,34 @@ void llamar_a_io(int socket_dispatch) {
         borrar_paquete(paquete);
         log_trace(logger, "Proceso PID %d enviado a IO por socket %d", pid, instancia->socket);
     }
-    log_debug(logger, "Aca nada 1");
+
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
-    log_debug(logger, "Aca nada 2");
+
+    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
-    log_debug(logger, "Aca nada 3");
+
     sem_post(&cpus_disponibles);
     pthread_mutex_lock(&mutex_ready);
     if(!queue_is_empty(cola_ready)){
         sem_post(&sem_procesos_ready);
     }
     pthread_mutex_unlock(&mutex_ready);
-    log_debug(logger, "Aca nada 4");
+
     list_destroy_and_destroy_elements(campos, free);
-    log_debug(logger, "Aca nada 5");
+
     
 }
 
 void manejar_finaliza_io(int socket_io){
     t_list* recibido = recibir_paquete(socket_io);
     int* pid = list_get(recibido, 0);
-    char* nombre_dispositivo = list_get(recibido, 1);
-    int cpu_id = *((int*)list_get(recibido, 2));
+    char* nombre_dispositivo_raw = list_get(recibido, 1);
+    int* cpu_id_ptr = list_get(recibido, 2);
+    int cpu_id = *cpu_id_ptr;
+    char* nombre_dispositivo = string_duplicate(nombre_dispositivo_raw);
 
     log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s - cpuid %d", *pid, nombre_dispositivo, cpu_id);
     t_pcb* pcb = obtener_pcb(*pid);
@@ -216,11 +216,12 @@ void manejar_finaliza_io(int socket_io){
         libre->pid_ocupado = siguiente->pid;
         pthread_mutex_unlock(&io->mutex_dispositivos);
 
-        int* cpu_id_ptr = malloc(sizeof(int));
-        *cpu_id_ptr = cpu_id;
+        int* cpu_id_ptr_copia = malloc(sizeof(int));
+        *cpu_id_ptr_copia = cpu_id;
 
+        log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
         pthread_mutex_lock(&mutex_cpus_libres);
-        queue_push(cpus_libres, cpu_id_ptr);
+        queue_push(cpus_libres, cpu_id_ptr_copia);
         pthread_mutex_unlock(&mutex_cpus_libres);
         sem_post(&cpus_disponibles);
 
@@ -235,8 +236,8 @@ void manejar_finaliza_io(int socket_io){
             pcb->temporal_blocked = NULL;
         }
     }
-    free(pid);
-    list_destroy(recibido);
+    free(nombre_dispositivo);
+    list_destroy_and_destroy_elements(recibido, free);
     //list_destroy_and_destroy_elements(recibido, free); esto estaba liberando cosas que iban a un diccionario creo
 }
 
@@ -327,6 +328,7 @@ void dump_memory(int socket_dispatch){
     int* nuevo_cpu_id = malloc(sizeof(int));
     *nuevo_cpu_id = cpu_id;
 
+    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, nuevo_cpu_id);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -356,10 +358,12 @@ void dump_memory(int socket_dispatch){
 
 void iniciar_proceso(int socket_cpu){
     t_list* recibido = recibir_paquete(socket_cpu);
-    int pid_anterior = *((int*)list_get(recibido, 0));
-    int tamanio_proceso = *((int*)list_get(recibido, 1));
+    int* pid_anterior_raw = list_get(recibido, 0);
+    int* tamanio_proceso_raw = list_get(recibido, 1);
     char* nombre_archivo = list_get(recibido, 2);
 
+    int pid_anterior = *pid_anterior_raw;
+    int tamanio_proceso = *tamanio_proceso_raw;
     int pid = crear_proceso(tamanio_proceso);
 
 
@@ -372,6 +376,7 @@ void iniciar_proceso(int socket_cpu){
     enviar_paquete(paquete, socket_memoria, logger);
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
+    list_destroy_and_destroy_elements(recibido, free);
     log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
 }
 

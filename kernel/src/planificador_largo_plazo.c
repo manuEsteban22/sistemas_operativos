@@ -145,6 +145,7 @@ void finalizar_proceso(t_pcb* pcb){
     
     borrar_pcb(pcb);
     free(pid_str);
+    log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);

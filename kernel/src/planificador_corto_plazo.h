@@ -11,7 +11,7 @@ extern sem_t cpus_disponibles;
 #include <kernel.h>
 
 t_pcb* planificador_corto_plazo ();
-t_pcb* planificar_sjf_sin_desalojo(t_queue* cola);
-void* planificador_corto_plazo_loop(void* _/*int* socket_ptr*/);
+t_pcb* planificar_sjf(t_queue* cola);
+void* planificador_corto_plazo_loop(void*);
 
 #endif

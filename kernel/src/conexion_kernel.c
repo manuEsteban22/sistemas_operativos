@@ -43,6 +43,7 @@ void* manejar_servidor_cpu(void* arg){
                     int* cpu_id_ptr = malloc(sizeof(int));
                     *cpu_id_ptr = cpu_id;
 
+                    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
                     pthread_mutex_lock(&mutex_cpus_libres);
                     queue_push(cpus_libres, cpu_id_ptr);
                     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -147,8 +148,6 @@ void handshake_io(int socket_dispositivo){
         io->cola_bloqueados = queue_create();
         pthread_mutex_init(&io->mutex_dispositivos, NULL);
         dictionary_put(dispositivos_io, nombre_dispositivo, io);
-    } else if (io != NULL){
-        log_error(logger, "que carajo pasa aca");
     }
     t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
     log_debug(logger, "Nueva instancia creada en %p", nueva_instancia);
@@ -197,10 +196,6 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
         if (!instancia->ocupado){
             pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
             log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
-            if(instancia->ocupado){
-                log_error(logger, "true");
-            } else{log_error(logger, "false");}
-            log_error(logger, "La instancia tiene pid_ocupado %d", instancia->pid_ocupado);
             return instancia;
         }
         

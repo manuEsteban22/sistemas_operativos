@@ -138,6 +138,7 @@ void* planificador_corto_plazo_loop(void* _) {
                 break;
             }
 
+            log_warning(logger, "popeo una cpu de cpus libres");
             pthread_mutex_lock(&mutex_cpus_libres);
             int* cpu_id_ptr = queue_pop(cpus_libres);
             pthread_mutex_unlock(&mutex_cpus_libres);

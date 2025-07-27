@@ -9,5 +9,6 @@
 
 void planificador_mediano_plazo();
 void informar_memoria_suspension(int pid);
+void inicializar_planificador_mp();
 
 #endif

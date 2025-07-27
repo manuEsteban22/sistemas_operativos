@@ -5,6 +5,7 @@
 #include<kernel.h>
 
 
+
 typedef enum {
     NEW,
     READY,
@@ -47,6 +48,8 @@ void asignar_timer_blocked(t_pcb* pcb);
 t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid);
 char* parsear_estado(int estado);
 void log_metricas_estado(t_pcb* pcb);
+bool hay_proceso_en_exec();
+t_pcb* obtener_proceso_en_exec();
 
 #include<planificador_largo_plazo.h>
 
