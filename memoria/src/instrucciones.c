@@ -25,10 +25,13 @@ void cargar_instrucciones(int pid, char* nombre_archivo)
         linea[strcspn(linea, "\n")] = 0; // eliminar \n
         list_add(lista_instrucciones, strdup(linea)); // guardar copia
     }
-
+    
     fclose(archivo);
-    dictionary_put(lista_de_instrucciones_por_pid, string_itoa(pid), lista_instrucciones);
+    char* pid_str = string_itoa(pid);
+    dictionary_put(lista_de_instrucciones_por_pid, pid_str, lista_instrucciones);
     log_debug(logger, "Agregue una lista de instrucciones al diccionario PID %d", pid);
+    free(Archivo);
+    free(pid_str);
 }
 
 char* obtener_instruccion(int pc, char* pid) 
@@ -134,14 +137,19 @@ int mandar_instruccion(int socket_cliente)
     //log_info(logger, "Espacio libre: %d\n", espacio_libre());
 
     list_destroy_and_destroy_elements(lista_paquete, free); 
+    free(pid_str);
+
     return 0;
 }
 
 int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el frame
     t_list* lista_paquete = recibir_paquete(socket_cliente);
 
-    int pid = *((int*) list_get(lista_paquete, 0));
-    int nro_pagina = *((int*) list_get(lista_paquete, 1));
+    int* pid_raw = list_get(lista_paquete, 0);
+    int* nro_pagina_raw = list_get(lista_paquete, 1);
+
+    int pid = *pid_raw;
+    int nro_pagina = *nro_pagina_raw;
 
     int marco = obtener_marco(pid, nro_pagina);
     t_paquete* paquete = crear_paquete();
@@ -149,6 +157,7 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     agregar_a_paquete(paquete,&marco,sizeof(int));
     enviar_paquete(paquete, socket_cliente, logger);
     borrar_paquete(paquete);
+    list_destroy_and_destroy_elements(lista_paquete, free);
     
     return 0;
 }
@@ -327,6 +336,7 @@ void dumpear_memoria(int pid, int socket_cliente){
     fclose(archivo);
     free(path);
     free(timestamp);
+    //free(copia);
     log_info(logger, "Dump de memoria del proceso %d generado", pid);
 
     t_paquete* confirmacion = crear_paquete();

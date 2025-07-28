@@ -113,7 +113,7 @@ void manejar_conexion_kernel(int socket_cliente) {
                 borrar_paquete(paquete);
                }
                 list_destroy_and_destroy_elements(recibido, free);
-                //free(pid_str);
+                free(pid_str);
             }
             break;
         case KILL_PROC:
@@ -131,6 +131,7 @@ void manejar_conexion_kernel(int socket_cliente) {
             int pid_dumpeo = *((int*)list_get(recibido_pid_dump, 0));
             log_info(logger, "## PID: %d - Memory Dump solicitado", pid_dumpeo);
             dumpear_memoria(pid_dumpeo, socket_cliente);
+            list_destroy_and_destroy_elements(recibido_pid_dump, free);
             break;
         case OC_SUSP:
             log_info(logger, "Recibi solicitud de hacer un susp");
