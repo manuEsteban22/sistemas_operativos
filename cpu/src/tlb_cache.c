@@ -145,6 +145,79 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
         log_error(logger, "La cache no esta activada");
         return NULL;
     }
+    int bytes_restantes = tamanio;
+    int dir_actual = direccion_logica;
+    char* resultado = malloc(tamanio + 1);
+    int offset_resultado = 0;
+
+    while(bytes_restantes > 0){
+        int nro_pagina = dir_actual / tam_pagina;
+        int desplazamiento = dir_actual % tam_pagina;
+        int marco;
+
+        int bytes_pagina = tam_pagina - desplazamiento;
+        int bytes_a_leer;
+        if(bytes_restantes < bytes_pagina){
+            bytes_a_leer = bytes_restantes;
+        } else {bytes_a_leer = bytes_pagina;}
+
+        bool hit = esta_en_cache(nro_pagina, &marco, pcb);
+        if(!hit){
+            cache_miss(nro_pagina, pcb);
+            usleep(retardo_cache * 1000);
+            esta_en_cache(nro_pagina, &marco, pcb);
+        } else{
+            log_info(logger, "PID: %d - Cache Hit - Pagina: %d", pcb->pid, nro_pagina);
+        }
+    
+
+        pthread_mutex_lock(&mutex_cache);
+        t_entrada_cache* entrada = NULL;
+
+        for(int i = 0; i < list_size(cache); i++) {
+            t_entrada_cache* temp = list_get(cache, i);
+            if(temp->pagina == nro_pagina) {
+                entrada = temp;
+                break;
+            }
+        }
+
+        if(entrada == NULL) {
+            pthread_mutex_unlock(&mutex_cache);
+            free(resultado);
+            return NULL;
+        }
+    
+        if(desplazamiento + bytes_a_leer > tam_pagina) {
+            log_error(logger, "Se intento leer fuera de la pagina");
+            pthread_mutex_unlock(&mutex_cache);
+            free(resultado);
+            return NULL;
+        }
+
+        memcpy(resultado + offset_resultado, entrada->contenido + desplazamiento, bytes_a_leer);
+        entrada->usado = true;
+        pthread_mutex_unlock(&mutex_cache);
+
+        usleep(retardo_cache * 1000);
+    
+        offset_resultado += bytes_a_leer;
+        dir_actual += bytes_a_leer;
+        bytes_restantes -= bytes_a_leer;
+    }
+
+    resultado[tamanio] = '\0';
+    log_info(logger, "PID: %d - Accion: LEER - Valor: %s", pcb->pid, resultado);
+    return resultado;
+}
+
+//funcion vieja
+/*
+void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
+    if(entradas_cache <= 0){
+        log_error(logger, "La cache no esta activada");
+        return NULL;
+    }
 
     int nro_pagina = direccion_logica / tam_pagina;
     int desplazamiento = direccion_logica % tam_pagina;
@@ -193,7 +266,10 @@ void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb){
     log_info(logger, "PID: %d - Accion: LEER - Valor: %s", pcb->pid, datos);
     return datos;
 }
+*/
 
+//escribir vieja
+/*
 bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
     if(entradas_cache <= 0){
         return false;
@@ -237,6 +313,72 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb){
         usleep(retardo_cache * 1000);
         return true;
     }
+}
+*/
+
+bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb) {
+    if (entradas_cache <= 0) {
+        return false;
+    }
+
+    int bytes_restantes = strlen(datos);
+    int dir_actual = direccion_logica;
+    int offset_dato = 0;
+
+    while (bytes_restantes > 0) {
+        int nro_pagina = dir_actual / tam_pagina;
+        int desplazamiento = dir_actual % tam_pagina;
+        int marco;
+
+        int bytes_pagina = tam_pagina - desplazamiento;
+        int bytes_a_escribir = (bytes_restantes < bytes_pagina) ? bytes_restantes : bytes_pagina;
+
+        char* fragmento = malloc(bytes_a_escribir + 1);
+        memcpy(fragmento, datos + offset_dato, bytes_a_escribir);
+        fragmento[bytes_a_escribir] = '\0';
+
+        if (esta_en_cache(nro_pagina, &marco, pcb)) {
+            pthread_mutex_lock(&mutex_cache);
+            t_entrada_cache* entrada = NULL;
+            for (int i = 0; i < list_size(cache); i++) {
+                t_entrada_cache* temp = list_get(cache, i);
+                if (temp->pagina == nro_pagina) {
+                    entrada = temp;
+                    break;
+                }
+            }
+            if (entrada != NULL) {
+                memcpy(entrada->contenido + desplazamiento, fragmento, bytes_a_escribir);
+                entrada->modificado = true;
+                entrada->usado = true;
+                log_debug(logger, "PID: %d - Escribiendo en caché (Hit) %d bytes en página %d offset %d: '%s'",
+                          pcb->pid, bytes_a_escribir, nro_pagina, desplazamiento, fragmento);
+            }
+            pthread_mutex_unlock(&mutex_cache);
+        } else {
+            int direccion_fisica = traducir_direccion(pcb, dir_actual);
+            int marco_local = direccion_fisica / tam_pagina;
+            char* pagina_completa = leer_pagina_memoria(direccion_fisica, pcb);
+
+            memcpy(pagina_completa + desplazamiento, fragmento, bytes_a_escribir);
+
+            actualizar_cache(nro_pagina, marco_local, pagina_completa, true, pcb);
+            free(pagina_completa);
+            log_info(logger, "PID: %d - Cache Miss - Página: %d", pcb->pid, nro_pagina);
+            log_debug(logger, "PID: %d - Escribiendo en caché (Miss) %d bytes en página %d offset %d: '%s'",
+                      pcb->pid, bytes_a_escribir, nro_pagina, desplazamiento, fragmento);
+        }
+
+        free(fragmento);
+        usleep(retardo_cache * 1000);
+
+        bytes_restantes -= bytes_a_escribir;
+        offset_dato += bytes_a_escribir;
+        dir_actual += bytes_a_escribir;
+    }
+
+    log_info(logger, "PID: %d - Acción: ESCRIBIR - Dirección lógica: %d - Valor: %s", pcb->pid, direccion_logica, datos);
+    return true;
 }
 
 void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb) {
