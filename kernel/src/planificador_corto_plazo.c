@@ -79,7 +79,7 @@ t_pcb* planificar_sjf(t_queue* cola){
     }
 
     list_destroy(lista_aux);
-    log_error(logger, "aca se hace un pop a cola de ready de PID %d", pcb_menor->pid);
+    //log_error(logger, "aca se hace un pop a cola de ready de PID %d", pcb_menor->pid);
     return pcb_menor;    
 }
 

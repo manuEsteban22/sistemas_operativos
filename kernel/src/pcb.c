@@ -163,7 +163,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             pthread_mutex_unlock(&mutex_exec);
             
             ejecutando->estimacion_rafaga = estimacion_restante;
-            log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
+            //log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, ejecutando);
             pthread_mutex_unlock(&mutex_ready);

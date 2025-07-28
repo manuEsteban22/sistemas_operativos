@@ -199,7 +199,7 @@ int estado_anterior;
                 cambiar_estado(pcb, READY);
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+                //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);
@@ -231,7 +231,7 @@ int estado_anterior;
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
                 log_trace(logger, "El planificador LP tomo el PID %d", pcb->pid);
 
-                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+                //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);
