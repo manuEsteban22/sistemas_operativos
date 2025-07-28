@@ -168,7 +168,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             queue_push(cola_ready, ejecutando);
             pthread_mutex_unlock(&mutex_ready);
             
-            log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id);
+            //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id);
             pthread_mutex_lock(&mutex_cpus_libres);
             queue_push(cpus_libres, cpu_id);
             pthread_mutex_unlock(&mutex_cpus_libres);

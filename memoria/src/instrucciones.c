@@ -143,6 +143,7 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     int pid = *((int*) list_get(lista_paquete, 0));
     int nro_pagina = *((int*) list_get(lista_paquete, 1));
 
+    log_warning(logger, "El pid recibido en mandar frame es %d y nro_pagina %d", pid, nro_pagina);
     int marco = obtener_marco(pid, nro_pagina);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);

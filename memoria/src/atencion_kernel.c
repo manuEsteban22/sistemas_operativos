@@ -15,6 +15,10 @@ t_metricas inicializar_metricas()
 
 void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;
+    // if(pags_necesarias <= 0){//para procesos con tamaño 0
+    //     pags_necesarias = 1;
+    //     log_trace(logger, "Tamanio 0");
+    // }
     log_trace(logger, "pags necesarias %d", pags_necesarias);
 
     t_proceso* proceso = calloc(1, sizeof(t_proceso));

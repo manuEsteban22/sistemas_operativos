@@ -171,7 +171,7 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
         log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
-        //log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
+        log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
         return false;
     }
 }
@@ -208,7 +208,7 @@ int estado_anterior;
 
             } else{
                 pthread_mutex_unlock(&mutex_susp_ready);
-                log_warning(logger, "## No hay suficiente espacio para ejecutar el proceso");
+                //log_warning(logger, "## No hay suficiente espacio para ejecutar el proceso");
                 continue;
             }
 
@@ -238,7 +238,7 @@ int estado_anterior;
                 pthread_mutex_unlock(&mutex_ready);
 
             } else{
-                log_warning(logger, "No habia suficiente espacio en memoria");
+                //log_warning(logger, "No habia suficiente espacio en memoria");
                 pthread_mutex_unlock(&mutex_new);
             }
         } else {
