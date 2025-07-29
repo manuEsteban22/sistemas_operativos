@@ -34,6 +34,7 @@ typedef enum
     OC_INIT,
     OC_INTERRUPT,
     OC_SUSP,
+    OC_DESUSP,
     SYSCALL_IO,
     SYSCALL_INIT,
     SYSCALL_DUMP_MEMORY,

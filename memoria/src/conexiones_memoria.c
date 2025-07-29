@@ -145,16 +145,16 @@ void manejar_conexion_kernel(int socket_cliente) {
             break;
         case OC_DESUSP:
             log_info(logger, "Recibi solicitud de hacer una desuspension");
-            t_list* recibido = recibir_paquete(socket_cliente);
-            int* pid_ptr = list_get(recibido, 0);
-            int pid = *pid_ptr;
+            recibido = recibir_paquete(socket_cliente);
+            int* pid_recibido = list_get(recibido, 0);
+            pid = *pid_recibido;
 
             des_suspender_proceso(pid);
 
-            t_paquete* confirmacion = crear_paquete();
-            cambiar_opcode_paquete(confirmacion, OK);
-            enviar_paquete(confirmacion, socket_cliente, logger);
-            borrar_paquete(confirmacion);
+            t_paquete* confirmacion_desusp = crear_paquete();
+            cambiar_opcode_paquete(confirmacion_desusp, OK);
+            enviar_paquete(confirmacion_desusp, socket_cliente, logger);
+            borrar_paquete(confirmacion_desusp);
 
             list_destroy_and_destroy_elements(recibido, free);
             break;

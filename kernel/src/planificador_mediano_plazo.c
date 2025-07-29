@@ -1,13 +1,13 @@
 #include<planificador_mediano_plazo.h>
 
 void* trackear_bloqueo(void* args){
-    t_pcb* pcb_bloqueado = (t_pcb)args;
+    t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
     pthread_mutex_lock(&mutex_blocked);
-    if(pcb->BLOCKED){
+    if(pcb->estado_actual == BLOCKED){
         queue_pop(cola_blocked); 
 
-        estado_anterior = pcb->estado_actual;
+        int estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, SUSP_BLOCKED);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
         
@@ -29,7 +29,6 @@ void inicializar_planificador_mp(){
 }
 
 void planificador_mediano_plazo(){
-    int estado_anterior;
     log_trace(logger, "Arranque a correr plani mediano plazo");
     while(1){
         
