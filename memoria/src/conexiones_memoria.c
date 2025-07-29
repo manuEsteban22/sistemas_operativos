@@ -134,12 +134,27 @@ void manejar_conexion_kernel(int socket_cliente) {
             list_destroy_and_destroy_elements(recibido_pid_dump, free);
             break;
         case OC_SUSP:
-            log_info(logger, "Recibi solicitud de hacer un susp");
+            log_info(logger, "Recibi solicitud de hacer una suspension");
             t_list* recibido = recibir_paquete(socket_cliente);
             int* pid_ptr = list_get(recibido, 0);
             int pid = *pid_ptr;
             
             suspender_proceso(pid);
+
+            list_destroy_and_destroy_elements(recibido, free);
+            break;
+        case OC_DESUSP:
+            log_info(logger, "Recibi solicitud de hacer una desuspension");
+            t_list* recibido = recibir_paquete(socket_cliente);
+            int* pid_ptr = list_get(recibido, 0);
+            int pid = *pid_ptr;
+
+            des_suspender_proceso(pid);
+
+            t_paquete* confirmacion = crear_paquete();
+            cambiar_opcode_paquete(confirmacion, OK);
+            enviar_paquete(confirmacion, socket_cliente, logger);
+            borrar_paquete(confirmacion);
 
             list_destroy_and_destroy_elements(recibido, free);
             break;

@@ -144,7 +144,7 @@ void finalizar_proceso(t_pcb* pcb){
     
     borrar_pcb(pcb);
     free(pid_str);
-    log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
+    //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -194,6 +194,8 @@ int estado_anterior;
             if(enviar_pedido_memoria(pcb)){
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
+
+                informar_memoria_desuspension(pcb->pid);
 
                 estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);

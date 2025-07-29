@@ -76,3 +76,15 @@ void informar_memoria_suspension(int pid){
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
 }
+void informar_memoria_desuspension(int pid){
+    t_paquete* paquete = crear_paquete();
+    cambiar_opcode_paquete(paquete, OC_DESUSP);
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    socket_memoria = operacion_con_memoria();
+    enviar_paquete(paquete, socket_memoria, logger);
+    borrar_paquete(paquete);
+
+    int confirmacion = recibir_operacion(socket_memoria);
+    if(confirmacion != OK){log_error(logger, "No se recibio confirmacion de la desuspension (%d)", confirmacion);}
+    cerrar_conexion_memoria(socket_memoria);
+}
