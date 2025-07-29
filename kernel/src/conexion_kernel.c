@@ -95,7 +95,7 @@ void* manejar_servidor_cpu(void* arg){
 
 bool handshake_memoria(int socket){
     enviar_handshake(socket);
-    log_info(logger, "Envié un handshake a memoria");
+    //log_trace(logger, "Envié un handshake a memoria");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
@@ -103,7 +103,7 @@ bool handshake_memoria(int socket){
         return false;
     }
     if(respuesta == OK){
-        log_info(logger, "Recibi el OK de memoria");
+        //log_trace(logger, "Recibi el OK de memoria");
         return true;
     }else {
         log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
