@@ -187,7 +187,6 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
     log_debug(logger, "Hay %d instancias", list_size(dispositivo->sockets_io));
     pthread_mutex_lock(&dispositivo->mutex_dispositivos);
     for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
-        log_error(logger, "Obteniendo instancia [%d] de %d", i, list_size(dispositivo->sockets_io));
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if(!instancia){
             log_error(logger, "ERROR: instancia es NULL en indice %d", i);

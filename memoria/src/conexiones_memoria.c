@@ -135,6 +135,13 @@ void manejar_conexion_kernel(int socket_cliente) {
             break;
         case OC_SUSP:
             log_info(logger, "Recibi solicitud de hacer un susp");
+            t_list* recibido = recibir_paquete(socket_cliente);
+            int* pid_ptr = list_get(recibido, 0);
+            int pid = *pid_ptr;
+            
+            suspender_proceso(pid);
+
+            list_destroy_and_destroy_elements(recibido, free);
             break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
