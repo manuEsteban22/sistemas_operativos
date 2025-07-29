@@ -157,9 +157,10 @@ void manejar_finaliza_io(int socket_io){
     } else if (pcb->estado_actual == BLOCKED){
         pthread_mutex_lock(&mutex_blocked);
         sacar_pcb_de_cola(cola_blocked, pcb->pid);
+        cambiar_estado(pcb, READY);
         pthread_mutex_unlock(&mutex_blocked);
 
-        cambiar_estado(pcb, READY);
+        
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
         //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);

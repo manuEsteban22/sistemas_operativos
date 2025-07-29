@@ -3,7 +3,7 @@
 void* trackear_bloqueo(void* args){
     t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
-    pthread_mutex_lock(&mutex_blocked);
+    //pthread_mutex_lock(&mutex_blocked);
     if(pcb->estado_actual == BLOCKED){
         queue_pop(cola_blocked); 
 
@@ -20,8 +20,10 @@ void* trackear_bloqueo(void* args){
 
         temporal_destroy(pcb->temporal_blocked);
 
-        pthread_mutex_unlock(&mutex_blocked);
+        
     }
+    pthread_mutex_unlock(&mutex_blocked);
+    return NULL;
 }
 
 void inicializar_planificador_mp(){
