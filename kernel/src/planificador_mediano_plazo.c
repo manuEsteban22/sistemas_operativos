@@ -3,10 +3,16 @@
 void* trackear_bloqueo(void* args){
     t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
-    pthread_mutex_lock(&mutex_blocked);
+    
+    log_error(logger, "bloquea pcb pmp:7");
+    pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->estado_actual == BLOCKED){
-        log_error(logger, "si estaba blocked");
+        
+        log_error(logger,"Se bloqueo en pmp:10");
+        pthread_mutex_lock(&mutex_blocked);
+        
         queue_pop(cola_blocked); 
+        pthread_mutex_unlock(&mutex_blocked);
 
         int estado_anterior = pcb->estado_actual;
         cambiar_estado(pcb, SUSP_BLOCKED);
@@ -26,8 +32,8 @@ void* trackear_bloqueo(void* args){
 
         
     }
-    log_error(logger, "no estaba mas blocked");
-    pthread_mutex_unlock(&mutex_blocked);
+    pthread_mutex_unlock(&pcb->mutex_pcb);
+    
     return NULL;
 }
 
@@ -42,7 +48,9 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
+        log_error(logger,"Se bloqueo en pmp:50");
         pthread_mutex_lock(&mutex_blocked);
+        
         bool hay_bloqueados = !queue_is_empty(cola_blocked);
         if (hay_bloqueados){
             t_pcb* pcb = queue_peek(cola_blocked); 

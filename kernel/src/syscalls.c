@@ -19,7 +19,9 @@ void llamar_a_io(int socket_dispatch) {
 
     log_info(logger, "Recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
+    pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
+    pthread_mutex_unlock(&mutex_dispositivos);
 
     if(io == NULL) {
         log_error(logger, "dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
@@ -47,10 +49,12 @@ void llamar_a_io(int socket_dispatch) {
     asignar_timer_blocked(pcb);
 
     log_debug(logger, "Se bloquea el proceso PID %d", pcb->pid);
+    log_error(logger,"Se bloqueo en syscalls:51");
     pthread_mutex_lock(&mutex_blocked);
+    
     queue_push(cola_blocked, pcb);
+    log_error(logger, "se desbloqueo en syscalls:54");
     pthread_mutex_unlock(&mutex_blocked);
-    log_error(logger, "Aca llegue");
 
     char* cpu_id_str = string_itoa(cpu_id);
     pthread_mutex_lock(&mutex_interrupt);
@@ -133,7 +137,7 @@ void manejar_finaliza_io(int socket_io){
 
     log_trace(logger, "Recibi finalizacion de io - pid %d - dispositivo %s - cpuid %d", *pid, nombre_dispositivo, cpu_id);
     t_pcb* pcb = obtener_pcb(*pid);
-    
+    log_trace(logger, "esto no lo esta pasando 123124");
     if (pcb == NULL){
         log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
         list_destroy_and_destroy_elements(recibido, free);
@@ -142,12 +146,15 @@ void manejar_finaliza_io(int socket_io){
 
     int estado_anterior = pcb->estado_actual;
 
+    log_error(logger, "bloquea pcb syscalls:146");
+    pthread_mutex_lock(&pcb->mutex_pcb);
     if (pcb->estado_actual == SUSP_BLOCKED){
 
+        log_debug(logger, "llega aca sin bloquear susp blocked");
         pthread_mutex_lock(&mutex_susp_blocked);
         sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
         pthread_mutex_unlock(&mutex_susp_blocked);
-
+        log_debug(logger, "llega aca desbloqueando susp blocked");
         cambiar_estado(pcb, SUSP_READY);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
@@ -157,9 +164,14 @@ void manejar_finaliza_io(int socket_io){
         sem_post(&sem_plp);
 
     } else if (pcb->estado_actual == BLOCKED){
+        log_debug(logger, "llega aca sin bloquear blocked");
+        log_error(logger,"Se bloqueo en syscalls:163");
         pthread_mutex_lock(&mutex_blocked);
+        log_error(logger, "aca no hizo deadlock");
         sacar_pcb_de_cola(cola_blocked, pcb->pid);
-        cambiar_estado(pcb, READY);
+        log_error(logger, "aca tampoco hizo deadlock");
+        cambiar_estado_sin_lock(pcb, READY);
+        log_error(logger, "aca si hizo deadlock");
         pthread_mutex_unlock(&mutex_blocked);
 
         
@@ -173,7 +185,7 @@ void manejar_finaliza_io(int socket_io){
         sem_post(&sem_procesos_ready);
 
     }
-
+    log_debug(logger, "llega aca");
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     t_instancia_io* instancia = NULL;
 
@@ -234,12 +246,15 @@ void manejar_finaliza_io(int socket_io){
         free(siguiente);
     }
 
+    
     if(pcb->temporal_blocked != NULL){
         if(estado_anterior == BLOCKED){
             temporal_destroy(pcb->temporal_blocked);
             pcb->temporal_blocked = NULL;
         }
     }
+    log_error(logger, "se desbloquea pcb syscalls:251");
+    pthread_mutex_unlock(&pcb->mutex_pcb);
     free(nombre_dispositivo);
     list_destroy_and_destroy_elements(recibido, free);
     //list_destroy_and_destroy_elements(recibido, free); esto estaba liberando cosas que iban a un diccionario creo
@@ -261,8 +276,9 @@ void* esperar_confirmacion_dump(void* args_void){
         cambiar_estado(pcb, READY);
         log_debug(logger, "El dump memory se llevo a cabo correctamente");
         log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        
+        log_error(logger,"Se bloqueo en syscalls:272");
         pthread_mutex_lock(&mutex_blocked);
+        
         sacar_pcb_de_cola(cola_blocked, pid);
         pthread_mutex_unlock(&mutex_blocked);
 
@@ -279,10 +295,13 @@ void* esperar_confirmacion_dump(void* args_void){
         log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
         borrar_pcb(pcb);
     }
+    log_error(logger, "bloquea pcb syscalls:292");
+    pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->temporal_blocked != NULL){
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
+    pthread_mutex_unlock(&pcb->mutex_pcb);
     cerrar_conexion_memoria(socket_memoria);
     log_debug(logger, "Se recibio confirmacion de memory dump");
     return NULL;
@@ -297,8 +316,9 @@ void dump_memory(int socket_dispatch){
     int cpu_id = *((int*)list_get(recibido, 2));
 
     log_trace(logger, "## DUMP MEMORY - PID %d - PC %d - CPU_ID %d", pid, pc, cpu_id);
-
+    log_error(logger,"Se bloqueo en syscalls:310");
     pthread_mutex_lock(&mutex_blocked);
+    
     t_pcb* pcb = obtener_pcb(pid);
     pc++;
     pcb->pc = pc;

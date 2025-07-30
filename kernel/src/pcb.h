@@ -29,6 +29,7 @@ typedef struct
     double estimacion_rafaga;
     double rafaga_real_anterior;
     t_temporal* temporal_blocked;
+    pthread_mutex_t mutex_pcb;
 } t_pcb;
 
 typedef struct

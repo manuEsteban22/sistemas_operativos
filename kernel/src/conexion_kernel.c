@@ -147,7 +147,9 @@ void handshake_io(int socket_dispositivo){
         io->sockets_io = list_create();
         io->cola_bloqueados = queue_create();
         pthread_mutex_init(&io->mutex_dispositivos, NULL);
+        pthread_mutex_lock(&mutex_dispositivos);
         dictionary_put(dispositivos_io, nombre_dispositivo, io);
+        pthread_mutex_unlock(&mutex_dispositivos);
     }
     t_instancia_io* nueva_instancia = malloc(sizeof(t_instancia_io));
     log_debug(logger, "Nueva instancia creada en %p", nueva_instancia);

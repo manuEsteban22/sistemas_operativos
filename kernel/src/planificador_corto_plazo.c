@@ -123,7 +123,7 @@ void* planificador_corto_plazo_loop(void* _) {
         sem_wait(&sem_procesos_ready);
 
         while (true) {
-            if (queue_is_empty(cpus_libres)) break;
+            //if (queue_is_empty(cpus_libres)) break; puede causar rc
             log_debug(logger, "PCP: CPUs libres: %d - READY size: %d", queue_size(cpus_libres), queue_size(cola_ready));
 
             pthread_mutex_lock(&mutex_ready);

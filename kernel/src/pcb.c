@@ -21,6 +21,7 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
 
     pcb->estimacion_rafaga = estimacion_inicial;
     pcb->rafaga_real_anterior = 0;
+    pthread_mutex_init(&pcb->mutex_pcb, NULL);
 
     log_info(logger, "%d Se crea el proceso - Estado: NEW", pcb->pid);
 
@@ -40,12 +41,11 @@ t_pcb* obtener_pcb(int pid) {
     return pcb;
 }
 
-void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
+void cambiar_estado_sin_lock(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     if (pcb == NULL) {
         log_error(logger, "Error en cambio de estado PCB NULL");
         return;
     }
-
     int duracion = temporal_gettime(pcb->temporal_estado);
     pcb->metricas_tiempo[pcb->estado_actual] += duracion;
     //devuelve el tiempo que tomó el cronometro y lo suma a la metrica de tiempo del estado actual
@@ -53,7 +53,6 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     pcb->estado_actual = nuevo_estado;
     pcb->metricas_estado[nuevo_estado]++;
     //cambia el estado del pcb y suma 1 a la metrica de estado del estado nuevo
-
     if (nuevo_estado == READY && (strcmp(algoritmo_corto_plazo, "SRT") == 0)){
     chequear_sjf_con_desalojo(pcb);
     }
@@ -63,8 +62,18 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     //borra el cronometro del estado anterior y crea uno nuevo
 }
 
+void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
+    log_error(logger, "bloquea pcb pcb:66");
+    pthread_mutex_lock(&pcb->mutex_pcb);
+    cambiar_estado_sin_lock(pcb, nuevo_estado);
+    log_error(logger, "desbloquea pcb pcb:69");
+    pthread_mutex_unlock(&pcb->mutex_pcb);
+}
+
 void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
+    log_error(logger, "bloquea pcb pcb:71");
+    pthread_mutex_lock(&pcb->mutex_pcb);
     char* pid_str = string_itoa(pcb->pid);
 
     pthread_mutex_lock(&mutex_exec);
@@ -81,14 +90,11 @@ void borrar_pcb(t_pcb* pcb){
     pthread_mutex_unlock(&mutex_tabla_pcbs);
 
     free(pid_str);
+    pthread_mutex_unlock(&pcb->mutex_pcb);
+    pthread_mutex_destroy(&pcb->mutex_pcb);
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
-
-    // if(pcb_borrar != NULL){
-    //     log_error(logger, "SE ESTAN BORRANDO MAL LOS VALORES DE LA TABLA PCBS");
-    //     //temporal_destroy(pcb_borrar->temporal_estado);
-    //     free(pcb_borrar);
-    // }
+    
 
 }
 
@@ -97,7 +103,8 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
         log_error(logger, "No se pudo actualizar la estimacion, el PCB es NULL");
         return;
     }
-
+    log_error(logger, "bloquea pcb pcb:102");
+    pthread_mutex_lock(&pcb->mutex_pcb);
     double rafaga_real = temporal_gettime(pcb->temporal_estado);
     pcb->rafaga_real_anterior = rafaga_real;
 
@@ -107,6 +114,7 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
     log_debug(logger, "Nueva estimacion = %f", nueva_estimacion);
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
+    pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 
 void chequear_sjf_con_desalojo(t_pcb* nuevo) {
@@ -118,8 +126,11 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         return;
     }
     
+    log_debug(logger,"hasta aca llegue 2");
     t_pcb* ejecutando = obtener_proceso_en_exec();
-    
+    log_debug(logger,"hasta aca llegue 4");
+    //log_error(logger, "bloquea pcb pcb:127");
+    //pthread_mutex_lock(&ejecutando->mutex_pcb);
     double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
     double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_ejecutando;
 
@@ -129,15 +140,16 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     }
     log_debug(logger, "PID %d (ejecutando) - Estimación restante: %.2f", ejecutando->pid, estimacion_restante);
     log_debug(logger, "PID %d (nuevo) - Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
-
+    log_debug(logger,"hasta aca llegue 5");
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
         char* pid_str = string_itoa(ejecutando->pid);
+        log_debug(logger,"hasta aca llegue 6");
         pthread_mutex_lock(&mutex_exec);
         int* cpu_id_ptr = dictionary_get(tabla_exec, pid_str);
         pthread_mutex_unlock(&mutex_exec);
-        
+        log_debug(logger,"hasta aca llegue 7");
         if(cpu_id_ptr == NULL){
             log_error(logger, "chequear_sjf: no existe exec para PID %d", ejecutando->pid);
             free(pid_str);
@@ -146,15 +158,13 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 
         int cpu_id = *cpu_id_ptr;
         free(pid_str);
-
+        log_debug(logger,"hasta aca llegue 8");
         char* cpu_id_str = string_itoa(cpu_id);
         pthread_mutex_lock(&mutex_interrupt);
         int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
         pthread_mutex_unlock(&mutex_interrupt);
-        log_debug(logger, "hasta aca paso 3");
         if(socket_interrupt_ptr != NULL){
             int socket_interrupt = *socket_interrupt_ptr;
-            log_debug(logger, "hasta aca paso 4");
             enviar_interrupcion_a_cpu(socket_interrupt);
             log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
 
@@ -163,6 +173,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             pthread_mutex_unlock(&mutex_exec);
             
             ejecutando->estimacion_rafaga = estimacion_restante;
+            //pthread_mutex_unlock(&ejecutando->mutex_pcb);
             //log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, ejecutando);
@@ -180,9 +191,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         } else {
             log_error(logger, "No se encontró socket de interrupción para CPU %d", cpu_id);
         }
-        
-
-        
+        log_debug(logger,"hasta aca llegue chequear");
         // y hay que replanificar
     }
 }
@@ -190,9 +199,10 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 
 t_pcb* obtener_proceso_en_exec(){
     t_pcb* pcb_en_exec = NULL;
-
-    void buscar_exec(char* key, void* pcb){
-        if (((t_pcb*) pcb)->estado_actual == EXEC){
+    log_debug(logger,"hasta aca llegue 3");
+    void buscar_exec(char* key, void* pcb_void){
+        t_pcb* pcb = (t_pcb*)pcb_void;
+        if (pcb->estado_actual == EXEC){
             pcb_en_exec = pcb;
         }
     }
@@ -217,11 +227,15 @@ bool hay_proceso_en_exec(){
 }
 
 void asignar_timer_blocked(t_pcb* pcb){
+    log_error(logger, "bloquea pcb pcb:229");
+    pthread_mutex_lock(&pcb->mutex_pcb);
+    
     if (pcb->temporal_blocked != NULL) {
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
     pcb->temporal_blocked = temporal_create();
+    pthread_mutex_unlock(&pcb->mutex_pcb);
     sem_post(&sem_procesos_en_blocked);
 }
 
