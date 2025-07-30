@@ -153,6 +153,7 @@ void manejar_finaliza_io(int socket_io){
         pthread_mutex_lock(&mutex_susp_ready);
         queue_push(cola_susp_ready, pcb);
         pthread_mutex_unlock(&mutex_susp_ready);
+        sem_post(&sem_plp);
 
     } else if (pcb->estado_actual == BLOCKED){
         pthread_mutex_lock(&mutex_blocked);
