@@ -1,7 +1,8 @@
 #include <swap.h>
 #include <memoria.h>
 
-bool* bitmap_marcos_swap;
+//bool* bitmap_marcos_swap;
+t_bitarray* bitmap_marcos_swap = NULL;
 t_list* paginas_en_swap = NULL;
 
 void inicializar_swap(){
@@ -38,13 +39,13 @@ void inicializar_swap(){
     
     fclose(archivo_swap);
 
-    bitmap_marcos_swap = malloc(sizeof(bool) * campos_config.cantidad_marcos_swap);
-    if(!bitmap_marcos_swap){
-        log_error(logger, "No se pudo reservar memoria para el bitmap de marcos de swap.");
-        abort();
-    }
+    int tam_en_bytes = (cantidad_marcos_swap + 7)/8;
 
-    memset(bitmap_marcos_swap, false, sizeof(bool) * campos_config.cantidad_marcos_swap);
+    char* buffer = malloc(tam_en_bytes);
+    
+    memset(buffer, 0, tam_en_bytes);
+
+    bitmap_marcos_swap = bitarray_create_with_mode(buffer, tam_en_bytes, LSB_FIRST);
 
     log_info(logger, "Swap inicializado correctamente con %d marcos de %d bytes", campos_config.cantidad_marcos_swap, campos_config.tam_pagina);
 }

@@ -284,8 +284,7 @@ void dumpear_memoria(int pid, int socket_cliente){
 
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
-    t_proceso* copia = malloc(sizeof(t_proceso));
-    copia = proceso;
+    t_proceso* copia = proceso;
     free(pid_str);
 
     if(!copia){
