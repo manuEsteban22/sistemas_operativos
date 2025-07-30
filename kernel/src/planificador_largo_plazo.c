@@ -144,7 +144,7 @@ void finalizar_proceso(t_pcb* pcb){
     
     borrar_pcb(pcb);
     free(pid_str);
-    log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
+    //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -171,7 +171,7 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
         log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
-        //log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
+        log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
         return false;
     }
 }
@@ -195,11 +195,13 @@ int estado_anterior;
                 queue_pop(cola_susp_ready);
                 pthread_mutex_unlock(&mutex_susp_ready);
 
+                informar_memoria_desuspension(pcb->pid);
+
                 estado_anterior = pcb->estado_actual;
                 cambiar_estado(pcb, READY);
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+                //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);
@@ -208,7 +210,7 @@ int estado_anterior;
 
             } else{
                 pthread_mutex_unlock(&mutex_susp_ready);
-                log_warning(logger, "## No hay suficiente espacio para ejecutar el proceso");
+                //log_warning(logger, "## No hay suficiente espacio para ejecutar el proceso");
                 continue;
             }
 
@@ -231,14 +233,14 @@ int estado_anterior;
                 log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
                 log_trace(logger, "El planificador LP tomo el PID %d", pcb->pid);
 
-                log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+                //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
                 pthread_mutex_lock(&mutex_ready);
                 queue_push(cola_ready, pcb);
                 sem_post(&sem_procesos_ready);
                 pthread_mutex_unlock(&mutex_ready);
 
             } else{
-                log_warning(logger, "No habia suficiente espacio en memoria");
+                //log_warning(logger, "No habia suficiente espacio en memoria");
                 pthread_mutex_unlock(&mutex_new);
             }
         } else {

@@ -43,7 +43,7 @@ void* manejar_servidor_cpu(void* arg){
                     int* cpu_id_ptr = malloc(sizeof(int));
                     *cpu_id_ptr = cpu_id;
 
-                    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
+                    //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
                     pthread_mutex_lock(&mutex_cpus_libres);
                     queue_push(cpus_libres, cpu_id_ptr);
                     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -95,7 +95,7 @@ void* manejar_servidor_cpu(void* arg){
 
 bool handshake_memoria(int socket){
     enviar_handshake(socket);
-    log_info(logger, "Envié un handshake a memoria");
+    //log_trace(logger, "Envié un handshake a memoria");
 
     int respuesta;
     if(0 >= recv(socket, &respuesta, sizeof(int), MSG_WAITALL)){
@@ -103,7 +103,7 @@ bool handshake_memoria(int socket){
         return false;
     }
     if(respuesta == OK){
-        log_info(logger, "Recibi el OK de memoria");
+        //log_trace(logger, "Recibi el OK de memoria");
         return true;
     }else {
         log_error(logger, "Fallo en el handshake de memoria, recibí %d", respuesta);
@@ -187,7 +187,6 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
     log_debug(logger, "Hay %d instancias", list_size(dispositivo->sockets_io));
     pthread_mutex_lock(&dispositivo->mutex_dispositivos);
     for (int i = 0; i < list_size(dispositivo->sockets_io); i++){
-        log_error(logger, "Obteniendo instancia [%d] de %d", i, list_size(dispositivo->sockets_io));
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if(!instancia){
             log_error(logger, "ERROR: instancia es NULL en indice %d", i);

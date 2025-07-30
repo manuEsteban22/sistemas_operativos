@@ -79,7 +79,7 @@ t_pcb* planificar_sjf(t_queue* cola){
     }
 
     list_destroy(lista_aux);
-    log_error(logger, "aca se hace un pop a cola de ready de PID %d", pcb_menor->pid);
+    //log_error(logger, "aca se hace un pop a cola de ready de PID %d", pcb_menor->pid);
     return pcb_menor;    
 }
 
@@ -140,7 +140,7 @@ void* planificador_corto_plazo_loop(void* _) {
                 break;
             }
 
-            log_warning(logger, "popeo una cpu de cpus libres");
+            //log_warning(logger, "popeo una cpu de cpus libres");
             pthread_mutex_lock(&mutex_cpus_libres);
             int* cpu_id_ptr = queue_pop(cpus_libres);
             pthread_mutex_unlock(&mutex_cpus_libres);

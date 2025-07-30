@@ -105,7 +105,7 @@ void llamar_a_io(int socket_dispatch) {
     int* cpu_id_ptr = malloc(sizeof(int));
     *cpu_id_ptr = cpu_id;
 
-    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
+    //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr);
     pthread_mutex_unlock(&mutex_cpus_libres);
@@ -157,12 +157,13 @@ void manejar_finaliza_io(int socket_io){
     } else if (pcb->estado_actual == BLOCKED){
         pthread_mutex_lock(&mutex_blocked);
         sacar_pcb_de_cola(cola_blocked, pcb->pid);
+        cambiar_estado(pcb, READY);
         pthread_mutex_unlock(&mutex_blocked);
 
-        cambiar_estado(pcb, READY);
+        
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-        log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+        //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
         pthread_mutex_unlock(&mutex_ready);
@@ -220,7 +221,7 @@ void manejar_finaliza_io(int socket_io){
         int* cpu_id_ptr_copia = malloc(sizeof(int));
         *cpu_id_ptr_copia = cpu_id;
 
-        log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
+        //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
         pthread_mutex_lock(&mutex_cpus_libres);
         queue_push(cpus_libres, cpu_id_ptr_copia);
         pthread_mutex_unlock(&mutex_cpus_libres);
@@ -263,7 +264,7 @@ void* esperar_confirmacion_dump(void* args_void){
         sacar_pcb_de_cola(cola_blocked, pid);
         pthread_mutex_unlock(&mutex_blocked);
 
-        log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
+        //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
         pthread_mutex_unlock(&mutex_ready);
@@ -330,7 +331,7 @@ void dump_memory(int socket_dispatch){
     int* nuevo_cpu_id = malloc(sizeof(int));
     *nuevo_cpu_id = cpu_id;
 
-    log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
+    //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, nuevo_cpu_id);
     pthread_mutex_unlock(&mutex_cpus_libres);

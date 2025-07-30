@@ -134,7 +134,29 @@ void manejar_conexion_kernel(int socket_cliente) {
             list_destroy_and_destroy_elements(recibido_pid_dump, free);
             break;
         case OC_SUSP:
-            log_info(logger, "Recibi solicitud de hacer un susp");
+            log_info(logger, "Recibi solicitud de hacer una suspension");
+            t_list* recibido = recibir_paquete(socket_cliente);
+            int* pid_ptr = list_get(recibido, 0);
+            int pid = *pid_ptr;
+            
+            suspender_proceso(pid);
+
+            list_destroy_and_destroy_elements(recibido, free);
+            break;
+        case OC_DESUSP:
+            log_info(logger, "Recibi solicitud de hacer una desuspension");
+            recibido = recibir_paquete(socket_cliente);
+            int* pid_recibido = list_get(recibido, 0);
+            pid = *pid_recibido;
+
+            des_suspender_proceso(pid);
+
+            t_paquete* confirmacion_desusp = crear_paquete();
+            cambiar_opcode_paquete(confirmacion_desusp, OK);
+            enviar_paquete(confirmacion_desusp, socket_cliente, logger);
+            borrar_paquete(confirmacion_desusp);
+
+            list_destroy_and_destroy_elements(recibido, free);
             break;
         default:
             log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
