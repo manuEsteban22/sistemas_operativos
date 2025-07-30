@@ -68,22 +68,26 @@ void suspender_proceso(int pid){
     proceso->metricas.cantidad_bajadas_a_swap++;
 }
 
-void des_suspender_proceso(int pid){
-    t_list* paginas_proceso = list_create(); //filtramos las paginas de ese proceso
-    for (int i = 0; i < list_size(paginas_en_swap); i++){
+void des_suspender_proceso(int pid) {
+    // Filtrar páginas de ese proceso
+    t_list* paginas_proceso = list_create();
+    for (int i = 0; i < list_size(paginas_en_swap); i++) {
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
-        if(relacion->pid == pid){
+        if (relacion->pid == pid) {
             list_add(paginas_proceso, relacion);
         }
     }
-    if (list_size(paginas_proceso) > cantidad_marcos_libres()){
+
+    // Verificar si hay marcos libres en RAM
+    if (list_size(paginas_proceso) > cantidad_marcos_libres()) {
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
         list_destroy(paginas_proceso);
         return;
     }
+
     char* pid_str = string_itoa(pid);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
-    t_tabla_paginas* tabla_raiz = proceso->tabla_raiz;
+
     for (int i = 0; i < list_size(paginas_proceso); i++) {
         t_pagina_swap* relacion = list_get(paginas_proceso, i);
         int marco_ram = buscar_marco_libre();
@@ -91,17 +95,23 @@ void des_suspender_proceso(int pid){
             log_error(logger, "Error inesperado: no hay marco libre para restaurar página");
             break;
         }
+
         void* buffer = malloc(campos_config.tam_pagina);
         leer_de_swap(buffer, relacion->marco_swap);
         memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
-        t_entrada_tabla* entrada = buscar_entrada(tabla_raiz, relacion->nro_pagina, 0);
+
+        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, relacion->nro_pagina, 0);
         entrada->presencia = true;
         entrada->marco = marco_ram;
+
+        // Ahora sí liberar el marco en swap
         t_list* marcos_swap = list_create();
         int* marco_swap_ptr = malloc(sizeof(int));
         *marco_swap_ptr = relacion->marco_swap;
         list_add(marcos_swap, marco_swap_ptr);
         liberar_marcos(marcos_swap);
+
+        // Sacar de la lista global
         list_remove_element(paginas_en_swap, relacion);
         free(relacion);
         free(buffer);
@@ -237,30 +247,39 @@ void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base
     }
 }
 
-void suspender_pagina(int pid, int nro_pagina, int marco){
-
-    t_list* marcos_swap = asignar_marcos_swap(1); //pide marco libre
-
-    if (!marcos_swap){
+void suspender_pagina(int pid, int nro_pagina, int marco) {
+    // Pide marco libre en swap
+    t_list* marcos_swap = asignar_marcos_swap(1);
+    if (!marcos_swap) {
         log_error(logger, "No hay marcos libres en swap para suspender la pagina %d del proceso %d", nro_pagina, pid);
         return;
     }
 
     int marco_swap = *(int*)list_get(marcos_swap, 0);
 
-    void* buffer = malloc(campos_config.tam_pagina); //copia el contenido de las paginas
+    // Copia el contenido de la RAM al buffer
+    void* buffer = malloc(campos_config.tam_pagina);
+    uint8_t* ptr = memoria_usuario + marco * campos_config.tam_pagina;
+printf("Dump previo a escribir en swap (marco %d):\n", marco);
+for (int i = 0; i < campos_config.tam_pagina; i++) {
+    printf("%02X ", ptr[i]);
+}
+printf("\n");
     memcpy(buffer, memoria_usuario + marco * campos_config.tam_pagina, campos_config.tam_pagina);
 
-    escribir_en_swap(buffer, marco_swap); //lo escribe en el swap
+    // Escribe en swap
+    escribir_en_swap(buffer, marco_swap);
 
-    t_pagina_swap* relacion = malloc(sizeof(t_pagina_swap)); //guarda la relacion para cuando tenga que restaurarla
+    // Guarda la relación en la lista global
+    t_pagina_swap* relacion = malloc(sizeof(t_pagina_swap));
     relacion->pid = pid;
     relacion->nro_pagina = nro_pagina;
     relacion->marco_swap = marco_swap;
     list_add(paginas_en_swap, relacion);
 
-    free(buffer); //libera
-    liberar_marcos(marcos_swap);
+    // Liberar recursos de RAM, pero NO el marco en swap
+    free(buffer);
+    list_destroy_and_destroy_elements(marcos_swap, free);
 }
 
 int cantidad_marcos_libres()

@@ -69,6 +69,7 @@ void* creacion_estructuras_administrativas()
 
     paginas_en_swap = list_create();
     inicializar_memoria();
+    inicializar_swap();
     tablas_por_pid = dictionary_create();
     lista_de_instrucciones_por_pid = dictionary_create();
     return NULL;

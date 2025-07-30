@@ -275,7 +275,7 @@ void dumpear_memoria(int pid, int socket_cliente){
     char* timestamp = obtener_timestamp();
     char* path = string_from_format("%s%d-%s.dmp", campos_config.dump_path, pid, timestamp);
     
-    FILE* archivo = fopen(path, "w");
+    FILE* archivo = fopen(path, "wb");
     if (!archivo) {
        free(timestamp);
         free(path);
@@ -316,20 +316,8 @@ void dumpear_memoria(int pid, int socket_cliente){
 
         void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
         log_trace(logger, "Dump página %d: marco %d @ %p", pagina, entrada->marco, origen);
-        fprintf(archivo, "Página %d (Marco %d):\n", pagina, entrada->marco);
+        fwrite(origen, 1, campos_config.tam_pagina, archivo);
 
-        uint8_t* bytes = (uint8_t*) origen;
-        for (int i = 0; i < campos_config.tam_pagina; i++) {
-        fprintf(archivo, "%02X ", bytes[i]);
-
-        
-        if ((i + 1) % 16 == 0) // para que queden separadas y lindas las cosas gracias gepeto
-        {     
-            fprintf(archivo, "\n");
-        }
-        }
-
-        fprintf(archivo, "\n\n");
     }
 
     fclose(archivo);
