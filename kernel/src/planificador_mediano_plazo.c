@@ -3,7 +3,7 @@
 void* trackear_bloqueo(void* args){
     t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
-    //pthread_mutex_lock(&mutex_blocked);
+    pthread_mutex_lock(&mutex_blocked);
     if(pcb->estado_actual == BLOCKED){
         queue_pop(cola_blocked); 
 
@@ -18,7 +18,10 @@ void* trackear_bloqueo(void* args){
 
         log_info(logger, "PID %d pasa a susp blocked por exceder tiempo", pcb->pid);
 
-        temporal_destroy(pcb->temporal_blocked);
+        if(pcb->temporal_blocked != NULL){
+            temporal_destroy(pcb->temporal_blocked);
+            pcb->temporal_blocked = NULL;
+        }
 
         
     }
@@ -52,11 +55,15 @@ void planificador_mediano_plazo(){
                 continue;
             }
 
-            
             pthread_t hilo_chequear_suspension;
-            pthread_create(&hilo_chequear_suspension, NULL, trackear_bloqueo, pcb);
-            pthread_detach(hilo_chequear_suspension);
+            int err = pthread_create(&hilo_chequear_suspension, NULL, trackear_bloqueo, pcb);
+            if (err != 0) {
+                log_error(logger, "Error al crear hilo de trackeo de bloqueo: %s", strerror(err));
+            } else {
+                pthread_detach(hilo_chequear_suspension);
+            }
 
+            pthread_mutex_unlock(&mutex_blocked);
             //a partir de aca quiero cambiar la implementacion para que haga un hilo y ese hilo haga un usleep de x tiempo y pasado ese tiempo se fije si sigue bloqueado lo pone en susp blocked o si lo desbloquearon mata el hilo
 
 
