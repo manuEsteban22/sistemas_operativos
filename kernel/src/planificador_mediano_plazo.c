@@ -5,6 +5,7 @@ void* trackear_bloqueo(void* args){
     usleep(1000 * tiempo_suspension);
     pthread_mutex_lock(&mutex_blocked);
     if(pcb->estado_actual == BLOCKED){
+        log_error(logger, "si estaba blocked");
         queue_pop(cola_blocked); 
 
         int estado_anterior = pcb->estado_actual;
@@ -25,6 +26,7 @@ void* trackear_bloqueo(void* args){
 
         
     }
+    log_error(logger, "no estaba mas blocked");
     pthread_mutex_unlock(&mutex_blocked);
     return NULL;
 }
@@ -41,17 +43,19 @@ void planificador_mediano_plazo(){
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
         pthread_mutex_lock(&mutex_blocked);
-        if (!queue_is_empty(cola_blocked)){
+        bool hay_bloqueados = !queue_is_empty(cola_blocked);
+        if (hay_bloqueados){
             t_pcb* pcb = queue_peek(cola_blocked); 
+            pthread_mutex_unlock(&mutex_blocked);
             
             if (pcb == NULL) {
                 log_error(logger, "ERROR: La PCB en cola_blocked es NULL");
-                pthread_mutex_unlock(&mutex_blocked);
+                //pthread_mutex_unlock(&mutex_blocked);
                 continue;
             }
             if (pcb->temporal_blocked == NULL) {
                 log_error(logger, "ERROR: temporal_blocked de la PCB PID %d es NULL", pcb->pid);
-                pthread_mutex_unlock(&mutex_blocked);
+                //pthread_mutex_unlock(&mutex_blocked);
                 continue;
             }
 
@@ -63,15 +67,14 @@ void planificador_mediano_plazo(){
                 pthread_detach(hilo_chequear_suspension);
             }
 
-            pthread_mutex_unlock(&mutex_blocked);
+            //pthread_mutex_unlock(&mutex_blocked);
             //a partir de aca quiero cambiar la implementacion para que haga un hilo y ese hilo haga un usleep de x tiempo y pasado ese tiempo se fije si sigue bloqueado lo pone en susp blocked o si lo desbloquearon mata el hilo
 
 
             //int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
             //if (tiempo_bloqueado >= tiempo_suspension){
 
-        }
-        //pthread_mutex_unlock(&mutex_blocked);
+        } else{pthread_mutex_unlock(&mutex_blocked);}
     }
 }
 

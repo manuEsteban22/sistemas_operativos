@@ -50,6 +50,7 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_blocked);
     queue_push(cola_blocked, pcb);
     pthread_mutex_unlock(&mutex_blocked);
+    log_error(logger, "Aca llegue");
 
     char* cpu_id_str = string_itoa(cpu_id);
     pthread_mutex_lock(&mutex_interrupt);
