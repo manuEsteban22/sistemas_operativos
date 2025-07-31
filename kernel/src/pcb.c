@@ -31,8 +31,10 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
 //para ver a que pcb esta asignado dicho pid
 t_pcb* obtener_pcb(int pid) {
     char* pid_str = string_itoa(pid);
+    log_error(logger, "34: pthread_mutex_locK(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
     t_pcb* pcb = dictionary_get(tabla_pcbs, pid_str);
+    log_error(logger, "pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
     if (pcb == NULL) {
         log_error(logger, "Error para obtener PCB NULL");
@@ -63,21 +65,23 @@ void cambiar_estado_sin_lock(t_pcb* pcb, t_estado_proceso nuevo_estado) {
 }
 
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
-    log_error(logger, "bloquea pcb pcb:66");
+    log_error(logger, "68:pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     cambiar_estado_sin_lock(pcb, nuevo_estado);
-    log_error(logger, "desbloquea pcb pcb:69");
+    log_error(logger, "71: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 
 void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
-    log_error(logger, "bloquea pcb pcb:71");
+    log_error(logger, "77: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     char* pid_str = string_itoa(pcb->pid);
 
+    log_error(logger, "81: pthread_mutex_lock(&mutex_exec);");
     pthread_mutex_lock(&mutex_exec);
     int* cpu_id = dictionary_remove(tabla_exec, pid_str);
+    log_error(logger, "84  pthread_mutex_unlock(&mutex_exec);");
     pthread_mutex_unlock(&mutex_exec);
 
     if(cpu_id != NULL){
@@ -85,12 +89,16 @@ void borrar_pcb(t_pcb* pcb){
         free(cpu_id);
     }
 
+    log_error(logger, "92 pthread_mutex_lock(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
     t_pcb* pcb_borrar = dictionary_remove(tabla_pcbs, pid_str);
+    log_error(logger, "95: pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
 
     free(pid_str);
+    log_error(logger, "pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
+
     pthread_mutex_destroy(&pcb->mutex_pcb);
     temporal_destroy(pcb->temporal_estado);
     free(pcb);
@@ -114,6 +122,7 @@ void actualizar_estimacion_rafaga(t_pcb* pcb) {
     log_debug(logger, "Nueva estimacion = %f", nueva_estimacion);
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
+    log_error(logger, "125: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 
@@ -126,11 +135,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         return;
     }
     
-    log_debug(logger,"hasta aca llegue 2");
     t_pcb* ejecutando = obtener_proceso_en_exec();
-    log_debug(logger,"hasta aca llegue 4");
-    //log_error(logger, "bloquea pcb pcb:127");
-    //pthread_mutex_lock(&ejecutando->mutex_pcb);
     double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
     double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_ejecutando;
 
@@ -140,14 +145,14 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     }
     log_debug(logger, "PID %d (ejecutando) - Estimación restante: %.2f", ejecutando->pid, estimacion_restante);
     log_debug(logger, "PID %d (nuevo) - Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
-    log_debug(logger,"hasta aca llegue 5");
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
         char* pid_str = string_itoa(ejecutando->pid);
-        log_debug(logger,"hasta aca llegue 6");
+        log_error(logger, "152 pthread_mutex_lock(&mutex_exec);");
         pthread_mutex_lock(&mutex_exec);
         int* cpu_id_ptr = dictionary_get(tabla_exec, pid_str);
+        log_error(logger, "155 pthread_mutex_unlock(&mutex_exec);");
         pthread_mutex_unlock(&mutex_exec);
         log_debug(logger,"hasta aca llegue 7");
         if(cpu_id_ptr == NULL){
@@ -160,28 +165,36 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         free(pid_str);
         log_debug(logger,"hasta aca llegue 8");
         char* cpu_id_str = string_itoa(cpu_id);
+        log_error(logger, "168: pthread_mutex_lock(&mutex_interrupt);");
         pthread_mutex_lock(&mutex_interrupt);
         int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+        log_error(logger, "171: pthread_mutex_unlock(&mutex_interrupt);");
         pthread_mutex_unlock(&mutex_interrupt);
         if(socket_interrupt_ptr != NULL){
             int socket_interrupt = *socket_interrupt_ptr;
             enviar_interrupcion_a_cpu(socket_interrupt);
             log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
 
+            log_error(logger, "178: pthread_mutex_lock(&mutex_exec);");
             pthread_mutex_lock(&mutex_exec);
             int* cpu_id = dictionary_remove(tabla_exec, ejecutando->pid);
+            log_error(logger, "181: pthread_mutex_unlock(&mutex_exec);");
             pthread_mutex_unlock(&mutex_exec);
             
             ejecutando->estimacion_rafaga = estimacion_restante;
             //pthread_mutex_unlock(&ejecutando->mutex_pcb);
             //log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
+            log_error(logger, "187: pthread_mutex_lock(&mutex_ready);");
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, ejecutando);
+            log_error(logger, "190: pthread_mutex_unlock(&mutex_ready);");
             pthread_mutex_unlock(&mutex_ready);
             
             //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id);
+            log_error(logger, "194: pthread_mutex_lock(&mutex_cpus_libres);");
             pthread_mutex_lock(&mutex_cpus_libres);
             queue_push(cpus_libres, cpu_id);
+            log_error(logger, "197: pthread_mutex_unlock(&mutex_cpus_libres);");
             pthread_mutex_unlock(&mutex_cpus_libres);
             //pushear ejecutando a ready
             //pushear a la cola de cpus libres tambien
@@ -206,8 +219,10 @@ t_pcb* obtener_proceso_en_exec(){
             pcb_en_exec = pcb;
         }
     }
+    log_error(logger, "222: pthread_mutex_lock(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
     dictionary_iterator(tabla_pcbs, buscar_exec);
+    log_error(logger, "225: pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
     return pcb_en_exec;
 }
@@ -220,14 +235,16 @@ bool hay_proceso_en_exec(){
             hay_exec = true;
         }
     }
+    log_error(logger, "229:pthread_mutex_lock(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
     dictionary_iterator(tabla_pcbs, buscar_exec);
+    log_error(logger, "232:pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
     return hay_exec;
 }
 
 void asignar_timer_blocked(t_pcb* pcb){
-    log_error(logger, "bloquea pcb pcb:229");
+    log_error(logger, "238:pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     
     if (pcb->temporal_blocked != NULL) {
@@ -235,6 +252,7 @@ void asignar_timer_blocked(t_pcb* pcb){
         pcb->temporal_blocked = NULL;
     }
     pcb->temporal_blocked = temporal_create();
+    log_error(logger, "246: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
     sem_post(&sem_procesos_en_blocked);
 }

@@ -210,7 +210,6 @@ void borrar_socket_io(t_dispositivo_io* dispositivo, int socket_a_borrar){
     for(int i = 0; i < list_size(dispositivo->sockets_io); i++){
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if(instancia->socket == socket_a_borrar){
-            log_error(logger, "Esto no se esta corriendo no");
             list_remove_and_destroy_element(dispositivo->sockets_io, i, free);
             return;
         }

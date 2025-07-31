@@ -4,18 +4,21 @@ void* trackear_bloqueo(void* args){
     t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
     
-    log_error(logger, "bloquea pcb pmp:7");
+    log_error(logger, "pmp 7: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->estado_actual == BLOCKED){
         
         log_error(logger,"Se bloqueo en pmp:10");
+        log_error(logger, "pmp 12: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
         queue_pop(cola_blocked); 
+        log_error(logger, "pmp 16: pthread_mutex_unlock(&mutex_blocked);");
         pthread_mutex_unlock(&mutex_blocked);
 
         int estado_anterior = pcb->estado_actual;
-        cambiar_estado(pcb, SUSP_BLOCKED);
+        cambiar_estado_sin_lock(pcb, SUSP_BLOCKED);
+        //cambiar_estado(pcb, SUSP_BLOCKED);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
         
         pthread_mutex_lock(&mutex_susp_blocked);
@@ -32,6 +35,7 @@ void* trackear_bloqueo(void* args){
 
         
     }
+    log_error(logger, "pmp 37: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
     
     return NULL;
@@ -48,12 +52,13 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
-        log_error(logger,"Se bloqueo en pmp:50");
+        log_error(logger,"pmp 54: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
         bool hay_bloqueados = !queue_is_empty(cola_blocked);
         if (hay_bloqueados){
             t_pcb* pcb = queue_peek(cola_blocked); 
+            log_error(logger, "pmp 60: pthread_mutex_unlock(&mutex_blocked);");
             pthread_mutex_unlock(&mutex_blocked);
             
             if (pcb == NULL) {
@@ -82,7 +87,10 @@ void planificador_mediano_plazo(){
             //int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
             //if (tiempo_bloqueado >= tiempo_suspension){
 
-        } else{pthread_mutex_unlock(&mutex_blocked);}
+        } else{
+            log_error(logger, "pmp 90: pthread_mutex_unlock(&mutex_blocked);");
+            pthread_mutex_unlock(&mutex_blocked);
+            }
     }
 }
 
