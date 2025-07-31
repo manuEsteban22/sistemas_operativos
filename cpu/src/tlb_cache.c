@@ -19,6 +19,24 @@ void inicializar_cache() {
     cache = list_create();
 }
 
+// void enviar_desalojo_a_kernel(t_pcb* pcb){
+//     t_paquete* paquete = crear_paquete();
+//     cambiar_opcode_paquete()
+// }
+
+void gestionar_desalojo (t_pcb* pcb){
+    if(entradas_tlb > 0){
+        limpiar_tlb();
+        log_trace(logger, "Se limpio TLB por desalojo del proceso PID %d", pcb->pid);
+    }
+
+    if(entradas_cache > 0){
+        log_trace(logger, "Se limpio la caché por desalojo del proceso PID %d", pcb->pid);
+        limpiar_cache(pcb);
+    }
+
+}
+
 void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pcb) {
     log_trace(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
     char* pagina_a_enviar = calloc(1, tam_pagina);
@@ -123,6 +141,24 @@ void actualizar_tlb(int pagina, int marco) {
 void limpiar_tlb() {
     list_destroy_and_destroy_elements(tlb, free);
     tlb = list_create();
+}
+
+void limpiar_cache(t_pcb* pcb) {
+    pthread_mutex_lock(&mutex_cache);
+
+    for(int i = 0; i < list_size(cache); i++){
+        t_entrada_cache* entrada = list_get(cache, i);
+
+        if(entrada->modificado){
+            int direccion_fisica = entrada->marco * tam_pagina;
+            log_info(logger, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb->pid, entrada->pagina, entrada->marco);
+            escribir_pagina_en_memoria(direccion_fisica, entrada->contenido, pcb);
+        }
+        free(entrada->contenido);
+        free(entrada);
+    }
+    list_clean(cache);
+    pthread_mutex_unlock(&mutex_cache);
 }
 
 bool esta_en_cache(int pagina, int* marco, t_pcb* pcb){
