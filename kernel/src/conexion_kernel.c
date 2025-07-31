@@ -255,9 +255,9 @@ void matar_io (int socket_cliente){
             t_dispositivo_io* io_a_borrar = dictionary_remove(dispositivos_io, nombre);
             pthread_mutex_unlock(&mutex_dispositivos);
             list_destroy_and_destroy_elements(io_a_borrar->sockets_io, free);
-            queue_clean_and_destroy_elements(io_a_borrar->cola_bloqueados, free);
+            queue_destroy(io_a_borrar->cola_bloqueados);
             pthread_mutex_destroy(&io_a_borrar->mutex_dispositivos);
-            free(dispositivo);
+            //free(dispositivo);
             free(io_a_borrar);
         }
         

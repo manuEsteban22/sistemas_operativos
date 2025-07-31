@@ -95,7 +95,6 @@ void borrar_pcb(t_pcb* pcb){
     pthread_mutex_unlock(&mutex_exec);
 
     if(cpu_id != NULL){
-        log_error(logger, "SE ESTAN BORRANDO MAL LOS VALORES DE LA TABLA EXEC");
         free(cpu_id);
     }
 

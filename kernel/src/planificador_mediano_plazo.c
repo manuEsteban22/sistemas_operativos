@@ -4,16 +4,16 @@ void* trackear_bloqueo(void* args){
     t_pcb* pcb = (t_pcb*)args;
     usleep(1000 * tiempo_suspension);
     
-    log_error(logger, "pmp 7: pthread_mutex_lock(&pcb->mutex_pcb);");
+    //log_error(logger, "pmp 7: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->estado_actual == BLOCKED){
         
-        log_error(logger,"Se bloqueo en pmp:10");
-        log_error(logger, "pmp 12: pthread_mutex_lock(&mutex_blocked);");
+        //log_error(logger,"Se bloqueo en pmp:10");
+       // log_error(logger, "pmp 12: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
         queue_pop(cola_blocked); 
-        log_error(logger, "pmp 16: pthread_mutex_unlock(&mutex_blocked);");
+       // log_error(logger, "pmp 16: pthread_mutex_unlock(&mutex_blocked);");
         pthread_mutex_unlock(&mutex_blocked);
 
         int estado_anterior = pcb->estado_actual;
@@ -35,7 +35,7 @@ void* trackear_bloqueo(void* args){
 
         
     }
-    log_error(logger, "pmp 37: pthread_mutex_unlock(&pcb->mutex_pcb);");
+    //log_error(logger, "pmp 37: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
     
     return NULL;
@@ -52,13 +52,13 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
-        log_error(logger,"pmp 54: pthread_mutex_lock(&mutex_blocked);");
+       // log_error(logger,"pmp 54: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
         bool hay_bloqueados = !queue_is_empty(cola_blocked);
         if (hay_bloqueados){
             t_pcb* pcb = queue_peek(cola_blocked); 
-            log_error(logger, "pmp 60: pthread_mutex_unlock(&mutex_blocked);");
+            //log_error(logger, "pmp 60: pthread_mutex_unlock(&mutex_blocked);");
             pthread_mutex_unlock(&mutex_blocked);
             
             if (pcb == NULL) {
@@ -88,7 +88,7 @@ void planificador_mediano_plazo(){
             //if (tiempo_bloqueado >= tiempo_suspension){
 
         } else{
-            log_error(logger, "pmp 90: pthread_mutex_unlock(&mutex_blocked);");
+            //log_error(logger, "pmp 90: pthread_mutex_unlock(&mutex_blocked);");
             pthread_mutex_unlock(&mutex_blocked);
             }
     }
