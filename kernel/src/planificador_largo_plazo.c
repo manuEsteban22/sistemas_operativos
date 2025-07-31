@@ -130,7 +130,7 @@ void finalizar_proceso(t_pcb* pcb){
     
 
     sem_post(&sem_plp);//Como se libera memoria mando una señal mas
-    sem_post(&cpus_disponibles);
+    
 
     pthread_mutex_lock(&mutex_exec);
 
@@ -148,6 +148,7 @@ void finalizar_proceso(t_pcb* pcb){
     pthread_mutex_lock(&mutex_cpus_libres);
     queue_push(cpus_libres, cpu_id_ptr_copy);
     pthread_mutex_unlock(&mutex_cpus_libres);
+    sem_post(&cpus_disponibles);
 }
 
 
