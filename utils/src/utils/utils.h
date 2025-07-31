@@ -16,6 +16,7 @@
 #include<string.h>
 #include<pthread.h>
 #include<semaphore.h>
+#include<commons/bitarray.h>
 
 
 typedef enum

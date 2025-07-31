@@ -37,7 +37,8 @@ pthread_mutex_t mutex_interrupt = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_dispositivos = PTHREAD_MUTEX_INITIALIZER;
 t_dictionary* tabla_dispatch;
 t_dictionary* tabla_interrupt;
-t_queue* cpus_libres;
+t_list* cpus_libres;
+
 
 int main(int argc, char* argv[]) {
     config = iniciar_config();
@@ -47,7 +48,8 @@ int main(int argc, char* argv[]) {
     tabla_exec = dictionary_create();
     tabla_dispatch = dictionary_create();
     tabla_interrupt = dictionary_create();
-    cpus_libres = queue_create();
+    cpus_libres = list_create();
+
 
     
     if(argc < 3){

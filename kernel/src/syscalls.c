@@ -19,10 +19,10 @@ void llamar_a_io(int socket_dispatch) {
 
     log_info(logger, "Recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
-    log_error(logger, "22 pthread_mutex_lock(&mutex_dispositivos);");
+    //log_error(logger, "22 pthread_mutex_lock(&mutex_dispositivos);");
     pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
-    log_error(logger, "25 pthread_mutex_unlock(&mutex_dispositivos);");
+    //log_error(logger, "25 pthread_mutex_unlock(&mutex_dispositivos);");
     pthread_mutex_unlock(&mutex_dispositivos);
 
     if(io == NULL) {
@@ -51,18 +51,18 @@ void llamar_a_io(int socket_dispatch) {
     asignar_timer_blocked(pcb);
 
     log_debug(logger, "Se bloquea el proceso PID %d", pcb->pid);
-    log_error(logger,"54: pthread_mutex_lock(&mutex_blocked);");
+    //log_error(logger,"54: pthread_mutex_lock(&mutex_blocked);");
     pthread_mutex_lock(&mutex_blocked);
     
     queue_push(cola_blocked, pcb);
-    log_error(logger, "58: pthread_mutex_unlock(&mutex_blocked);");
+    //log_error(logger, "58: pthread_mutex_unlock(&mutex_blocked);");
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
-    log_error(logger, "62: pthread_mutex_lock(&mutex_interrupt);");
+    //log_error(logger, "62: pthread_mutex_lock(&mutex_interrupt);");
     pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
-    log_error(logger, "65: pthread_mutex_unlock(&mutex_interrupt);");
+    //log_error(logger, "65: pthread_mutex_unlock(&mutex_interrupt);");
     pthread_mutex_unlock(&mutex_interrupt);
     if(!socket_interrupt_ptr){
         log_error(logger, "No se encontro el socket_interrupt para CPU ID %d", cpu_id);
@@ -94,11 +94,10 @@ void llamar_a_io(int socket_dispatch) {
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
-        log_error(logger, "97: pthread_mutex_lock(&io->mutex_dispositivos);");
+        //log_error(logger, "97: pthread_mutex_lock(&io->mutex_dispositivos);");
         pthread_mutex_lock(&io->mutex_dispositivos);
-        instancia->ocupado = true;
         instancia->pid_ocupado = pid;
-        log_error(logger, "101: pthread_mutex_unlock(&io->mutex_dispositivos);");
+        //log_error(logger, "101: pthread_mutex_unlock(&io->mutex_dispositivos);");
         pthread_mutex_unlock(&io->mutex_dispositivos);
 
         t_paquete* paquete = crear_paquete();
@@ -116,19 +115,22 @@ void llamar_a_io(int socket_dispatch) {
     *cpu_id_ptr = cpu_id;
 
     //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
-    log_error(logger, "119: pthread_mutex_lock(&mutex_cpus_libres);");
+    //log_error(logger, "119: pthread_mutex_lock(&mutex_cpus_libres);");
     pthread_mutex_lock(&mutex_cpus_libres);
-    queue_push(cpus_libres, cpu_id_ptr);
-    log_error(logger, "122: pthread_mutex_unlock(&mutex_cpus_libres);");
+    if(!cpu_esta_en_lista(*cpu_id_ptr)){
+        list_add(cpus_libres, cpu_id_ptr);
+    }
+    log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
+   // log_error(logger, "122: pthread_mutex_unlock(&mutex_cpus_libres);");
     pthread_mutex_unlock(&mutex_cpus_libres);
 
     sem_post(&cpus_disponibles);
-    log_error(logger, "126: pthread_mutex_lock(&mutex_ready);");
+   // log_error(logger, "126: pthread_mutex_lock(&mutex_ready);");
     pthread_mutex_lock(&mutex_ready);
     if(!queue_is_empty(cola_ready)){
         sem_post(&sem_procesos_ready);
     }
-    log_error(logger, "131: pthread_mutex_unlock(&mutex_ready);");
+   // log_error(logger, "131: pthread_mutex_unlock(&mutex_ready);");
     pthread_mutex_unlock(&mutex_ready);
 
     list_destroy_and_destroy_elements(campos, free);
@@ -154,52 +156,46 @@ void manejar_finaliza_io(int socket_io){
 
     int estado_anterior = pcb->estado_actual;
 
-    log_error(logger, "158: pthread_mutex_lock(&pcb->mutex_pcb);");
+    //log_error(logger, "158: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     if (pcb->estado_actual == SUSP_BLOCKED){
 
-        log_error(logger, "162: pthread_mutex_lock(&mutex_susp_blocked);");
+        //log_error(logger, "162: pthread_mutex_lock(&mutex_susp_blocked);");
         pthread_mutex_lock(&mutex_susp_blocked);
         sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
-        log_error(logger, "165: pthread_mutex_unlock(&mutex_susp_blocked);");
+        //log_error(logger, "165: pthread_mutex_unlock(&mutex_susp_blocked);");
         pthread_mutex_unlock(&mutex_susp_blocked);
-        log_debug(logger, "llega aca desbloqueando susp blocked");
         cambiar_estado_sin_lock(pcb, SUSP_READY);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
-        log_error(logger, "171: pthread_mutex_lock(&mutex_susp_ready);");
+        //log_error(logger, "171: pthread_mutex_lock(&mutex_susp_ready);");
         pthread_mutex_lock(&mutex_susp_ready);
         queue_push(cola_susp_ready, pcb);
-        log_error(logger, "174: pthread_mutex_unlock(&mutex_susp_ready);");
+        //log_error(logger, "174: pthread_mutex_unlock(&mutex_susp_ready);");
         pthread_mutex_unlock(&mutex_susp_ready);
         sem_post(&sem_plp);
 
     } else if (pcb->estado_actual == BLOCKED){
-        log_debug(logger, "llega aca sin bloquear blocked");
-        log_error(logger,"180: pthread_mutex_lock(&mutex_blocked);");
+        //log_error(logger,"180: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
-        log_error(logger, "aca no hizo deadlock");
         sacar_pcb_de_cola(cola_blocked, pcb->pid);
-        log_error(logger, "aca tampoco hizo deadlock");
         cambiar_estado_sin_lock(pcb, READY);
-        log_error(logger, "aca si hizo deadlock");
-        log_error(logger,"187: pthread_mutex_unlock(&mutex_blocked);");
+        //log_error(logger,"187: pthread_mutex_unlock(&mutex_blocked);");
         pthread_mutex_unlock(&mutex_blocked);
 
         
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
         //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
-        log_error(logger,"194: pthread_mutex_lock(&mutex_ready);");
+        //log_error(logger,"194: pthread_mutex_lock(&mutex_ready);");
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
-        log_error(logger,"197: pthread_mutex_unlock(&mutex_ready);");
+        //log_error(logger,"197: pthread_mutex_unlock(&mutex_ready);");
         pthread_mutex_unlock(&mutex_ready);
         log_info(logger, "## (%d) finalizó IO y pasa a READY", pcb->pid);
         sem_post(&sem_procesos_ready);
 
     }
-    log_debug(logger, "llega aca");
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     t_instancia_io* instancia = NULL;
 
@@ -212,27 +208,33 @@ void manejar_finaliza_io(int socket_io){
     }
 
     if(instancia != NULL){
-        log_error(logger, "216: pthread_mutex_lock(&io->mutex_dispositivos);");
+        //log_error(logger, "216: pthread_mutex_lock(&io->mutex_dispositivos);");
         pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->ocupado = false;
         instancia->pid_ocupado = -1;
-        log_error(logger, "220: pthread_mutex_unlock(&io->mutex_dispositivos);");
+        //log_error(logger, "220: pthread_mutex_unlock(&io->mutex_dispositivos);");
         pthread_mutex_unlock(&io->mutex_dispositivos);
     }
 
-    t_instancia_io* libre = obtener_instancia_disponible(io);
-
     if (!queue_is_empty(io->cola_bloqueados)) {
-        t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
-
+        t_instancia_io* libre = obtener_instancia_disponible(io);
         if(libre == NULL){
             log_error(logger, "No quedan instancias del dispositivo [%s]", nombre_dispositivo);
             log_debug(logger, "Este caso no se deberia dar");//no se contempla pasar procesos a exit
-            free(siguiente);
+            //free(siguiente);
             list_destroy_and_destroy_elements(recibido, free);
             return;
         }
+        
+        log_error(logger, "------------------------");
+        log_error(logger, "HAY (%d) PROCESOS EN LA COLA DE BLOQUEADOS DE IO", queue_size(io->cola_bloqueados));
+        log_error(logger, "------------------------");
+        log_error(logger, "------------------------");
+        log_error(logger, "------------------------");
+        log_error(logger, "------------------------");
 
+
+        t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
         // Mandar a IO
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
@@ -243,21 +245,24 @@ void manejar_finaliza_io(int socket_io){
         enviar_paquete(paquete, libre->socket, logger);
         borrar_paquete(paquete);
 
-        log_error(logger, "247: pthread_mutex_lock(&io->mutex_dispositivos);");
+      //  log_error(logger, "247: pthread_mutex_lock(&io->mutex_dispositivos);");
         pthread_mutex_lock(&io->mutex_dispositivos);
         libre->ocupado = true;
         libre->pid_ocupado = siguiente->pid;
-        log_error(logger, "251: pthread_mutex_unlock(&io->mutex_dispositivos);");
+      //  log_error(logger, "251: pthread_mutex_unlock(&io->mutex_dispositivos);");
         pthread_mutex_unlock(&io->mutex_dispositivos);
 
         int* cpu_id_ptr_copia = malloc(sizeof(int));
         *cpu_id_ptr_copia = cpu_id;
 
         //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
-        log_error(logger, "258: pthread_mutex_lock(&mutex_cpus_libres);");
+      //  log_error(logger, "258: pthread_mutex_lock(&mutex_cpus_libres);");
         pthread_mutex_lock(&mutex_cpus_libres);
-        queue_push(cpus_libres, cpu_id_ptr_copia);
-        log_error(logger, "261: pthread_mutex_unlock(&mutex_cpus_libres);");
+        if(!cpu_esta_en_lista(*cpu_id_ptr_copia)){
+            list_add(cpus_libres, cpu_id_ptr_copia);
+        }
+        log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
+       // log_error(logger, "261: pthread_mutex_unlock(&mutex_cpus_libres);");
         pthread_mutex_unlock(&mutex_cpus_libres);
         sem_post(&cpus_disponibles);
 
@@ -273,7 +278,7 @@ void manejar_finaliza_io(int socket_io){
             pcb->temporal_blocked = NULL;
         }
     }
-    log_error(logger, "277: pthread_mutex_unlock(&pcb->mutex_pcb);");
+   // log_error(logger, "277: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
     free(nombre_dispositivo);
     list_destroy_and_destroy_elements(recibido, free);
@@ -296,18 +301,18 @@ void* esperar_confirmacion_dump(void* args_void){
         cambiar_estado(pcb, READY);
         log_debug(logger, "El dump memory se llevo a cabo correctamente");
         log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        log_error(logger,"300: pthread_mutex_lock(&mutex_blocked);");
+       // log_error(logger,"300: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
         sacar_pcb_de_cola(cola_blocked, pid);
-        log_error(logger,"304: pthread_mutex_unlock(&mutex_blocked);");
+       // log_error(logger,"304: pthread_mutex_unlock(&mutex_blocked);");
         pthread_mutex_unlock(&mutex_blocked);
 
         //log_error(logger, "aca se hace un push a cola de ready de PID %d", pcb->pid);
-        log_error(logger,"308: pthread_mutex_lock(&mutex_ready);");
+      //  log_error(logger,"308: pthread_mutex_lock(&mutex_ready);");
         pthread_mutex_lock(&mutex_ready);
         queue_push(cola_ready, pcb);
-        log_error(logger,"311: pthread_mutex_unlock(&mutex_ready);");
+      //  log_error(logger,"311: pthread_mutex_unlock(&mutex_ready);");
         pthread_mutex_unlock(&mutex_ready);
 
         sem_post(&sem_procesos_ready);
@@ -318,13 +323,13 @@ void* esperar_confirmacion_dump(void* args_void){
         log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
         borrar_pcb(pcb);
     }
-    log_error(logger, "322: pthread_mutex_lock(&pcb->mutex_pcb);");
+   // log_error(logger, "322: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->temporal_blocked != NULL){
         temporal_destroy(pcb->temporal_blocked);
         pcb->temporal_blocked = NULL;
     }
-    log_error(logger, "328: pthread_mutex_unlock(&pcb->mutex_pcb);");
+   // log_error(logger, "328: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
     cerrar_conexion_memoria(socket_memoria);
     log_debug(logger, "Se recibio confirmacion de memory dump");
@@ -340,7 +345,7 @@ void dump_memory(int socket_dispatch){
     int cpu_id = *((int*)list_get(recibido, 2));
 
     log_trace(logger, "## DUMP MEMORY - PID %d - PC %d - CPU_ID %d", pid, pc, cpu_id);
-    log_error(logger,"344: pthread_mutex_lock(&mutex_blocked);");
+   // log_error(logger,"344: pthread_mutex_lock(&mutex_blocked);");
     pthread_mutex_lock(&mutex_blocked);
     
     t_pcb* pcb = obtener_pcb(pid);
@@ -357,10 +362,10 @@ void dump_memory(int socket_dispatch){
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
-    log_error(logger, "361: pthread_mutex_lock(&mutex_interrupt);");
+   // log_error(logger, "361: pthread_mutex_lock(&mutex_interrupt);");
     pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
-    log_error(logger, "364: pthread_mutex_unlock(&mutex_interrupt);");
+   // log_error(logger, "364: pthread_mutex_unlock(&mutex_interrupt);");
     pthread_mutex_unlock(&mutex_interrupt);
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);
@@ -381,7 +386,10 @@ void dump_memory(int socket_dispatch){
 
     //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
     pthread_mutex_lock(&mutex_cpus_libres);
-    queue_push(cpus_libres, nuevo_cpu_id);
+    if(!cpu_esta_en_lista(*nuevo_cpu_id)){
+        list_add(cpus_libres, nuevo_cpu_id);
+    }
+    log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);
     sem_post(&cpus_disponibles);
 
@@ -455,4 +463,15 @@ void ejecutar_exit(int socket_cpu){
     actualizar_estimacion_rafaga(pcb);
     finalizar_proceso(pcb);
     list_destroy_and_destroy_elements(recibido, free);
+
+    pthread_mutex_lock(&mutex_ready);
+    if (!queue_is_empty(cola_ready)) {
+        sem_post(&sem_procesos_ready);
+    }
+    log_warning(logger, "El tamaño de la cola de ready es %d", queue_size(cola_ready));
+    pthread_mutex_unlock(&mutex_ready);
+    log_warning(logger, "El tamaño de la cola de new es %d", queue_size(cola_new));
+    log_warning(logger, "El tamaño de la cola de blocked es %d", queue_size(cola_blocked));
+    log_warning(logger, "El tamaño de la cola de susp_ready es %d", queue_size(cola_susp_ready));
+    return;
 }

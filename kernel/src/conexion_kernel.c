@@ -45,7 +45,10 @@ void* manejar_servidor_cpu(void* arg){
 
                     //log_warning(logger, "Pusheo cpu %d a cpus libres", cpu_id);
                     pthread_mutex_lock(&mutex_cpus_libres);
-                    queue_push(cpus_libres, cpu_id_ptr);
+                    if(!cpu_esta_en_lista(*cpu_id_ptr)){
+                        list_add(cpus_libres, cpu_id_ptr);
+                    }
+                    log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
                     pthread_mutex_unlock(&mutex_cpus_libres);
 
                     log_trace(logger, "Socket DISPATCH guardado: %d", socket_cliente);
@@ -195,6 +198,7 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
             continue;
         }
         if (!instancia->ocupado){
+            instancia->ocupado = true;
             pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
             log_debug(logger, "Instancia libre encontrada en socket %d", instancia->socket);
             return instancia;

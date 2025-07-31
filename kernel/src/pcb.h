@@ -52,6 +52,7 @@ char* parsear_estado(int estado);
 void log_metricas_estado(t_pcb* pcb);
 bool hay_proceso_en_exec();
 t_pcb* obtener_proceso_en_exec();
+bool cpu_esta_en_lista(int cpu_id);
 
 #include<planificador_largo_plazo.h>
 

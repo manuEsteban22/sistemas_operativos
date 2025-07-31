@@ -123,8 +123,15 @@ void* planificador_corto_plazo_loop(void* _) {
         sem_wait(&sem_procesos_ready);
 
         while (true) {
-            //if (queue_is_empty(cpus_libres)) break; puede causar rc
-            log_debug(logger, "PCP: CPUs libres: %d - READY size: %d", queue_size(cpus_libres), queue_size(cola_ready));
+            log_warning(logger, "estoy dando una vuelta de pcp");
+            pthread_mutex_lock(&mutex_cpus_libres);
+            if (list_is_empty(cpus_libres)) {
+                pthread_mutex_unlock(&mutex_cpus_libres);
+                log_trace(logger, "La cola de cpus libres esta vacia");
+                break;
+            }
+            pthread_mutex_unlock(&mutex_cpus_libres);
+            log_debug(logger, "PCP: CPUs libres: %d - READY size: %d", list_size(cpus_libres), queue_size(cola_ready));
 
             pthread_mutex_lock(&mutex_ready);
             bool ready_empty = queue_is_empty(cola_ready);
@@ -142,7 +149,8 @@ void* planificador_corto_plazo_loop(void* _) {
 
             //log_warning(logger, "popeo una cpu de cpus libres");
             pthread_mutex_lock(&mutex_cpus_libres);
-            int* cpu_id_ptr = queue_pop(cpus_libres);
+            int* cpu_id_ptr = list_remove(cpus_libres, 0);
+            log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
             pthread_mutex_unlock(&mutex_cpus_libres);
 
             if (!cpu_id_ptr) {

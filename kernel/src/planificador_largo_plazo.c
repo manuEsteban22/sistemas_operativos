@@ -146,7 +146,10 @@ void finalizar_proceso(t_pcb* pcb){
     free(pid_str);
     //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id_ptr_copy);
     pthread_mutex_lock(&mutex_cpus_libres);
-    queue_push(cpus_libres, cpu_id_ptr_copy);
+    if(!cpu_esta_en_lista(*cpu_id_ptr_copy)){
+        list_add(cpus_libres, cpu_id_ptr_copy);
+    }
+    log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);
     sem_post(&cpus_disponibles);
 }
