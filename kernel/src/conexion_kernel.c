@@ -239,19 +239,25 @@ void matar_io (int socket_cliente){
                     int estado_anterior = pcb->estado_actual;
                     cambiar_estado(pcb, EXIT);
                     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+                    char* pid_str = string_itoa(pcb->pid);
+                    pthread_mutex_lock(&mutex_exec);
+                    int* cpu_exec = dictionary_remove(tabla_exec, pid_str);
+                    pthread_mutex_unlock(&mutex_exec);
+                    free(cpu_exec);
+                    free(pid_str);
                     borrar_pcb(pcb);
                 }
                 free(pcb_io);
             }
-            list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
-            queue_destroy(dispositivo->cola_bloqueados);
+            //list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
+            //queue_destroy(dispositivo->cola_bloqueados);
             pthread_mutex_lock(&mutex_dispositivos);
             t_dispositivo_io* io_a_borrar = dictionary_remove(dispositivos_io, nombre);
             pthread_mutex_unlock(&mutex_dispositivos);
-            free(dispositivo);
             list_destroy_and_destroy_elements(io_a_borrar->sockets_io, free);
             queue_clean_and_destroy_elements(io_a_borrar->cola_bloqueados, free);
             pthread_mutex_destroy(&io_a_borrar->mutex_dispositivos);
+            free(dispositivo);
             free(io_a_borrar);
         }
         

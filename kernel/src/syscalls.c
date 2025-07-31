@@ -28,13 +28,37 @@ void llamar_a_io(int socket_dispatch) {
     if(io == NULL) {
         log_error(logger, "dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
         t_pcb* pcb = obtener_pcb(pid);
-        estado_anterior = pcb->estado_actual;
-        cambiar_estado(pcb, EXIT);
-        log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+        if(pcb != NULL){
+            estado_anterior = pcb->estado_actual;
+            cambiar_estado(pcb, EXIT);
+            log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+            borrar_pcb(pcb);
+        } else{
+            log_error(logger, "No se encontro PCB con PID %d al intentar finalizar por IO null", pid);
+        }
+        
+        char* cpu_id_str = string_itoa(cpu_id);
+        pthread_mutex_lock(&mutex_interrupt);
+        int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
+        pthread_mutex_unlock(&mutex_interrupt);
 
-        borrar_pcb(pcb);
+        if(socket_interrupt_ptr != NULL){
+            int socket_interrupt = *socket_interrupt_ptr;
+            t_paquete* senial_bloqueante = crear_paquete();
+            cambiar_opcode_paquete(senial_bloqueante, OC_INTERRUPT);
+            enviar_paquete(senial_bloqueante, socket_interrupt, logger);
+            borrar_paquete(senial_bloqueante);
+            log_debug(logger, "mando interrupcion despues de IO null");
+        }
+        free(cpu_id_str);
+
+        t_paquete* confirmacion = crear_paquete();
+        cambiar_opcode_paquete(confirmacion, OK);
+        enviar_paquete(confirmacion, socket_dispatch, logger);
+        borrar_paquete(confirmacion);
+
         list_destroy_and_destroy_elements(campos, free);
-        free(dispositivo);
+        //free(dispositivo);
         return;
     }
 
