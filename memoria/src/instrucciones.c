@@ -28,7 +28,11 @@ void cargar_instrucciones(int pid, char* nombre_archivo)
     
     fclose(archivo);
     char* pid_str = string_itoa(pid);
+
+    pthread_mutex_lock(&mutex_diccionario_instrucciones);
     dictionary_put(lista_de_instrucciones_por_pid, pid_str, lista_instrucciones);
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
+
     log_debug(logger, "Agregue una lista de instrucciones al diccionario PID %d", pid);
     free(Archivo);
     free(pid_str);
@@ -37,12 +41,19 @@ void cargar_instrucciones(int pid, char* nombre_archivo)
 char* obtener_instruccion(int pc, char* pid) 
 {
     if (pc >= list_size(dictionary_get(lista_de_instrucciones_por_pid, pid))) return NULL;
+
+    pthread_mutex_lock(&mutex_diccionario_instrucciones);
     return list_get(dictionary_get(lista_de_instrucciones_por_pid, pid), pc);
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
 }
 
 
-int cantidad_instrucciones(char* pid) {
+int cantidad_instrucciones(char* pid) 
+{
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
     t_list* instrucciones = dictionary_get(lista_de_instrucciones_por_pid, pid);
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
+
     if (instrucciones == NULL) {
         log_error(logger, "La lista de instrucciones es NULL en cantidad_instrucciones para PID %s", pid);
         return 0;
@@ -129,8 +140,10 @@ int mandar_instruccion(int socket_cliente)
     cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
 
-    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // yrsteajteazjntguesijk sxr4
+    pthread_mutex_lock(&mutex_diccionario_procesos);
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); 
     proceso->metricas.cantidad_instrucciones_solicitadas++;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     borrar_paquete(paquete);
 
@@ -151,7 +164,10 @@ int mandar_frame(int socket_cliente){//recibo nro_pagina y pid y le mando el fra
     int pid = *pid_raw;
     int nro_pagina = *nro_pagina_raw;
 
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     int marco = obtener_marco(pid, nro_pagina);
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
+
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_FRAME);
     agregar_a_paquete(paquete,&marco,sizeof(int));
@@ -173,7 +189,10 @@ int ejecutar_read(int socket_cliente){
 
     usleep(campos_config.retardo_memoria * 1000);
 
+
+    pthread_mutex_lock(&mutex_memoria);
     memcpy(leido, memoria_usuario + direccion_fisica, tamanio);
+    pthread_mutex_unlock(&mutex_memoria);
 
     log_info(logger, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
     t_paquete* paquete = crear_paquete();
@@ -181,8 +200,10 @@ int ejecutar_read(int socket_cliente){
     agregar_a_paquete(paquete, leido, tamanio);
     enviar_paquete(paquete, socket_cliente, logger);
 
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); //cut6dseyrasjiytr46azjtr4ea6
     proceso->metricas.cantidad_lecturas_memoria++;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
 
@@ -202,10 +223,15 @@ int ejecutar_write(int socket_cliente){
 
     usleep(campos_config.retardo_memoria * 1000);
 
-    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
 
+    pthread_mutex_lock(&mutex_memoria);
+    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
+    pthread_mutex_unlock(&mutex_memoria);
+
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // aaaaaaaaaaaaaaaaaaaaaaaaaakhfysxky
     proceso->metricas.cantidad_escrituras_memoria++;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
 
@@ -226,7 +252,11 @@ int leer_pagina_completa(int socket_cliente){
 
     usleep(campos_config.retardo_memoria * 1000);
 
+
+    pthread_mutex_lock(&mutex_memoria);
     memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
+    pthread_mutex_unlock(&mutex_memoria);
+    
     log_debug(logger, "Contenido de la pagina : %s", buffer);
 
     t_paquete* paquete = crear_paquete();
@@ -234,8 +264,10 @@ int leer_pagina_completa(int socket_cliente){
     agregar_a_paquete(paquete, buffer, campos_config.tam_pagina);
     enviar_paquete(paquete, socket_cliente, logger);
 
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); //cut6dseyrasjiytr46azjtr4ea6
     proceso->metricas.cantidad_lecturas_memoria++;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
     borrar_paquete(paquete);
@@ -256,14 +288,18 @@ int escribir_pagina_completa(int socket_cliente){
 
     usleep(campos_config.retardo_memoria * 1000);
 
+    pthread_mutex_lock(&mutex_memoria);
     memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
+    pthread_mutex_unlock(&mutex_memoria);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OK);
     enviar_paquete(paquete, socket_cliente, logger);
 
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); // aaaaaaaaaaaaaaaaaaaaaaaaaakhfysxky
     proceso->metricas.cantidad_escrituras_memoria++;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
     borrar_paquete(paquete);
@@ -283,8 +319,13 @@ void dumpear_memoria(int pid, int socket_cliente){
     }
 
     char* pid_str = string_itoa(pid);
+
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     t_proceso* copia = proceso;
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
+
+    
     free(pid_str);
 
     if(!copia){
@@ -297,8 +338,12 @@ void dumpear_memoria(int pid, int socket_cliente){
 
     int marcos_totales = campos_config.tam_memoria / campos_config.tam_pagina;
 
-    for (int pagina = 0; pagina < copia->paginas_usadas; pagina++) {
+    for (int pagina = 0; pagina < copia->paginas_usadas; pagina++) 
+    {
+        pthread_mutex_lock(&mutex_tablas);
         t_entrada_tabla* entrada = buscar_entrada(copia->tabla_raiz, pagina, 0);
+        pthread_mutex_unlock(&mutex_tablas);
+
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", pagina);
             
@@ -343,6 +388,7 @@ char* obtener_timestamp() {
 
 int obtener_marco(int pid, int nro_pagina) {
     char* pid_str = string_itoa(pid);
+    
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     free(pid_str);
 

@@ -1,6 +1,7 @@
 #include <config_memoria.h>
 
 t_config* iniciar_config();
+t_log* iniciar_logger();
 
 t_configuracion campos_config;
 
@@ -20,6 +21,14 @@ t_configuracion retornar_config(t_config * config){
     return campos_config;
 }
 
+t_log* iniciar_logger(void){
+    t_log_level nivel = log_level_from_string (campos_config.log_level);
+    t_log* nuevo_logger;
+    nuevo_logger = log_create("memoria.log","LogMem",true, nivel);
+    log_trace(nuevo_logger, "Funciona logger memoria :)");
+    return nuevo_logger;
+}
+
 t_config* iniciar_config(void){
     t_config* nuevo_config;
     nuevo_config = config_create("memoria.config");
@@ -29,3 +38,13 @@ t_config* iniciar_config(void){
     }
     return nuevo_config;
 }
+
+// MUTEX
+
+
+
+pthread_mutex_t mutex_memoria = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_diccionario_procesos = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_diccionario_instrucciones = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_swap = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_bitmap = PTHREAD_MUTEX_INITIALIZER;

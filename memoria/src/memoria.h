@@ -8,6 +8,6 @@
 #include <swap.h>
 #include <commons/bitarray.h>
 
-extern t_log* logger;
+
 
 #endif

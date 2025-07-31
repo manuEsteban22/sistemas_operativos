@@ -1,5 +1,5 @@
 #include <memoria.h>
-t_log* iniciar_logger();
+
 t_log* logger;
 t_config* config;
 
@@ -18,15 +18,6 @@ int main(int argc, char* argv[]){
     pause();
     return 0;
 }
-
-t_log* iniciar_logger(void){
-    t_log_level nivel = log_level_from_string (campos_config.log_level);
-    t_log* nuevo_logger;
-    nuevo_logger = log_create("memoria.log","LogMem",true, nivel);
-    log_trace(nuevo_logger, "Funciona logger memoria :)");
-    return nuevo_logger;
-}
-
 
 //cerrar logger, config, etc
 void terminar_programa(t_log* logger){

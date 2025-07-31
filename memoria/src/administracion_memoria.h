@@ -47,6 +47,7 @@ typedef struct {
     int accesos_memoria;
     int page_faults;
     t_metricas metricas;
+    pthread_mutex_t mutex_tabla;
 } t_proceso;
 
 t_tabla_paginas* crear_tabla(int nivel_actual);
