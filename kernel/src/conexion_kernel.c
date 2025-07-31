@@ -83,6 +83,16 @@ void* manejar_servidor_cpu(void* arg){
                 log_info(logger, "Recibi un EXIT");
                 ejecutar_exit(socket_cliente);
                 break;
+            case CPU_INTERRUPT:
+                log_trace(logger, "Me llego el pid y pc actualizados de la interrupcion");
+                t_list* recibido = recibir_paquete(socket_cliente);
+                int* pid_ptr = list_get(recibido, 0);
+                int* pc_ptr = list_get(recibido, 1);
+                t_pcb* pcb = obtener_pcb(*pid_ptr);
+                int pc = *pc_ptr;
+                pcb->pc = pc;
+                list_destroy_and_destroy_elements(recibido, free);
+                break;
             case ERROR:
                 break;
             default:

@@ -163,8 +163,9 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         break;
     case IO:
         log_info(logger, "## PID: %d - Ejecutando: IO - %s %d", pid, (char*)instruccion->param1, atoi(instruccion->param2));
-        pcb->pc++;
+        //pcb->pc++;
         ejecutar_io(instruccion, pcb, cpu_id);
+        pcb->pc++;
         break;
     case INIT_PROC:
         init_proc(instruccion, pcb);
@@ -172,9 +173,8 @@ void execute(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
         pcb->pc++;
         break;
     case DUMP_MEMORY:
-        log_trace(logger, "Se va a ejecutar un dump memory PID %d ", pcb->pid);
-        dump_memory(pcb, cpu_id);
         log_info(logger, "## PID: %d - Ejecutando: DUMP_MEMORY", pid);
+        dump_memory(pcb, cpu_id);
         pcb->pc++;
         break;
     case EXIT:
@@ -197,9 +197,30 @@ bool check_interrupt(t_pcb* pcb){
 
     if(recibido > 0 && opcode == OC_INTERRUPT){
         log_info(logger, "## Llega interrupción al puerto Interrupt");
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, CPU_INTERRUPT);
+        agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+        agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
+        enviar_paquete(paquete, socket_kernel_dispatch, logger);
+        borrar_paquete(paquete);
         return true;
     }
     return false;
+}
+
+void check_interrupt_syscall(t_pcb* pcb){
+    int opcode = recibir_operacion(socket_kernel_interrupt);
+    if(opcode == OC_INTERRUPT){
+        log_info(logger, "## Llega interrupción al puerto Interrupt");
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, CPU_INTERRUPT);
+        agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
+        agregar_a_paquete(paquete, &(pcb->pc), sizeof(int));
+        enviar_paquete(paquete, socket_kernel_dispatch, logger);
+        borrar_paquete(paquete);
+        recibir_operacion(socket_kernel_interrupt);//limpia basura en el buffer
+        return;
+    }else{log_error(logger, "en vez de llegar interrupcion, llego %d", opcode);}
 }
 
 
@@ -219,13 +240,24 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int cpu_id){
         }
         if(prox->identificador == EXIT){
             proceso_en_running = false;
+            gestionar_desalojo(pcb);
             log_trace(logger, "lei un exit");
         }
         execute(prox, pcb, cpu_id);
 
+        if(prox->identificador == IO || prox->identificador == DUMP_MEMORY){
+            check_interrupt_syscall(pcb);
+            gestionar_desalojo(pcb);
+            proceso_en_running = false;
+        }
+
         if(proceso_en_running){
             hay_interrupcion = check_interrupt(pcb);
-            proceso_en_running = !hay_interrupcion;
+            if(hay_interrupcion){
+                gestionar_desalojo(pcb);
+                //enviar_desalojo_a_kernel(pcb);
+                proceso_en_running = false;
+            }
         }
         free(prox);
     }

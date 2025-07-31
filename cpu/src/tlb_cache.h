@@ -34,5 +34,6 @@ void inicializar_cache();
 int esta_en_tlb(int pagina);
 int pedir_frame(t_pcb* pcb, int nro_pagina);
 void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb);
+void gestionar_desalojo (t_pcb* pcb);
 
 #endif
