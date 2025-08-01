@@ -126,7 +126,7 @@ void* planificador_corto_plazo_loop(void* _) {
         sem_wait(&sem_procesos_ready);
 
         while (true) {
-            log_warning(logger, "estoy dando una vuelta de pcp");
+            log_trace(logger, "estoy dando una vuelta de pcp");
             pthread_mutex_lock(&mutex_cpus_libres);
             if (list_is_empty(cpus_libres)) {
                 pthread_mutex_unlock(&mutex_cpus_libres);

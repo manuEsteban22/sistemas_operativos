@@ -177,6 +177,7 @@ void manejar_finaliza_io(int socket_io){
     if (pcb == NULL){
         log_error(logger, "FINALIZA_IO: No se encontró el PCB del PID %d", *pid);
         list_destroy_and_destroy_elements(recibido, free);
+        free(nombre_dispositivo);
         return;
     }
 
@@ -294,10 +295,8 @@ void manejar_finaliza_io(int socket_io){
 
     
     if(pcb->temporal_blocked != NULL){
-        if(estado_anterior == BLOCKED){
-            temporal_destroy(pcb->temporal_blocked);
-            pcb->temporal_blocked = NULL;
-        }
+        temporal_destroy(pcb->temporal_blocked);
+        pcb->temporal_blocked = NULL;
     }
    // log_error(logger, "277: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
@@ -361,16 +360,19 @@ void dump_memory(int socket_dispatch){
     int estado_anterior;
 
     t_list* recibido = recibir_paquete(socket_dispatch);
-    int pid = *((int*)list_get(recibido, 0));
-    int pc = *((int*)list_get(recibido, 1));
-    int cpu_id = *((int*)list_get(recibido, 2));
+    int* pid_raw = list_get(recibido, 0);
+    int* pc_raw = list_get(recibido, 1);
+    int* cpu_id_raw = list_get(recibido, 2);
 
+    int pid = *pid_raw;
+    int pc = *pc_raw;
+    int cpu_id = *cpu_id_raw;
     log_trace(logger, "## DUMP MEMORY - PID %d - PC %d - CPU_ID %d", pid, pc, cpu_id);
    // log_error(logger,"344: pthread_mutex_lock(&mutex_blocked);");
     pthread_mutex_lock(&mutex_blocked);
     
     t_pcb* pcb = obtener_pcb(pid);
-    pc++;
+    //pc++;
     pcb->pc = pc;
 
     actualizar_estimacion_rafaga(pcb);
@@ -434,6 +436,7 @@ void dump_memory(int socket_dispatch){
     pthread_create(&hilo_confirmacion_dump, NULL, esperar_confirmacion_dump, (void*) args);
     pthread_detach(hilo_confirmacion_dump);
 
+    list_destroy_and_destroy_elements(recibido, free);
 }
 
 
@@ -491,10 +494,6 @@ void ejecutar_exit(int socket_cpu){
     if (!queue_is_empty(cola_ready)) {
         sem_post(&sem_procesos_ready);
     }
-    log_warning(logger, "El tamaño de la cola de ready es %d", queue_size(cola_ready));
     pthread_mutex_unlock(&mutex_ready);
-    log_warning(logger, "El tamaño de la cola de new es %d", queue_size(cola_new));
-    log_warning(logger, "El tamaño de la cola de blocked es %d", queue_size(cola_blocked));
-    log_warning(logger, "El tamaño de la cola de susp_ready es %d", queue_size(cola_susp_ready));
     return;
 }

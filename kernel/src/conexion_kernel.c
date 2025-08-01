@@ -17,7 +17,7 @@ void* manejar_servidor_cpu(void* arg){
             break;
         }
 
-        log_info(logger, "[%s] Código de operación recibido: %d", nombre_cliente, codigo_operacion);
+        //log_info(logger, "[%s] Código de operación recibido: %d", nombre_cliente, codigo_operacion);
 
         switch (codigo_operacion){
             case CERRADO:
@@ -91,8 +91,9 @@ void* manejar_servidor_cpu(void* arg){
                 int* pid_ptr = list_get(recibido, 0);
                 int* pc_ptr = list_get(recibido, 1);
                 t_pcb* pcb = obtener_pcb(*pid_ptr);
-                int pc = *pc_ptr;
-                pcb->pc = pc;
+                if(pcb != NULL){
+                    pcb->pc = *pc_ptr;
+                }else{log_debug(logger, "conexion_kernel:97");}
                 list_destroy_and_destroy_elements(recibido, free);
                 break;
             case ERROR:
@@ -157,7 +158,6 @@ void handshake_io(int socket_dispositivo){
 
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
     if(io == NULL){
-        log_error(logger, "Se creo por primera vez el dispositivo");
         io = malloc(sizeof(t_dispositivo_io));
         io->sockets_io = list_create();
         io->cola_bloqueados = queue_create();
@@ -218,7 +218,7 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
         
     }
     pthread_mutex_unlock(&dispositivo->mutex_dispositivos);
-    log_warning(logger, "No se encontro una instancia libre");
+    log_trace(logger, "No se encontro una instancia libre");
     return NULL;
 }
 
@@ -291,7 +291,7 @@ void* manejar_servidor_io(void* arg){
             break;
         }
 
-        log_info(logger, "IO Código de operación recibido: %d", codigo_operacion);
+        //log_info(logger, "IO Código de operación recibido: %d", codigo_operacion);
 
         switch (codigo_operacion){
             case HANDSHAKE:
