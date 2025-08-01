@@ -151,7 +151,13 @@ int mandar_instruccion(int socket_cliente)
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); 
-    proceso->metricas.cantidad_instrucciones_solicitadas++;
+
+    if(proceso != NULL){
+        proceso->metricas.cantidad_instrucciones_solicitadas++;
+    } else{
+        log_warning(logger,  "PID %s no encontrado en tablas_por_pid (posible destrucción)", pid_str);
+    }
+   
     pthread_mutex_unlock(&mutex_diccionario_procesos);
     log_trace(logger, "aca si 7");
 

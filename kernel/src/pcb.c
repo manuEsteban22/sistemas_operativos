@@ -70,7 +70,11 @@ void cambiar_estado_sin_lock(t_pcb* pcb, t_estado_proceso nuevo_estado) {
     }
 
     temporal_destroy(pcb->temporal_estado);
-    pcb->temporal_estado = temporal_create();
+    if(nuevo_estado != EXIT){
+        pcb->temporal_estado = temporal_create();
+    } else{
+        pcb->temporal_estado = NULL;
+    }
     //borra el cronometro del estado anterior y crea uno nuevo
 }
 
@@ -171,7 +175,6 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         }
 
         int cpu_id = *cpu_id_ptr;
-        free(pid_str);
         log_debug(logger,"hasta aca llegue 8");
         char* cpu_id_str = string_itoa(cpu_id);
        // log_error(logger, "168: pthread_mutex_lock(&mutex_interrupt);");
@@ -179,6 +182,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
        // log_error(logger, "171: pthread_mutex_unlock(&mutex_interrupt);");
         pthread_mutex_unlock(&mutex_interrupt);
+        free(cpu_id_str);
         if(socket_interrupt_ptr != NULL){
             int socket_interrupt = *socket_interrupt_ptr;
             enviar_interrupcion_a_cpu(socket_interrupt);
@@ -186,7 +190,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 
             //log_error(logger, "178: pthread_mutex_lock(&mutex_exec);");
             pthread_mutex_lock(&mutex_exec);
-            int* cpu_id = dictionary_remove(tabla_exec, ejecutando->pid);
+            int* cpu_id = dictionary_remove(tabla_exec, pid_str);
             //log_error(logger, "181: pthread_mutex_unlock(&mutex_exec);");
             pthread_mutex_unlock(&mutex_exec);
             
@@ -218,6 +222,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         } else {
             log_error(logger, "No se encontró socket de interrupción para CPU %d", cpu_id);
         }
+        free(pid_str);
         log_debug(logger,"hasta aca llegue chequear");
         // y hay que replanificar
     }
