@@ -45,7 +45,9 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
             log_trace(logger, "Página %d no está en memoria principal", pagina);
         }
 
+        pthread_mutex_lock(&mutex_bitmap);
         bitarray_set_bit(bitmap_marcos, marco_libre);
+        pthread_mutex_unlock(&mutex_bitmap);
         entrada->presencia = true;
         entrada->marco = marco_libre;
         pthread_mutex_unlock(&proceso->mutex_tabla);
@@ -186,7 +188,9 @@ void* finalizar_proceso(int pid) {
     }
 
     // Elimina del diccionario y libera el proceso
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_remove(tablas_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     // Log de métricas
     log_info(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
@@ -207,15 +211,16 @@ void* finalizar_proceso(int pid) {
 int buscar_marco_libre() 
 {
     int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
-    pthread_mutex_lock(&mutex_bitmap);
+    
     for (int i = 0; i < cantidad_marcos; i++) {
+        pthread_mutex_lock(&mutex_bitmap);
         if (!bitarray_test_bit(bitmap_marcos, i)) {
             bitarray_set_bit(bitmap_marcos, i);
             pthread_mutex_unlock(&mutex_bitmap);
             return i;
         }
+        pthread_mutex_unlock(&mutex_bitmap);
     }
-    pthread_mutex_unlock(&mutex_bitmap);
     return -1;
 }
 
@@ -271,7 +276,11 @@ void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base
         } else {
             if (entrada->presencia) {
                 suspender_pagina(pid, nro_pagina, entrada->marco);
+                
+                pthread_mutex_lock(&mutex_bitmap);
                 bitarray_clean_bit(bitmap_marcos, entrada->marco);
+                pthread_mutex_unlock(&mutex_bitmap);
+
                 entrada->presencia = false;
             }
         }
@@ -314,9 +323,11 @@ int cantidad_marcos_libres()
     int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
     
     for (int i = 0; i < cantidad_marcos; i++) {
+        pthread_mutex_lock(&mutex_bitmap);
         if (!bitarray_test_bit(bitmap_marcos, i)) {
             marcos_libres ++;
         }
+        pthread_mutex_unlock(&mutex_bitmap);
     }
     return marcos_libres;
 }
@@ -359,11 +370,17 @@ void liberar_proceso(void* proceso_void) {
 
     char* pid_str = string_itoa(proceso->pid);
 
+    pthread_mutex_lock(&mutex_diccionario_instrucciones);
     t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
+
     if (instrucciones)
         list_destroy_and_destroy_elements(instrucciones, free);
 
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_remove(tablas_por_pid, pid_str);  // También podés liberar aquí si no lo hiciste antes
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
+
     free(pid_str);
 
     log_trace(logger, "Liberando proceso PID %d", proceso->pid);
