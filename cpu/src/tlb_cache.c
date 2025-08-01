@@ -38,9 +38,9 @@ void gestionar_desalojo (t_pcb* pcb){
 }
 
 void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pcb) {
-    log_trace(logger, "PID: %d, DIRECCION FISICA: %d", pcb->pid, direccion_fisica);
+    log_trace(logger, "PID: %d, DIRECCION FISICA: %d, contenido a escribir {%s}", pcb->pid, direccion_fisica, contenido);
     char* pagina_a_enviar = calloc(1, tam_pagina);
-    memcpy(pagina_a_enviar, contenido, strlen(contenido));
+    memcpy(pagina_a_enviar, contenido, tam_pagina);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_PAG_WRITE);
     agregar_a_paquete(paquete, &(pcb->pid), sizeof(int));
@@ -418,6 +418,9 @@ bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb) {
 }
 
 void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb) {
+    
+    pthread_mutex_lock(&mutex_cache);
+    
     t_entrada_cache* nueva_entrada = malloc(sizeof(t_entrada_cache));
     nueva_entrada->pagina = pagina;
     nueva_entrada->marco = marco;
@@ -441,6 +444,7 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
     }
     
     list_add(cache, nueva_entrada);
+    pthread_mutex_unlock(&mutex_cache);
     log_info(logger, "PID: %d - Cache Add - Pagina: %d", pcb->pid, pagina);
     return;
 }

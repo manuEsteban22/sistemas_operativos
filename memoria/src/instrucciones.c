@@ -264,13 +264,16 @@ int leer_pagina_completa(int socket_cliente){
     log_debug(logger, "PID %d - Dir Fisica %d", pid, direccion_fisica);
     char* pid_str = string_itoa(pid);
 
+    int marco = direccion_fisica / campos_config.tam_pagina;
+    int base = marco * campos_config.tam_pagina;
+
     char* buffer = malloc(campos_config.tam_pagina);
 
     usleep(campos_config.retardo_memoria * 1000);
 
 
     pthread_mutex_lock(&mutex_memoria);
-    memcpy(buffer, memoria_usuario + direccion_fisica, campos_config.tam_pagina);
+    memcpy(buffer, memoria_usuario + base, campos_config.tam_pagina);
     pthread_mutex_unlock(&mutex_memoria);
     
     log_debug(logger, "Contenido de la pagina : %s", buffer);
