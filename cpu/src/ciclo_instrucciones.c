@@ -238,14 +238,15 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int cpu_id){
             proceso_en_running = false;
             return;
         }
-        if(prox->identificador == EXIT){
+        int instruccion = prox->identificador;
+        if(instruccion == EXIT){
             proceso_en_running = false;
             gestionar_desalojo(pcb);
             log_trace(logger, "lei un exit");
         }
         execute(prox, pcb, cpu_id);
 
-        if(prox->identificador == IO || prox->identificador == DUMP_MEMORY){
+        if(instruccion == IO || instruccion == DUMP_MEMORY){
             check_interrupt_syscall(pcb);
             gestionar_desalojo(pcb);
             proceso_en_running = false;

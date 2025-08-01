@@ -52,10 +52,10 @@ void llamar_a_io(int socket_dispatch) {
         }
         free(cpu_id_str);
 
-        t_paquete* confirmacion = crear_paquete();
-        cambiar_opcode_paquete(confirmacion, OK);
-        enviar_paquete(confirmacion, socket_dispatch, logger);
-        borrar_paquete(confirmacion);
+        // t_paquete* confirmacion = crear_paquete();
+        // cambiar_opcode_paquete(confirmacion, OK);
+        // enviar_paquete(confirmacion, socket_dispatch, logger);
+        // borrar_paquete(confirmacion);
 
         list_destroy_and_destroy_elements(campos, free);
         //free(dispositivo);
@@ -103,10 +103,10 @@ void llamar_a_io(int socket_dispatch) {
     enviar_paquete(senial_bloqueante, socket_interrupt, logger);
     borrar_paquete(senial_bloqueante);
     
-    t_paquete* confirmacion = crear_paquete();
-    cambiar_opcode_paquete(confirmacion, OK);
-    enviar_paquete(confirmacion, socket_dispatch, logger);
-    borrar_paquete(confirmacion);
+    // t_paquete* confirmacion = crear_paquete();
+    // cambiar_opcode_paquete(confirmacion, OK);
+    // enviar_paquete(confirmacion, socket_dispatch, logger);
+    // borrar_paquete(confirmacion);
 
     t_instancia_io* instancia = obtener_instancia_disponible(io);
 
@@ -143,6 +143,8 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_cpus_libres);
     if(!cpu_esta_en_lista(*cpu_id_ptr)){
         list_add(cpus_libres, cpu_id_ptr);
+    } else{
+        free(cpu_id_ptr);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
    // log_error(logger, "122: pthread_mutex_unlock(&mutex_cpus_libres);");
@@ -249,13 +251,6 @@ void manejar_finaliza_io(int socket_io){
             list_destroy_and_destroy_elements(recibido, free);
             return;
         }
-        
-        log_error(logger, "------------------------");
-        log_error(logger, "HAY (%d) PROCESOS EN LA COLA DE BLOQUEADOS DE IO", queue_size(io->cola_bloqueados));
-        log_error(logger, "------------------------");
-        log_error(logger, "------------------------");
-        log_error(logger, "------------------------");
-        log_error(logger, "------------------------");
 
 
         t_pcb_io* siguiente = queue_pop(io->cola_bloqueados);
@@ -284,6 +279,8 @@ void manejar_finaliza_io(int socket_io){
         pthread_mutex_lock(&mutex_cpus_libres);
         if(!cpu_esta_en_lista(*cpu_id_ptr_copia)){
             list_add(cpus_libres, cpu_id_ptr_copia);
+        }else{
+            free(cpu_id_ptr_copia);
         }
         log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
        // log_error(logger, "261: pthread_mutex_unlock(&mutex_cpus_libres);");
@@ -400,10 +397,10 @@ void dump_memory(int socket_dispatch){
     enviar_paquete(senial_bloqueante, socket_interrupt, logger);
     borrar_paquete(senial_bloqueante);
 
-    t_paquete* confirmacion = crear_paquete();
-    cambiar_opcode_paquete(confirmacion, OK);
-    enviar_paquete(confirmacion, socket_dispatch, logger);
-    borrar_paquete(confirmacion);
+    // t_paquete* confirmacion = crear_paquete();
+    // cambiar_opcode_paquete(confirmacion, OK);
+    // enviar_paquete(confirmacion, socket_dispatch, logger);
+    // borrar_paquete(confirmacion);
 
     int* nuevo_cpu_id = malloc(sizeof(int));
     *nuevo_cpu_id = cpu_id;
@@ -412,6 +409,8 @@ void dump_memory(int socket_dispatch){
     pthread_mutex_lock(&mutex_cpus_libres);
     if(!cpu_esta_en_lista(*nuevo_cpu_id)){
         list_add(cpus_libres, nuevo_cpu_id);
+    } else{
+        free(nuevo_cpu_id);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);

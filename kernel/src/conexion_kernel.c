@@ -47,6 +47,8 @@ void* manejar_servidor_cpu(void* arg){
                     pthread_mutex_lock(&mutex_cpus_libres);
                     if(!cpu_esta_en_lista(*cpu_id_ptr)){
                         list_add(cpus_libres, cpu_id_ptr);
+                    } else{
+                        free(cpu_id_ptr);
                     }
                     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
                     pthread_mutex_unlock(&mutex_cpus_libres);

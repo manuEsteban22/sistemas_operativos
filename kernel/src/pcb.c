@@ -204,6 +204,8 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             pthread_mutex_lock(&mutex_cpus_libres);
             if(!cpu_esta_en_lista(*cpu_id)){
                 list_add(cpus_libres, cpu_id);
+            } else{
+                free(cpu_id);
             }
             log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
             //log_error(logger, "197: pthread_mutex_unlock(&mutex_cpus_libres);");

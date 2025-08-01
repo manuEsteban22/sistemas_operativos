@@ -65,16 +65,16 @@ void ejecutar_io(t_instruccion* instruccion, t_pcb* pcb, int cpu_id){
     enviar_paquete(paquete, socket_kernel_dispatch, logger);
     borrar_paquete(paquete);
 
-    int respuesta = recibir_operacion(socket_kernel_dispatch);
-    if(respuesta == OK){
-        log_trace(logger, "Recibi confirmacion de IO de kernel");
-        return;
-    }
-    else{
-        log_error(logger, "No se recibio respuesta del IO de kernel, %d", respuesta);
-        recv(socket_kernel_dispatch, &respuesta, sizeof(int), MSG_WAITALL);
-        log_trace(logger, "Opcode %d", respuesta);
-    }
+    // int respuesta = recibir_operacion(socket_kernel_dispatch);
+    // if(respuesta == OK){
+    //     log_trace(logger, "Recibi confirmacion de IO de kernel");
+    //     return;
+    // }
+    // else{
+    //     log_error(logger, "No se recibio respuesta del IO de kernel, %d", respuesta);
+    //     recv(socket_kernel_dispatch, &respuesta, sizeof(int), MSG_WAITALL);
+    //     log_trace(logger, "Opcode %d", respuesta);
+    // }
 }
 
 void init_proc(t_instruccion* instruccion, t_pcb* pcb){

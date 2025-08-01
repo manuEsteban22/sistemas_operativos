@@ -87,6 +87,9 @@ void ejecutar_proceso(t_pcb* pcb, int socket_dispatch, int cpu_id){
     int estado_anterior;
 
     estado_anterior = pcb->estado_actual;
+    if(estado_anterior == BLOCKED){
+        log_error(logger, "aca pasa esto");
+    }
     cambiar_estado(pcb, EXEC);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
