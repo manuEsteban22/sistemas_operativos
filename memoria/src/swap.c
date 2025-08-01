@@ -72,7 +72,6 @@ t_list* asignar_marcos_swap(int cantidad) {
         return NULL;
     }
 
-    log_info(logger, "Se asignaron %d marcos de swap.", cantidad);
     return marcos_libres;
 }
 
