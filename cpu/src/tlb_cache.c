@@ -451,44 +451,48 @@ void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t
 
 int encontrar_victima_cache(t_pcb* pcb) {
     pthread_mutex_lock(&mutex_cache_clock);
-    int vueltas = 0;
 
-    while (vueltas < 2) {
-        for (int i = 0; i < list_size(cache); i++) {
-            t_entrada_cache* entrada = list_get(cache, puntero_clock);
-            
-            log_trace(logger, "Evaluando entrada %d: usado=%d, modificado=%d", puntero_clock, entrada->usado, entrada->modificado);
+    while (1) {
+        for(int vueltas = 0; vueltas < 2; vueltas++){
+            for (int i = 0; i < list_size(cache); i++) {
+                t_entrada_cache* entrada = list_get(cache, puntero_clock);
 
-            if (strcmp(reemplazo_cache, "CLOCK-M") == 0) {
-                if (vueltas == 0 && !entrada->usado && !entrada->modificado) {
-                    int victima = puntero_clock;
-                    puntero_clock = (puntero_clock + 1) % entradas_cache;
-                    pthread_mutex_unlock(&mutex_cache_clock);
-                    return victima;
+                log_trace(logger, "Evaluando entrada %d: usado=%d, modificado=%d", puntero_clock, entrada->usado, entrada->modificado);
+
+                if (strcmp(reemplazo_cache, "CLOCK-M") == 0) {
+                    if (vueltas == 0 && !entrada->usado && !entrada->modificado) {
+                        int victima = puntero_clock;
+                        puntero_clock = (puntero_clock + 1) % entradas_cache;
+                        pthread_mutex_unlock(&mutex_cache_clock);
+                        return victima;
+                    }
+                    if (vueltas == 1) {
+                        if(!entrada->usado && entrada->modificado){
+                            int victima = puntero_clock;
+                            puntero_clock = (puntero_clock + 1) % entradas_cache;
+                            pthread_mutex_unlock(&mutex_cache_clock);
+                            return victima;
+                        }
+                        entrada->usado = false;
+                    }
+                } else if (strcmp(reemplazo_cache, "CLOCK") == 0) {
+                    if (!entrada->usado) {
+                        int victima = puntero_clock;
+                        puntero_clock = (puntero_clock + 1) % entradas_cache;
+                        pthread_mutex_unlock(&mutex_cache_clock);
+                        return victima;
+                    }
+                    entrada->usado = false;
                 }
-                if (vueltas == 1 && !entrada->usado && entrada->modificado) {
-                    
-                    int victima = puntero_clock;
-                    puntero_clock = (puntero_clock + 1) % entradas_cache;
-                    pthread_mutex_unlock(&mutex_cache_clock);
-                    return victima;
-                }
-            } else if (strcmp(reemplazo_cache, "CLOCK") == 0) {
-                if (!entrada->usado) {
-                    int victima = puntero_clock;
-                    puntero_clock = (puntero_clock + 1) % entradas_cache;
-                    pthread_mutex_unlock(&mutex_cache_clock);
-                    return victima;
-                }
+
+                // mueve el puntero a la proxima entrada
+                puntero_clock = (puntero_clock + 1) % entradas_cache;
             }
-
-            entrada->usado = false;
-            puntero_clock = (puntero_clock + 1) % entradas_cache;
         }
-        vueltas++;
+        log_debug(logger, "No se encontró víctima en 2 vueltas, repitiendo búsqueda");
     }
 
-    log_error(logger, "No se encontró víctima, usando la entrada 0 por defecto.");
+    
     pthread_mutex_unlock(&mutex_cache_clock);
     return 0;
 }
