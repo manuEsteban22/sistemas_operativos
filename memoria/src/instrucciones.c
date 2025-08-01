@@ -340,9 +340,9 @@ void dumpear_memoria(int pid, int socket_cliente){
 
     for (int pagina = 0; pagina < copia->paginas_usadas; pagina++) 
     {
-        pthread_mutex_lock(&mutex_tablas);
+        pthread_mutex_lock(&copia->mutex_tabla);
         t_entrada_tabla* entrada = buscar_entrada(copia->tabla_raiz, pagina, 0);
-        pthread_mutex_unlock(&mutex_tablas);
+        pthread_mutex_unlock(&copia->mutex_tabla);
 
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", pagina);
