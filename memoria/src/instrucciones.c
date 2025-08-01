@@ -401,9 +401,7 @@ char* obtener_timestamp() {
 
 int obtener_marco(int pid, int nro_pagina) {
     char* pid_str = string_itoa(pid);
-    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
-    pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
 
