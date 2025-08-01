@@ -9,10 +9,9 @@ void* trackear_bloqueo(void* args){
     pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->estado_actual == BLOCKED){
         
-        //log_error(logger,"Se bloqueo en pmp:10");
-       // log_error(logger, "pmp 12: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
+
         queue_pop(cola_blocked); 
        // log_error(logger, "pmp 16: pthread_mutex_unlock(&mutex_blocked);");
         pthread_mutex_unlock(&mutex_blocked);
@@ -21,7 +20,7 @@ void* trackear_bloqueo(void* args){
         cambiar_estado_sin_lock(pcb, SUSP_BLOCKED);
         //cambiar_estado(pcb, SUSP_BLOCKED);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        
+        log_error(logger, "SE SUSPENDIO PROCESO PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_susp_blocked);
         queue_push(cola_susp_blocked, pcb);
         informar_memoria_suspension(pcb->pid);
@@ -36,8 +35,10 @@ void* trackear_bloqueo(void* args){
 
         
     }
-    //log_error(logger, "pmp 37: pthread_mutex_unlock(&pcb->mutex_pcb);");
+    pcb->en_suspension_check = false;
     pthread_mutex_unlock(&pcb->mutex_pcb);
+    //log_error(logger, "pmp 37: pthread_mutex_unlock(&pcb->mutex_pcb);");
+    //pthread_mutex_unlock(&pcb->mutex_pcb);
     
     return NULL;
 }
@@ -53,45 +54,72 @@ void planificador_mediano_plazo(){
         sem_wait(&sem_procesos_en_blocked);
         log_trace(logger, "arranque una vuelta de plani mediano plazo");
 
-       // log_error(logger,"pmp 54: pthread_mutex_lock(&mutex_blocked);");
         pthread_mutex_lock(&mutex_blocked);
         
-        bool hay_bloqueados = !queue_is_empty(cola_blocked);
-        if (hay_bloqueados){
-            t_pcb* pcb = queue_peek(cola_blocked); 
-            //log_error(logger, "pmp 60: pthread_mutex_unlock(&mutex_blocked);");
-            pthread_mutex_unlock(&mutex_blocked);
-            
-            if (pcb == NULL) {
-                log_error(logger, "ERROR: La PCB en cola_blocked es NULL");
-                //pthread_mutex_unlock(&mutex_blocked);
+        t_list* copia_blocked = list_create();
+        int blocked_size = queue_size(cola_blocked);
+        for(int i = 0; i < blocked_size; i++){
+            t_pcb* pcb = queue_pop(cola_blocked);
+            queue_push(cola_blocked, pcb);
+            list_add(copia_blocked, pcb);
+        }
+
+        pthread_mutex_unlock(&mutex_blocked);
+
+        for(int i = 0; i < list_size(copia_blocked); i++){
+            t_pcb* pcb = list_get(copia_blocked, i);
+
+            pthread_mutex_lock(&pcb->mutex_pcb);
+            if(pcb->temporal_blocked == NULL){
+                pthread_mutex_unlock(&pcb->mutex_pcb);
                 continue;
             }
-            if (pcb->temporal_blocked == NULL) {
-                log_error(logger, "ERROR: temporal_blocked de la PCB PID %d es NULL", pcb->pid);
-                //pthread_mutex_unlock(&mutex_blocked);
+
+            if(pcb->en_suspension_check){
+                pthread_mutex_unlock(&pcb->mutex_pcb);
                 continue;
             }
+
+            pcb->en_suspension_check = true;
+            pthread_mutex_unlock(&pcb->mutex_pcb);
 
             pthread_t hilo_chequear_suspension;
-            int err = pthread_create(&hilo_chequear_suspension, NULL, trackear_bloqueo, pcb);
-            if (err != 0) {
-                log_error(logger, "Error al crear hilo de trackeo de bloqueo: %s", strerror(err));
-            } else {
+            if(pthread_create(&hilo_chequear_suspension, NULL, trackear_bloqueo, pcb) == 0){
                 pthread_detach(hilo_chequear_suspension);
+            } else {
+                log_error(logger, "Error al crear hilo de trackeo");
             }
+        }
+        list_destroy(copia_blocked);
+        //bool hay_bloqueados = !queue_is_empty(cola_blocked);
+        // if (hay_bloqueados){
+        //     t_pcb* pcb = queue_peek(cola_blocked); 
+        //     //log_error(logger, "pmp 60: pthread_mutex_unlock(&mutex_blocked);");
+        //     pthread_mutex_unlock(&mutex_blocked);
+            
+        //     if (pcb == NULL) {
+        //         log_error(logger, "ERROR: La PCB en cola_blocked es NULL");
+        //         //pthread_mutex_unlock(&mutex_blocked);
+        //         continue;
+        //     }
+        //     if (pcb->temporal_blocked == NULL) {
+        //         log_error(logger, "ERROR: temporal_blocked de la PCB PID %d es NULL", pcb->pid);
+        //         //pthread_mutex_unlock(&mutex_blocked);
+        //         continue;
+        //     }
 
-            //pthread_mutex_unlock(&mutex_blocked);
-            //a partir de aca quiero cambiar la implementacion para que haga un hilo y ese hilo haga un usleep de x tiempo y pasado ese tiempo se fije si sigue bloqueado lo pone en susp blocked o si lo desbloquearon mata el hilo
+        //     pthread_t hilo_chequear_suspension;
+        //     int err = pthread_create(&hilo_chequear_suspension, NULL, trackear_bloqueo, pcb);
+        //     if (err != 0) {
+        //         log_error(logger, "Error al crear hilo de trackeo de bloqueo: %s", strerror(err));
+        //     } else {
+        //         pthread_detach(hilo_chequear_suspension);
+        //     }
 
-
-            //int tiempo_bloqueado = temporal_gettime(pcb->temporal_blocked);
-            //if (tiempo_bloqueado >= tiempo_suspension){
-
-        } else{
-            //log_error(logger, "pmp 90: pthread_mutex_unlock(&mutex_blocked);");
-            pthread_mutex_unlock(&mutex_blocked);
-            }
+        // } else{
+        //     //log_error(logger, "pmp 90: pthread_mutex_unlock(&mutex_blocked);");
+        //     pthread_mutex_unlock(&mutex_blocked);
+        //     }
     }
 }
 

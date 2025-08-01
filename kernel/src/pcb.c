@@ -315,12 +315,15 @@ char* parsear_estado(int estado){
 void log_metricas_estado(t_pcb* pcb){
     if (pcb == NULL) return;
 
-    log_info(logger, "%d - Métricas de estado:", pcb->pid);
-    log_info(logger, "NEW (%d) (%d)", pcb->metricas_estado[NEW], (int)pcb->metricas_tiempo[NEW]);
-    log_info(logger, "READY (%d) (%d)", pcb->metricas_estado[READY], (int)pcb->metricas_tiempo[READY]);
-    log_info(logger, "EXEC (%d) (%d)", pcb->metricas_estado[EXEC], (int)pcb->metricas_tiempo[EXEC]);
-    log_info(logger, "BLOCKED (%d) (%d)", pcb->metricas_estado[BLOCKED], (int)pcb->metricas_tiempo[BLOCKED]);
-    log_info(logger, "SUSP_BLOCKED (%d) (%d)", pcb->metricas_estado[SUSP_BLOCKED], (int)pcb->metricas_tiempo[SUSP_BLOCKED]);
-    log_info(logger, "SUSP_READY (%d) (%d)", pcb->metricas_estado[SUSP_READY], (int)pcb->metricas_tiempo[SUSP_READY]);
-    log_info(logger, "EXIT (%d) (%d)", pcb->metricas_estado[EXIT], (int)pcb->metricas_tiempo[EXIT]);
+    log_info(logger, 
+    "## (%d) - Métricas: NEW (%d|%d) READY (%d|%d) EXEC (%d|%d) BLOCKED (%d|%d) SUSP_BLOCKED (%d|%d) SUSP_READY (%d|%d) EXIT (%d|%d)", 
+    pcb->pid,
+    pcb->metricas_estado[NEW], (int)pcb->metricas_tiempo[NEW],
+    pcb->metricas_estado[READY], (int)pcb->metricas_tiempo[READY],
+    pcb->metricas_estado[EXEC], (int)pcb->metricas_tiempo[EXEC],
+    pcb->metricas_estado[BLOCKED], (int)pcb->metricas_tiempo[BLOCKED],
+    pcb->metricas_estado[SUSP_BLOCKED], (int)pcb->metricas_tiempo[SUSP_BLOCKED],
+    pcb->metricas_estado[SUSP_READY], (int)pcb->metricas_tiempo[SUSP_READY],
+    pcb->metricas_estado[EXIT], (int)pcb->metricas_tiempo[EXIT]
+);
 }

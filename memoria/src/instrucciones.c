@@ -78,7 +78,6 @@ void liberar_memoria(char* pid)
 
 int mandar_instruccion(int socket_cliente) 
 {
-    log_trace(logger, "aca si 1");
     t_list* lista_paquete = recibir_paquete(socket_cliente);
     int pid = *((int*)list_get(lista_paquete, 0));
     int pc = *((int*) list_get(lista_paquete, 1));
@@ -89,8 +88,6 @@ int mandar_instruccion(int socket_cliente)
     sem_t* sem = dictionary_get(semaforos_por_pid, pid_str);
     iniciado = dictionary_get(iniciados_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_semaforos);
-    log_trace(logger, "aca si 2");
-
     while (sem == NULL) {
         usleep(1000); 
         pthread_mutex_lock(&mutex_semaforos);
@@ -98,7 +95,6 @@ int mandar_instruccion(int socket_cliente)
         iniciado = dictionary_get(iniciados_por_pid, pid_str);
         pthread_mutex_unlock(&mutex_semaforos);
     }
-    log_trace(logger, "aca si 3");
 
     if (!iniciado){
         sem_wait(sem);
@@ -124,12 +120,10 @@ int mandar_instruccion(int socket_cliente)
         free(pid_str);
         return -1;
     }
-    log_trace(logger, "aca si 4");
 
     pthread_mutex_lock(&mutex_diccionario_instrucciones);
     char* instruccion = obtener_instruccion(pc, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_instrucciones);
-    log_trace(logger, "aca si 5");
 
     if (instruccion == NULL) {
     log_error(logger, "No se encontró la instrucción en la posición PC=%d", pc);
@@ -147,7 +141,6 @@ int mandar_instruccion(int socket_cliente)
     cambiar_opcode_paquete(paquete, PAQUETE);
     enviar_paquete(paquete, socket_cliente, logger);
 
-    log_trace(logger, "aca si 6");
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str); 
@@ -159,7 +152,6 @@ int mandar_instruccion(int socket_cliente)
     }
    
     pthread_mutex_unlock(&mutex_diccionario_procesos);
-    log_trace(logger, "aca si 7");
 
     borrar_paquete(paquete);
 
