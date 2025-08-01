@@ -50,7 +50,7 @@ char* obtener_instruccion(int pc, char* pid)
 
 int cantidad_instrucciones(char* pid) 
 {
-    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
+    pthread_mutex_lock(&mutex_diccionario_instrucciones);
     t_list* instrucciones = dictionary_get(lista_de_instrucciones_por_pid, pid);
     pthread_mutex_unlock(&mutex_diccionario_instrucciones);
 
@@ -340,9 +340,9 @@ void dumpear_memoria(int pid, int socket_cliente){
 
     for (int pagina = 0; pagina < copia->paginas_usadas; pagina++) 
     {
-        pthread_mutex_lock(&copia->mutex_tabla);
+        pthread_mutex_lock(&mutex_tablas);
         t_entrada_tabla* entrada = buscar_entrada(copia->tabla_raiz, pagina, 0);
-        pthread_mutex_unlock(&copia->mutex_tabla);
+        pthread_mutex_unlock(&mutex_tablas);
 
         if(!entrada){
             log_error(logger, "Entrada NULL para pagina %d", pagina);
@@ -359,7 +359,10 @@ void dumpear_memoria(int pid, int socket_cliente){
             
         }
 
+        pthread_mutex_lock(&mutex_memoria);
         void* origen = memoria_usuario + ((size_t)entrada->marco * campos_config.tam_pagina);
+        pthread_mutex_unlock(&mutex_memoria);
+
         log_trace(logger, "Dump página %d: marco %d @ %p", pagina, entrada->marco, origen);
         fwrite(origen, 1, campos_config.tam_pagina, archivo);
 
@@ -388,8 +391,10 @@ char* obtener_timestamp() {
 
 int obtener_marco(int pid, int nro_pagina) {
     char* pid_str = string_itoa(pid);
-    
+    pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
+
     free(pid_str);
 
     if (!proceso) {
