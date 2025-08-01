@@ -201,7 +201,8 @@ int ejecutar_read(int socket_cliente){
     int pid = *((int*)list_get(recibido, 2));
     char* pid_str = string_itoa(pid);
 
-    void* leido = malloc(tamanio);
+    void* leido = malloc(tamanio + 1);
+    memset(leido, 0, tamanio + 1);
 
     usleep(campos_config.retardo_memoria * 1000);
 
@@ -211,6 +212,7 @@ int ejecutar_read(int socket_cliente){
     pthread_mutex_unlock(&mutex_memoria);
 
     log_info(logger, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d",pid, direccion_fisica, tamanio);
+    log_trace(logger, "Se leyo %s", (char*)leido);
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_READ);
     agregar_a_paquete(paquete, leido, tamanio);
@@ -234,9 +236,10 @@ int ejecutar_write(int socket_cliente){
     int direccion_fisica = *((int*)list_get(recibido, 0));
     char* datos = list_get(recibido, 1);
     int pid = *((int*)list_get(recibido, 2));
-    int tamanio = strlen(datos) + 1;
+    int tamanio = strlen(datos);
     char* pid_str = string_itoa(pid);
 
+    //log_debug(logger, "DATOS (%s)", datos);
     usleep(campos_config.retardo_memoria * 1000);
 
 
