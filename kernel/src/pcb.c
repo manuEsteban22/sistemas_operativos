@@ -132,7 +132,7 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, bool rafaga_completa) {
     pthread_mutex_lock(&pcb->mutex_pcb);
 
     double tiempo_actual = temporal_gettime(pcb->temporal_estado);
-    double tiempo
+    double tiempo;
     pcb->rafaga_acumulada = tiempo_actual;
 
     if(rafaga_completa){

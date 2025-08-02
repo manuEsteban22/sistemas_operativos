@@ -14,12 +14,19 @@ typedef struct {
     int socket_memoria;
 } t_args_dump;
 
+typedef struct {
+    int pid;
+    int tamanio;
+    char* nombre;
+} t_proceso_espera;
+
 void llamar_a_io(int socket_cpu);
 void dump_memory(int socket_cpu);
 void iniciar_proceso(int socket_cpu);
 void ejecutar_exit(int socket_cpu);
 void enviar_finalizacion_a_memoria(int pid);
 void manejar_finaliza_io(int socket_io);
+void* reintentar_init(void*);
 
 #include <conexion_kernel.h>
 #endif

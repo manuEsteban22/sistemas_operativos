@@ -29,6 +29,8 @@ extern pthread_mutex_t mutex_dispositivos;
 extern char* algoritmo_largo_plazo;
 extern char* algoritmo_corto_plazo;
 extern int tiempo_suspension;
+extern sem_t semaforo_espera;
+extern t_queue* cola_espera;
 
 void iniciar_estructuras();
 void proceso_arranque(int tamanio_proceso, char* nombre_archivo);

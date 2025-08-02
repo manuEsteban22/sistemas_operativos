@@ -71,7 +71,7 @@ void llamar_a_io(int socket_dispatch) {
     temporal_stop(pcb->temporal_estado);
     double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
-    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
+    actualizar_estimacion_rafaga(pcb, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
@@ -372,7 +372,7 @@ void dump_memory(int socket_dispatch){
 
     temporal_stop(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
-    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
+    actualizar_estimacion_rafaga(pcb, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
     
@@ -446,26 +446,59 @@ void iniciar_proceso(int socket_cpu){
     int tamanio_proceso = *tamanio_proceso_raw;
     int pid = crear_proceso(tamanio_proceso);
     t_pcb* pcb = obtener_pcb(pid);
-    pushear_a_new(pcb);
 
-    t_pcb* pcb = obtener_pcb(pid);
     bool entra = enviar_pedido_memoria(pcb);
 
-    if(entra)
-    {
-    t_paquete* paquete = crear_paquete();
-    cambiar_opcode_paquete(paquete, OC_INIT);
-    agregar_a_paquete(paquete, &pid, sizeof(int));
-    agregar_a_paquete(paquete, &tamanio_proceso, sizeof(int));
-    agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo)+1);
-    socket_memoria = operacion_con_memoria();
-    enviar_paquete(paquete, socket_memoria, logger);
-    cerrar_conexion_memoria(socket_memoria);
-    borrar_paquete(paquete);
-    log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
-    }else{}
+    if(entra){
+        pushear_a_new(pcb);
+        t_paquete* paquete = crear_paquete();
+        cambiar_opcode_paquete(paquete, OC_INIT);
+        agregar_a_paquete(paquete, &pid, sizeof(int));
+        agregar_a_paquete(paquete, &tamanio_proceso, sizeof(int));
+        agregar_a_paquete(paquete, nombre_archivo, strlen(nombre_archivo)+1);
+        socket_memoria = operacion_con_memoria();
+        enviar_paquete(paquete, socket_memoria, logger);
+        cerrar_conexion_memoria(socket_memoria);
+        borrar_paquete(paquete);
+        log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+    }else{
+        t_proceso_espera* proceso = malloc(sizeof(t_proceso_espera));
+        proceso->pid = pid;
+        proceso->tamanio = tamanio_proceso;
+        proceso->nombre = nombre_archivo;
+        queue_push(cola_espera, proceso);
+    }
 
     list_destroy_and_destroy_elements(recibido, free);    
+}
+
+void* reintentar_init(void*){
+    while(1){
+        sem_wait(&semaforo_espera);
+        if(!queue_is_empty){
+            t_proceso_espera* espera = queue_pop(cola_espera);
+            t_pcb* pcb = obtener_pcb(espera->pid);
+            if(enviar_pedido_memoria(pcb)){
+                pushear_a_new(pcb);
+                t_paquete* paquete = crear_paquete();
+                cambiar_opcode_paquete(paquete, OC_INIT);
+                agregar_a_paquete(paquete, &(espera->pid), sizeof(int));
+                agregar_a_paquete(paquete, &(espera->tamanio), sizeof(int));
+                agregar_a_paquete(paquete, espera->nombre, strlen(espera->nombre)+1);
+                socket_memoria = operacion_con_memoria();
+                enviar_paquete(paquete, socket_memoria, logger);
+                cerrar_conexion_memoria(socket_memoria);
+                borrar_paquete(paquete);
+                log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", espera->nombre, (espera->tamanio));
+            } else{
+                queue_push(cola_espera, espera);
+            }
+        } else{
+            return NULL;
+        }
+        
+    }
+    
 }
 
 void enviar_finalizacion_a_memoria(int pid){
@@ -490,7 +523,7 @@ void ejecutar_exit(int socket_cpu){
     t_pcb* pcb = obtener_pcb(pid);
     temporal_stop(pcb->temporal_estado);
     double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
-    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
+    actualizar_estimacion_rafaga(pcb, true);
     finalizar_proceso(pcb);
     list_destroy_and_destroy_elements(recibido, free);
 

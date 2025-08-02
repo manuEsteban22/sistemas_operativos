@@ -132,7 +132,7 @@ void finalizar_proceso(t_pcb* pcb){
     //log_info(logger, "%d Finaliza el proceso", pcb->pid);
     log_metricas_estado(pcb);
     
-
+    sem_post(&semaforo_espera);
     sem_post(&sem_plp);//Como se libera memoria mando una señal mas
     
 

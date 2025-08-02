@@ -24,6 +24,7 @@ int socket_memoria;
 int tiempo_suspension;
 pthread_t thread_io_main;
 pthread_t thread_principal;
+pthread_t thread_reintento;
 char *algoritmo_largo_plazo;
 char *algoritmo_corto_plazo;
 t_dictionary* dispositivos_io;
@@ -38,6 +39,8 @@ pthread_mutex_t mutex_dispositivos = PTHREAD_MUTEX_INITIALIZER;
 t_dictionary* tabla_dispatch;
 t_dictionary* tabla_interrupt;
 t_list* cpus_libres;
+sem_t semaforo_espera;
+t_queue* cola_espera;
 
 
 int main(int argc, char* argv[]) {
@@ -49,6 +52,7 @@ int main(int argc, char* argv[]) {
     tabla_dispatch = dictionary_create();
     tabla_interrupt = dictionary_create();
     cpus_libres = list_create();
+    cola_espera = queue_create();
 
 
     
@@ -81,6 +85,10 @@ int main(int argc, char* argv[]) {
     
     inicializar_planificador_lp();
     inicializar_planificador_mp();
+
+    pthread_create(&thread_reintento, NULL, reintentar_init, NULL);
+    pthread_detach(thread_reintento);
+
     proceso_arranque(tamanio_proceso, archivo_pseudocodigo);
     sem_post(&sem_plp);
 
@@ -111,6 +119,7 @@ t_log* iniciar_logger(void){
 
 void iniciar_estructuras(){
     sem_init(&cpus_disponibles, 0, 0);
+    sem_init(&semaforo_espera, 0, 0);
 }
 
 t_config* iniciar_config(void){
