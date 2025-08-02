@@ -371,7 +371,6 @@ void dump_memory(int socket_dispatch){
     pcb->pc = pc;
 
     temporal_stop(pcb->temporal_estado);
-    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
     actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     cambiar_estado(pcb, BLOCKED);
@@ -447,6 +446,8 @@ void iniciar_proceso(int socket_cpu){
     //int pid_anterior = *pid_anterior_raw;
     int tamanio_proceso = *tamanio_proceso_raw;
     int pid = crear_proceso(tamanio_proceso);
+    t_pcb* pcb = obtener_pcb(pid);
+    pushear_a_new(pcb);
 
 
     t_paquete* paquete = crear_paquete();

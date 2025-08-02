@@ -123,7 +123,7 @@ void borrar_pcb(t_pcb* pcb){
 
 }
 
-void actualizar_estimacion_rafaga(t_pcb* pcb, double tiempo_actual, bool rafaga_completa) {
+void actualizar_estimacion_rafaga(t_pcb* pcb, bool rafaga_completa) {
     if (pcb == NULL) {
         log_error(logger, "No se pudo actualizar la estimacion, el PCB es NULL");
         return;
@@ -131,7 +131,8 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, double tiempo_actual, bool rafaga_
    // log_error(logger, "bloquea pcb pcb:102");
     pthread_mutex_lock(&pcb->mutex_pcb);
 
-    //double tiempo_actual = temporal_gettime(pcb->temporal_estado);
+    double tiempo_actual = temporal_gettime(pcb->temporal_estado);
+    double tiempo
     pcb->rafaga_acumulada = tiempo_actual;
 
     if(rafaga_completa){

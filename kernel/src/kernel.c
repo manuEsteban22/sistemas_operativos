@@ -144,6 +144,8 @@ t_config* iniciar_config(void){
 void proceso_arranque(int tamanio_proceso, char* nombre_archivo){
 
     int pid = crear_proceso(tamanio_proceso);
+    t_pcb* pcb = obtener_pcb(pid);
+    pushear_a_new(pcb);
 
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_INIT);

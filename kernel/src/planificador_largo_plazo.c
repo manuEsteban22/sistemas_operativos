@@ -59,7 +59,10 @@ int crear_proceso(int tamanio_proceso){
     dictionary_put(tabla_pcbs, pid_str, pcb);
     pthread_mutex_unlock(&mutex_tabla_pcbs);
     free(pid_str);
+    return pcb->pid;
+}
 
+void pushear_a_new(t_pcb* pcb){
     pthread_mutex_lock(&mutex_new);
 
     switch(enum_algoritmo_lp){
@@ -85,8 +88,6 @@ int crear_proceso(int tamanio_proceso){
             exit(EXIT_FAILURE);
     }
     pthread_mutex_unlock(&mutex_new);
-    //sem_post(&sem_plp);
-    return pcb->pid;
 }
 
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
