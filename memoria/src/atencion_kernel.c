@@ -207,7 +207,7 @@ void liberar_proceso(void* proceso_void)
 
     // Liberar semáforo asociado
     pthread_mutex_lock(&mutex_semaforos);
-    t_sem* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
+    sem_t* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_semaforos);
     if (semaforo)
     {
