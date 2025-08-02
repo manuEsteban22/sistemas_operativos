@@ -30,6 +30,7 @@ typedef struct
     double rafaga_real_anterior;
     t_temporal* temporal_blocked;
     pthread_mutex_t mutex_pcb;
+    bool en_suspension_check;
 } t_pcb;
 
 typedef struct

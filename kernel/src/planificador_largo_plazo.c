@@ -177,7 +177,7 @@ bool enviar_pedido_memoria(t_pcb* pcb) {
         log_trace(logger, "Habia suficiente espacio");
         return true;
     } else {
-        log_warning(logger, "No había suficiente espacio, (%d)", respuesta);
+        log_trace(logger, "No había suficiente espacio, (%d)", respuesta);
         return false;
     }
 }

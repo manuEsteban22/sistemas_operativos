@@ -66,8 +66,15 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     return proceso->tabla_raiz;
 }
 
+<<<<<<< HEAD
 void suspender_proceso(int pid)
 {
+=======
+
+
+
+void suspender_proceso(int pid){
+>>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
     char* pid_str = string_itoa(pid);
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
@@ -156,8 +163,34 @@ void des_suspender_proceso(int pid)
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);
 }
 
+<<<<<<< HEAD
 void* finalizar_proceso(int pid) 
 {
+=======
+
+void liberar_marcos_de_proceso(t_tabla_paginas* tabla, int nivel_actual) {
+    int cant_entradas = list_size(tabla->entradas);
+
+    for (int i = 0; i < cant_entradas; i++) {
+        t_entrada_tabla* entrada = list_get(tabla->entradas, i);
+
+        if (nivel_actual < campos_config.cantidad_niveles - 1) {
+            if (entrada->siguiente_tabla) {
+                liberar_marcos_de_proceso(entrada->siguiente_tabla, nivel_actual + 1);
+            }
+        } else {
+            if (entrada->presencia) {
+                pthread_mutex_lock(&mutex_bitmap);
+                bitarray_clean_bit(bitmap_marcos, entrada->marco);
+                pthread_mutex_unlock(&mutex_bitmap);
+            }
+        }
+    }
+}
+
+
+void* finalizar_proceso(int pid) {
+>>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
     char* pid_str = string_itoa(pid);
     pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
@@ -170,8 +203,14 @@ void* finalizar_proceso(int pid)
         return NULL;
     }
 
+<<<<<<< HEAD
     if (proceso->tabla_raiz) 
     {
+=======
+    // Libera toda la jerarquía de tablas de páginas
+    if (proceso->tabla_raiz) {
+        liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
+>>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
@@ -200,7 +239,7 @@ void* finalizar_proceso(int pid)
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     // Log de métricas
-    log_info(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
+    log_error(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
         pid,
         proceso->metricas.cantidad_accesos_tablas_de_paginas,
         proceso->metricas.cantidad_instrucciones_solicitadas,
