@@ -14,11 +14,8 @@ t_metricas inicializar_metricas()
 }
 
 void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
-    int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;
-    // if(pags_necesarias <= 0){//para procesos con tamaño 0
-    //     pags_necesarias = 1;
-    //     log_trace(logger, "Tamanio 0");
-    // }
+    int pags_necesarias = (tam_proceso + campos_config.tam_pagina - 1) / campos_config.tam_pagina;  //para redonder  (ej: 8 : 5 = 1,6  (1 entero) necesitamos 2, entonces (8+4) : 5 = 2,3 (2 entero))
+
     log_trace(logger, "pags necesarias %d", pags_necesarias);
 
     t_proceso* proceso = calloc(1, sizeof(t_proceso));
@@ -31,17 +28,19 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     char* pid_str = string_itoa(pid);
     
 
-    cargar_instrucciones(pid, nombre_archivo);
+    cargar_instrucciones(pid, nombre_archivo); //mete el set de instrucciones a una lista que mete a un diccionario de listas de sets
 
-    for (int pagina = 0; pagina < pags_necesarias; pagina++) {
+    for (int pagina = 0; pagina < pags_necesarias; pagina++) 
+    {
         int marco_libre = buscar_marco_libre();
 
         
         pthread_mutex_lock(&proceso->mutex_tabla);
-        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina, 0);
+        t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, pagina, 0);  // va buscando ordenadamente entre las entradas, como recorriendo un arbol binario
         
 
-        if (!entrada->presencia) {
+        if (!entrada->presencia) 
+        {
             log_trace(logger, "Página %d no está en memoria principal", pagina);
         }
 
@@ -57,7 +56,7 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
 
     log_info(logger, "## PID: %d - Proceso Creado - Tamaño: %d", pid, tam_proceso);
     
-    proceso->metricas = inicializar_metricas();
+    proceso->metricas = inicializar_metricas();  // para que no esten en null
     
     pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_put(tablas_por_pid, pid_str, proceso);
@@ -67,7 +66,8 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     return proceso->tabla_raiz;
 }
 
-void suspender_proceso(int pid){
+void suspender_proceso(int pid)
+{
     char* pid_str = string_itoa(pid);
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
@@ -75,27 +75,32 @@ void suspender_proceso(int pid){
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);
-    if (!proceso){
+    if (!proceso)
+    {
         log_error(logger, "No se encontró el proceso %d", pid);
         return;
     }
-    suspender_tabla(proceso->tabla_raiz, 0, pid, 0);
+    suspender_tabla(proceso->tabla_raiz, 0, pid, 0); //suspende tabla que suspende pags y las escribe en swap
 
     proceso->metricas.cantidad_bajadas_a_swap++;
 }
 
-void des_suspender_proceso(int pid) {
+void des_suspender_proceso(int pid) 
+{
     // Filtrar páginas de ese proceso
     t_list* paginas_proceso = list_create();
-    for (int i = 0; i < list_size(paginas_en_swap); i++) {
+    for (int i = 0; i < list_size(paginas_en_swap); i++) 
+    {
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
-        if (relacion->pid == pid) {
+        if (relacion->pid == pid) 
+        {
             list_add(paginas_proceso, relacion);
         }
     }
 
     // Verificar si hay marcos libres en RAM
-    if (list_size(paginas_proceso) > cantidad_marcos_libres()) {
+    if (list_size(paginas_proceso) > cantidad_marcos_libres()) 
+    {
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
         list_destroy(paginas_proceso);
         return;
@@ -107,10 +112,12 @@ void des_suspender_proceso(int pid) {
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
-    for (int i = 0; i < list_size(paginas_proceso); i++) {
+    for (int i = 0; i < list_size(paginas_proceso); i++) 
+    {
         t_pagina_swap* relacion = list_get(paginas_proceso, i);
         int marco_ram = buscar_marco_libre();
-        if (marco_ram == -1) {
+        if (marco_ram == -1) 
+        {
             log_error(logger, "Error inesperado: no hay marco libre para restaurar página");
             break;
         }
@@ -131,14 +138,12 @@ void des_suspender_proceso(int pid) {
         entrada->marco = marco_ram;
         pthread_mutex_unlock(&proceso->mutex_tabla);
 
-        // Ahora sí liberar el marco en swap
         t_list* marcos_swap = list_create();
         int* marco_swap_ptr = malloc(sizeof(int));
         *marco_swap_ptr = relacion->marco_swap;
         list_add(marcos_swap, marco_swap_ptr);
         liberar_marcos(marcos_swap);
 
-        // Sacar de la lista global
         list_remove_element(paginas_en_swap, relacion);
         free(relacion);
         free(buffer);
@@ -151,28 +156,31 @@ void des_suspender_proceso(int pid) {
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);
 }
 
-void* finalizar_proceso(int pid) {
+void* finalizar_proceso(int pid) 
+{
     char* pid_str = string_itoa(pid);
     pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
-    if (!proceso) {
+    if (!proceso) 
+    {
         log_error(logger, "No se encontró el proceso %d", pid);
         free(pid_str);
         return NULL;
     }
 
-    // Libera toda la jerarquía de tablas de páginas
-    if (proceso->tabla_raiz) {
+    if (proceso->tabla_raiz) 
+    {
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
 
-    // Libera marcos en swap pertenecientes a este proceso
-    for (int i = 0; i < list_size(paginas_en_swap); ) {
+    for (int i = 0; i < list_size(paginas_en_swap); ) 
+    {
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
-        if (relacion->pid == pid) {
+        if (relacion->pid == pid) 
+        {
             int* marco_swap_ptr = malloc(sizeof(int));
             *marco_swap_ptr = relacion->marco_swap;
 
@@ -187,7 +195,6 @@ void* finalizar_proceso(int pid) {
         }
     }
 
-    // Elimina del diccionario y libera el proceso
     pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_remove(tablas_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_procesos);
@@ -212,9 +219,11 @@ int buscar_marco_libre()
 {
     int cantidad_marcos = campos_config.tam_memoria / campos_config.tam_pagina;
     
-    for (int i = 0; i < cantidad_marcos; i++) {
+    for (int i = 0; i < cantidad_marcos; i++) 
+    {
         pthread_mutex_lock(&mutex_bitmap);
-        if (!bitarray_test_bit(bitmap_marcos, i)) {
+        if (!bitarray_test_bit(bitmap_marcos, i)) 
+        {
             bitarray_set_bit(bitmap_marcos, i);
             pthread_mutex_unlock(&mutex_bitmap);
             return i;
@@ -227,18 +236,21 @@ int buscar_marco_libre()
 // busca la entrada en cuestion
 
 
-t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_actual) {
+t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_actual) 
+{
     int bits_por_nivel = log2(campos_config.entradas_por_tabla);
     int entrada_actual = (pagina >> (bits_por_nivel * (campos_config.cantidad_niveles - nivel_actual - 1))) & ((1 << bits_por_nivel) - 1);
 
     t_entrada_tabla* entrada = list_get(tabla->entradas, entrada_actual);
 
-    if (!entrada) {
+    if (!entrada) 
+    {
         log_error(logger, "Entrada inválida en nivel %d (entrada %d)", nivel_actual, entrada_actual);
         return NULL;
     }
     
-    if (nivel_actual == campos_config.cantidad_niveles - 1) {
+    if (nivel_actual == campos_config.cantidad_niveles - 1) 
+    {
         
         if(!entrada->presencia)
         {
@@ -254,7 +266,8 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_ac
         return entrada;
     }
 
-    if (!entrada->siguiente_tabla) {
+    if (!entrada->siguiente_tabla) 
+    {
         log_error(logger, "Entrada sin siguiente tabla en nivel %d (entrada %d)", nivel_actual, entrada_actual);
         return NULL;
     }
@@ -262,19 +275,25 @@ t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_ac
     return buscar_entrada(entrada->siguiente_tabla, pagina, nivel_actual + 1);
 }
 
-void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base) {
+void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base) 
+{
     int cant_entradas = list_size(tabla->entradas);
 
-    for (int i = 0; i < cant_entradas; i++) {
+    for (int i = 0; i < cant_entradas; i++) 
+    {
         t_entrada_tabla* entrada = list_get(tabla->entradas, i);
         int salto = (int)pow(campos_config.entradas_por_tabla, campos_config.cantidad_niveles - nivel - 1);
         int nro_pagina = pagina_base + i * salto;
 
-        if (nivel < campos_config.cantidad_niveles - 1) {
+        if (nivel < campos_config.cantidad_niveles - 1) 
+        {
             if (entrada->siguiente_tabla)
+            {
                 suspender_tabla(entrada->siguiente_tabla, nivel + 1, pid, nro_pagina);
+            }
         } else {
-            if (entrada->presencia) {
+            if (entrada->presencia) 
+            {
                 suspender_pagina(pid, nro_pagina, entrada->marco);
                 
                 pthread_mutex_lock(&mutex_bitmap);
@@ -287,32 +306,29 @@ void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base
     }
 }
 
-void suspender_pagina(int pid, int nro_pagina, int marco) {
-    // Pide marco libre en swap
+void suspender_pagina(int pid, int nro_pagina, int marco) 
+{
     t_list* marcos_swap = asignar_marcos_swap(1);
-    if (!marcos_swap) {
+    if (!marcos_swap) 
+    {
         log_error(logger, "No hay marcos libres en swap para suspender la pagina %d del proceso %d", nro_pagina, pid);
         return;
     }
 
     int marco_swap = *(int*)list_get(marcos_swap, 0);
 
-    // Copia el contenido de la RAM al buffer
     void* buffer = malloc(campos_config.tam_pagina);
 
     memcpy(buffer, memoria_usuario + marco * campos_config.tam_pagina, campos_config.tam_pagina);
 
-    // Escribe en swap
     escribir_en_swap(buffer, marco_swap);
 
-    // Guarda la relación en la lista global
     t_pagina_swap* relacion = malloc(sizeof(t_pagina_swap));
     relacion->pid = pid;
     relacion->nro_pagina = nro_pagina;
     relacion->marco_swap = marco_swap;
     list_add(paginas_en_swap, relacion);
 
-    // Liberar recursos de RAM, pero NO el marco en swap
     free(buffer);
     list_destroy_and_destroy_elements(marcos_swap, free);
 }
@@ -332,7 +348,8 @@ int cantidad_marcos_libres()
     return marcos_libres;
 }
 
-bool entra_el_proceso(int tamanio){
+bool entra_el_proceso(int tamanio)
+{
     int marcos_que_ocupa = tamanio / campos_config.tam_pagina;
     int marcos_libres = cantidad_marcos_libres();
     if(marcos_que_ocupa <= marcos_libres){
@@ -344,7 +361,8 @@ bool entra_el_proceso(int tamanio){
 }
 
 
-void liberar_tabla(t_tabla_paginas* tabla, int nivel_actual) {
+void liberar_tabla(t_tabla_paginas* tabla, int nivel_actual)
+{
     for (int i = 0; i < list_size(tabla->entradas); i++) {
         t_entrada_tabla* entrada = list_get(tabla->entradas, i);
         if (entrada->siguiente_tabla && nivel_actual < campos_config.cantidad_niveles - 1) {
@@ -356,14 +374,17 @@ void liberar_tabla(t_tabla_paginas* tabla, int nivel_actual) {
     free(tabla);
 }
 
-void liberar_proceso(void* proceso_void) {
+void liberar_proceso(void* proceso_void) 
+{
     t_proceso* proceso = (t_proceso*)proceso_void;
-    if (!proceso) {
+    if (!proceso) 
+    {
         log_error(logger, "Intento de liberar un proceso NULL");
         return;
     }
 
-    if (proceso->tabla_raiz) {
+    if (proceso->tabla_raiz) 
+    {
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
@@ -375,10 +396,12 @@ void liberar_proceso(void* proceso_void) {
     pthread_mutex_unlock(&mutex_diccionario_instrucciones);
 
     if (instrucciones)
+    {
         list_destroy_and_destroy_elements(instrucciones, free);
+    }
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
-    dictionary_remove(tablas_por_pid, pid_str);  // También podés liberar aquí si no lo hiciste antes
+    dictionary_remove(tablas_por_pid, pid_str);  
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
     free(pid_str);

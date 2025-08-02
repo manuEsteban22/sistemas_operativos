@@ -14,7 +14,6 @@ int main(int argc, char* argv[]){
 
     socket_servidor = iniciar_servidor(campos_config.puerto_escucha, logger);
     lanzar_servidor(socket_servidor);
-    //paginas_en_swap = list_create();
     pause();
     return 0;
 }
