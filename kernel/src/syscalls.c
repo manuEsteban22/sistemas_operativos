@@ -69,8 +69,9 @@ void llamar_a_io(int socket_dispatch) {
     pcb->pc = pc;
 
     temporal_stop(pcb->temporal_estado);
-    actualizar_estimacion_rafaga(pcb);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
@@ -369,8 +370,10 @@ void dump_memory(int socket_dispatch){
     //pc++;
     pcb->pc = pc;
 
-    actualizar_estimacion_rafaga(pcb);
+    temporal_stop(pcb->temporal_estado);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
     
@@ -480,7 +483,9 @@ void ejecutar_exit(int socket_cpu){
     int pid = *pid_raw;
 
     t_pcb* pcb = obtener_pcb(pid);
-    actualizar_estimacion_rafaga(pcb);
+    temporal_stop(pcb->temporal_estado);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     finalizar_proceso(pcb);
     list_destroy_and_destroy_elements(recibido, free);
 
