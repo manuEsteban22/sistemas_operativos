@@ -159,7 +159,7 @@ void manejar_conexion_kernel(int socket_cliente) {
             list_destroy_and_destroy_elements(recibido, free);
             break;
         default:
-            log_error(logger, "Operación Kernel desconocida: %d", codigo_operacion);
+            log_trace(logger, "Operación Kernel desconocida: %d", codigo_operacion);
             break;
     }
 }
