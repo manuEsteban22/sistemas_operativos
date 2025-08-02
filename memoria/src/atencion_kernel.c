@@ -416,7 +416,7 @@ int cantidad_marcos_libres()
     return marcos_libres;
 }
 
-bool entra_el_proceso(int tamanio)
+bool entra_el_proceso(int tamanio, int pid)
 {
     int marcos_que_ocupa = tamanio / campos_config.tam_pagina;
     int marcos_libres = cantidad_marcos_libres();

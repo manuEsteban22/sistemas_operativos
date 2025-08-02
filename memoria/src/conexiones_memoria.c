@@ -100,13 +100,13 @@ void manejar_conexion_kernel(int socket_cliente) {
                 //free(pid_str);
                 break;
             }else{
-               if(entra_el_proceso(tamanio)){
+               if(entra_el_proceso(tamanio, pid)){
                 t_paquete* paquete = crear_paquete();
                 cambiar_opcode_paquete(paquete, OK);
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
                }else{
-                log_warning(logger, "El proceso no entraba en memoria");
+                // log_warning(logger, "El proceso no entraba en memoria");
                 t_paquete* paquete = crear_paquete();
                 cambiar_opcode_paquete(paquete, NO);
                 enviar_paquete(paquete, socket_cliente, logger);

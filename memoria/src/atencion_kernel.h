@@ -14,7 +14,7 @@ void des_suspender_proceso(int pid);
 void* finalizar_proceso(int pid);
 int buscar_marco_libre();
 bool entrada_valida(t_entrada_tabla* entrada);
-bool entra_el_proceso(int tamanio);
+bool entra_el_proceso(int tamanio, int pid);
 t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_actual);
 void suspender_tabla(t_tabla_paginas* tabla, int nivel, int pid, int pagina_base);
 void suspender_pagina(int pid, int nro_pagina, int marco);
