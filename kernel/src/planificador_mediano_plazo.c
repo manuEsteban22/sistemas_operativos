@@ -144,3 +144,22 @@ void informar_memoria_desuspension(int pid){
     if(confirmacion != OK){log_error(logger, "No se recibio confirmacion de la desuspension (%d)", confirmacion);}
     cerrar_conexion_memoria(socket_memoria);
 }
+
+// void limpiar_cola_susp_blocked(){
+//     pthread_mutex_lock(&mutex_susp_blocked);
+//     for (int i = 0; i < queue_size(cola_susp_blocked->elements); i++) {
+//         t_pcb* pcb = list_get(cola_susp_blocked->elements, i);
+//         // Suponiendo que el PCB tiene un campo dispositivo_io o algún identificador
+//         if (strcmp(pcb->dispositivo_io, nombre) == 0) {
+//             int estado_anterior = pcb->estado_actual;
+//             cambiar_estado(pcb, EXIT);
+//             log_info(logger, "(%d) Pasa del estado %s al estado %s por shutdown de IO", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+//             borrar_pcb(pcb);
+//             // Eliminalo de la cola
+//             list_remove_and_destroy_element(cola_susp_blocked->elements, i, NULL);
+//             // Decrementa el índice porque la lista se achicó
+//             i--;
+//         }
+//     }
+//     pthread_mutex_unlock(&mutex_susp_blocked);
+// }
