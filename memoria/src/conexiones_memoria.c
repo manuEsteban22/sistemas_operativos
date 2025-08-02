@@ -106,7 +106,7 @@ void manejar_conexion_kernel(int socket_cliente) {
                 enviar_paquete(paquete, socket_cliente, logger);
                 borrar_paquete(paquete);
                }else{
-                // log_warning(logger, "El proceso no entraba en memoria");
+                log_trace(logger, "El proceso no entraba en memoria");
                 t_paquete* paquete = crear_paquete();
                 cambiar_opcode_paquete(paquete, NO);
                 enviar_paquete(paquete, socket_cliente, logger);
