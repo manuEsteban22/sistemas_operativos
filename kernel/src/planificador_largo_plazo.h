@@ -41,6 +41,7 @@ void enviar_finalizacion_a_memoria(int pid);
 int operacion_con_memoria();
 void cerrar_conexion_memoria(int socket);
 void informar_memoria_desuspension(int pid);
+void pushear_a_new(t_pcb* pcb);
 
 #include<planificador_corto_plazo.h>
 #endif

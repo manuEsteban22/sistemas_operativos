@@ -465,7 +465,7 @@ void iniciar_proceso(int socket_cpu){
 void* reintentar_init(void*){
     while(1){
         sem_wait(&semaforo_espera);
-        if(!queue_is_empty){
+        if(!queue_is_empty(cola_espera)){
             t_proceso_espera* espera = queue_pop(cola_espera);
             t_pcb* pcb = obtener_pcb(espera->pid);
             if(enviar_pedido_memoria(pcb)){
@@ -511,8 +511,7 @@ void ejecutar_exit(int socket_cpu){
     int pid = *pid_raw;
 
     t_pcb* pcb = obtener_pcb(pid);
-    temporal_stop(pcb->temporal_estado);
-    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
+    //temporal_stop(pcb->temporal_estado);
     actualizar_estimacion_rafaga(pcb, true);
     finalizar_proceso(pcb);
     list_destroy_and_destroy_elements(recibido, free);
