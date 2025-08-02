@@ -23,7 +23,7 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
     //log_error(logger, "25 pthread_mutex_unlock(&mutex_dispositivos);");
-    pthread_mutex_unlock(&mutex_dispositivos);
+    // pthread_mutex_unlock(&mutex_dispositivos);
 
     if(io == NULL) {
         log_debug(logger, "Dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
@@ -59,9 +59,11 @@ void llamar_a_io(int socket_dispatch) {
 
         list_destroy_and_destroy_elements(campos, free);
         //free(dispositivo);
+        pthread_mutex_unlock(&mutex_dispositivos);
         return;
     }
 
+    pthread_mutex_unlock(&mutex_dispositivos);
     
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;

@@ -216,14 +216,14 @@ t_instancia_io* obtener_instancia_disponible(t_dispositivo_io* dispositivo){
     return NULL;
 }
 
-void borrar_socket_io(t_dispositivo_io* dispositivo, int socket_a_borrar){
+int buscar_instancia_por_socket(t_dispositivo_io* dispositivo, int socket_a_borrar){
     for(int i = 0; i < list_size(dispositivo->sockets_io); i++){
         t_instancia_io* instancia = list_get(dispositivo->sockets_io, i);
         if(instancia->socket == socket_a_borrar){
-            list_remove_and_destroy_element(dispositivo->sockets_io, i, free);
-            return;
+            return i;
         }
     }
+    return -1;
 }
 
 
@@ -232,21 +232,75 @@ void matar_io (int socket_cliente){
     char* nombre = buscar_io_por_socket(socket_cliente);
     if(nombre != NULL){
         log_info(logger, "Se desconecto un dispositivo [%s] de socket (%d)", nombre, socket_cliente);
-        t_dispositivo_io* dispositivo = dictionary_remove(dispositivos_io, nombre);
-        //pthread_mutex_unlock(&mutex_dispositivos);
-        borrar_socket_io(dispositivo, socket_cliente);
+        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
+        if(dispositivo == NULL){
+            log_error(logger, "Dispositivo %s no encontrado en diccionario", nombre);
+            free(nombre);
+            pthread_mutex_unlock(&mutex_dispositivos);
+            return;
+        }
 
+        int nro_instancia = buscar_instancia_por_socket(dispositivo, socket_cliente);
+        if(nro_instancia != -1){
+            t_instancia_io* instancia_a_borrar = list_get(dispositivo->sockets_io, nro_instancia);
+            if(instancia_a_borrar->ocupado && instancia_a_borrar->pid_ocupado != -1){
+                t_pcb* pcb = obtener_pcb(instancia_a_borrar->pid_ocupado);
+                if(pcb != NULL){
+                    int estado_anterior = pcb->estado_actual;
+                    
+                    if(pcb->estado_actual == BLOCKED){
+                        pthread_mutex_lock(&mutex_blocked);
+                        sacar_pcb_de_cola(cola_blocked, pcb->pid);
+                        pthread_mutex_unlock(&mutex_blocked);
+                    } else if(pcb->estado_actual == SUSP_BLOCKED){
+                        pthread_mutex_lock(&mutex_susp_blocked);
+                        sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
+                        pthread_mutex_unlock(&mutex_susp_blocked);
+                    }
+
+                    cambiar_estado(pcb, EXIT);
+                    log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+
+                    char* pid_str = string_itoa(pcb->pid);
+                    pthread_mutex_lock(&mutex_exec);
+                    int* cpu_exec = dictionary_remove(tabla_exec, pid_str);
+                    pthread_mutex_unlock(&mutex_exec);
+                    if(cpu_exec) free(cpu_exec);
+                    free(pid_str);
+
+                    borrar_pcb(pcb);
+                }
+            }
+            list_remove_and_destroy_element(dispositivo->sockets_io, nro_instancia, free);
+
+        }
+        
 
         if(list_is_empty(dispositivo->sockets_io)){
             log_info(logger, "No quedan instancias para el dispositivo [%s]", nombre);
 
+            dictionary_remove(dispositivos_io, nombre);
+
             while(!queue_is_empty(dispositivo->cola_bloqueados)){
                 t_pcb_io* pcb_io = queue_pop(dispositivo->cola_bloqueados);
                 t_pcb* pcb = obtener_pcb(pcb_io->pid);
+
                 if(pcb != NULL){
                     int estado_anterior = pcb->estado_actual;
+
+                    if(pcb->estado_actual == BLOCKED){
+                        pthread_mutex_lock(&mutex_blocked);
+                        sacar_pcb_de_cola(cola_blocked, pcb->pid);
+                        pthread_mutex_unlock(&mutex_blocked);
+                    } else if(pcb->estado_actual == SUSP_BLOCKED){
+                        pthread_mutex_lock(&mutex_susp_blocked);
+                        sacar_pcb_de_cola(cola_susp_blocked, pcb->pid);
+                        pthread_mutex_unlock(&mutex_susp_blocked);
+                    }
+
                     cambiar_estado(pcb, EXIT);
                     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
+                    
                     char* pid_str = string_itoa(pcb->pid);
                     pthread_mutex_lock(&mutex_exec);
                     int* cpu_exec = dictionary_remove(tabla_exec, pid_str);
@@ -257,14 +311,10 @@ void matar_io (int socket_cliente){
                 }
                 free(pcb_io);
             }
-
             
-            //limpiar_cola_susp_blocked()
-
-
-
-            //list_destroy_and_destroy_elements(io_a_borrar->sockets_io, free);
-            //queue_destroy(io_a_borrar->cola_bloqueados);
+            list_destroy(dispositivo->sockets_io);
+            queue_destroy(dispositivo->cola_bloqueados);
+            free(dispositivo);
         }
         
         free(nombre);
