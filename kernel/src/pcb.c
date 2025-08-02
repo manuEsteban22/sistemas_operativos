@@ -159,7 +159,6 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     if (!hay_proceso_en_exec()){
         return;
     }
-    log_error(logger, "ESTA EJECUTANDO");
     t_pcb* ejecutando = obtener_proceso_en_exec();
 
     log_debug(logger, "=== CHEQUEANDO SRT ===");
@@ -167,14 +166,18 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
               ejecutando->pid, ejecutando->estimacion_rafaga, ejecutando->rafaga_acumulada);
     log_debug(logger, "Nuevo PID: %d, Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
 
-
+    pthread_mutex_lock(&ejecutando->mutex_pcb);
+    temporal_stop(ejecutando->temporal_estado);
     double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
-    double tiempo_total_usado = ejecutando->rafaga_acumulada + tiempo_ejecutando;
-    double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_total_usado;
+    ejecutando->rafaga_acumulada += tiempo_ejecutando;
+    double estimacion_restante = ejecutando->estimacion_rafaga - ejecutando->rafaga_acumulada;
+
+    pthread_mutex_unlock(&ejecutando->mutex_pcb);
 
     log_debug(logger, "Tiempo ejecutando actual: %.2f", tiempo_ejecutando);
-    log_debug(logger, "Tiempo total usado: %.2f", tiempo_total_usado);
+    log_debug(logger, "Ráfaga acumulada total: %.2f", ejecutando->rafaga_acumulada);
     log_debug(logger, "Estimación restante: %.2f", estimacion_restante);
+
 
 
     if(estimacion_restante < 0){
@@ -184,7 +187,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
-        log_error(logger, "*** SRT: DESALOJANDO PID %d (restante: %.2f) por PID %d (estimación: %.2f) ***", 
+        log_debug(logger, "*** SRT: DESALOJANDO PID %d (restante: %.2f) por PID %d (estimación: %.2f) ***", 
                  ejecutando->pid, estimacion_restante, nuevo->pid, nuevo->estimacion_rafaga);
         char* pid_str = string_itoa(ejecutando->pid);
 
@@ -210,8 +213,6 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             int socket_interrupt = *socket_interrupt_ptr;
 
             pthread_mutex_lock(&ejecutando->mutex_pcb);
-            double tiempo_parcial = temporal_gettime(ejecutando->temporal_estado);
-            ejecutando->rafaga_acumulada += tiempo_parcial;
             int estado_anterior = ejecutando->estado_actual;
             cambiar_estado_sin_lock(ejecutando, READY);
             log_info(logger, "(%d) Pasa del estado %s al estado %s", 

@@ -153,7 +153,7 @@ void finalizar_proceso(t_pcb* pcb){
     if(!cpu_esta_en_lista(*cpu_id_ptr_copy)){
         list_add(cpus_libres, cpu_id_ptr_copy);
     } else{
-        //free(cpu_id_ptr_copy);
+        free(cpu_id_ptr_copy);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);

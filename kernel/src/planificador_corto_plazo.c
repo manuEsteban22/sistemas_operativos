@@ -34,11 +34,11 @@ t_pcb* planificador_corto_plazo(){
             break;
         case SJF:
             pcb = planificar_sjf(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SJF", pcb->pid);
+            //log_info(logger, "%d Desalojado por algoritmo SJF", pcb->pid);
             break;
         case SRT:
             pcb = planificar_sjf(cola_ready);
-            log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
+            //log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
             break;
         case PMCP:
             log_error(logger, "Proceso mas chico primero no es un algoritmo valido de pcp");

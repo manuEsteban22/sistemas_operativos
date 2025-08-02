@@ -139,7 +139,7 @@ void llamar_a_io(int socket_dispatch) {
     if(!cpu_esta_en_lista(*cpu_id_ptr)){
         list_add(cpus_libres, cpu_id_ptr);
     } else{
-        //free(cpu_id_ptr);
+        free(cpu_id_ptr);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
    // log_error(logger, "122: pthread_mutex_unlock(&mutex_cpus_libres);");
@@ -408,7 +408,7 @@ void dump_memory(int socket_dispatch){
     if(!cpu_esta_en_lista(*nuevo_cpu_id)){
         list_add(cpus_libres, nuevo_cpu_id);
     } else{
-        //free(nuevo_cpu_id);
+        free(nuevo_cpu_id);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);
