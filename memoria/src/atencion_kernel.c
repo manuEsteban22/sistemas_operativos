@@ -89,18 +89,16 @@ void suspender_proceso(int pid){
 
 void des_suspender_proceso(int pid) 
 {
-    // Filtrar páginas de ese proceso
-    t_list* paginas_proceso = list_create();
+    t_list* paginas_proceso = list_create();    // para ir guardando las paginas de swap que corresponden al proceso
     for (int i = 0; i < list_size(paginas_en_swap); i++) 
     {
-        t_pagina_swap* relacion = list_get(paginas_en_swap, i);
-        if (relacion->pid == pid) 
-        {
+        t_pagina_swap* relacion = list_get(paginas_en_swap, i);        //guarda todas las paginas de swap 
+        if (relacion->pid == pid)                                     //para comparar con el pid del proceso
+        {                                                             //y quedarse con las que coincidan
             list_add(paginas_proceso, relacion);
         }
     }
 
-    // Verificar si hay marcos libres en RAM
     if (list_size(paginas_proceso) > cantidad_marcos_libres()) 
     {
         log_error(logger, "No hay marcos libres suficientes para des-suspender el proceso %d", pid);
@@ -117,8 +115,8 @@ void des_suspender_proceso(int pid)
     for (int i = 0; i < list_size(paginas_proceso); i++) 
     {
         t_pagina_swap* relacion = list_get(paginas_proceso, i);
-        int marco_ram = buscar_marco_libre();
-        if (marco_ram == -1) 
+        int marco = buscar_marco_libre();
+        if (marco == -1) 
         {
             log_error(logger, "Error inesperado: no hay marco libre para restaurar página");
             break;
@@ -131,20 +129,20 @@ void des_suspender_proceso(int pid)
         pthread_mutex_unlock(&mutex_swap);
 
         pthread_mutex_lock(&mutex_memoria);
-        memcpy(memoria_usuario + marco_ram * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
+        memcpy(memoria_usuario + marco * campos_config.tam_pagina, buffer, campos_config.tam_pagina);
         pthread_mutex_unlock(&mutex_memoria);
  
         pthread_mutex_lock(&proceso->mutex_tabla);
         t_entrada_tabla* entrada = buscar_entrada(proceso->tabla_raiz, relacion->nro_pagina, 0);
         entrada->presencia = true;
-        entrada->marco = marco_ram;
+        entrada->marco = marco;
         pthread_mutex_unlock(&proceso->mutex_tabla);
 
         t_list* marcos_swap = list_create();
         int* marco_swap_ptr = malloc(sizeof(int));
-        *marco_swap_ptr = relacion->marco_swap;
+        *marco_swap_ptr = relacion->marco_swap;             //creo lista marcos que saqué de swap para sacarlos jaja
         list_add(marcos_swap, marco_swap_ptr);
-        liberar_marcos(marcos_swap);
+        liberar_marcos_swap(marcos_swap);
 
         list_remove_element(paginas_en_swap, relacion);
         free(relacion);
@@ -188,7 +186,6 @@ void liberar_proceso(void* proceso_void)
         return;
     }
 
-    // Libera la tabla de páginas y marcos ocupados
     if (proceso->tabla_raiz) 
     {
         liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
@@ -198,14 +195,14 @@ void liberar_proceso(void* proceso_void)
 
     char* pid_str = string_itoa(proceso->pid);
 
-    // Liberar instrucciones
     pthread_mutex_lock(&mutex_diccionario_instrucciones);
     t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_instrucciones);
     if (instrucciones)
+    {
         list_destroy_and_destroy_elements(instrucciones, free);
+    }
 
-    // Liberar semáforo asociado
     pthread_mutex_lock(&mutex_semaforos);
     sem_t* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_semaforos);
@@ -215,7 +212,6 @@ void liberar_proceso(void* proceso_void)
         free(semaforo);
     }
 
-    // Eliminar páginas en swap asociadas al proceso
     for (int i = 0; i < list_size(paginas_en_swap); ) 
     {
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
@@ -226,7 +222,7 @@ void liberar_proceso(void* proceso_void)
 
             t_list* marcos_swap = list_create();
             list_add(marcos_swap, marco_swap_ptr);
-            liberar_marcos(marcos_swap);
+            liberar_marcos_swap(marcos_swap);
 
             list_remove(paginas_en_swap, i);
             free(relacion);
@@ -237,12 +233,10 @@ void liberar_proceso(void* proceso_void)
         }
     }
 
-    // Sacar del diccionario de procesos
     pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_remove(tablas_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
-    // Liberar mutex del proceso para evitar leaks
     pthread_mutex_destroy(&proceso->mutex_tabla);
 
     log_info(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
@@ -298,7 +292,6 @@ int buscar_marco_libre()
     return -1;
 }
 
-// busca la entrada en cuestion
 
 
 t_entrada_tabla* buscar_entrada(t_tabla_paginas* tabla, int pagina, int nivel_actual) 

@@ -66,7 +66,7 @@ t_list* asignar_marcos_swap(int cantidad) {
     }
 
     if (cantidad_agregada < cantidad) {
-        liberar_marcos(marcos_libres);
+        liberar_marcos_swap(marcos_libres);
         log_error(logger, 
             "La cantidad de marcos disponibles es menor que la cantidad solicitada (%d).", cantidad);
         return NULL;
@@ -107,7 +107,7 @@ void leer_de_swap(void* buffer, int nro_marco){
     fclose(archivo_swap);
 }
 
-void liberar_marcos(t_list* marcos) {
+void liberar_marcos_swap(t_list* marcos) {
     for (int i = 0; i < list_size(marcos); i++) {
         int* marco = list_get(marcos, i);
         bitarray_clean_bit(bitmap_marcos_swap, *marco); // marcar como libre

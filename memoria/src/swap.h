@@ -11,7 +11,7 @@ void inicializar_swap();
 t_list* asignar_marcos_swap(int cantidad);
 void escribir_en_swap(void* buffer, int nro_marco);
 void leer_de_swap(void* buffer, int nro_marco);
-void liberar_marcos(t_list* marcos);
+void liberar_marcos_swap(t_list* marcos);
 
 typedef struct {
     int pid;
