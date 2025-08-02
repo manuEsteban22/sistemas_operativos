@@ -39,8 +39,6 @@ t_pcb* planificador_corto_plazo(){
         case SRT:
             pcb = planificar_sjf(cola_ready);
             log_info(logger, "%d Desalojado por algoritmo SRT", pcb->pid);
-            // probablemente despues de cada proceso hay que actualizar la
-            // estimacion y la rafaga real anterior y asi quedan los valores para el que sigue
             break;
         case PMCP:
             log_error(logger, "Proceso mas chico primero no es un algoritmo valido de pcp");

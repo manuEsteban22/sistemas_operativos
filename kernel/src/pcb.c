@@ -159,23 +159,33 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     if (!hay_proceso_en_exec()){
         return;
     }
-    
+    log_error(logger, "ESTA EJECUTANDO");
     t_pcb* ejecutando = obtener_proceso_en_exec();
 
+    log_debug(logger, "=== CHEQUEANDO SRT ===");
+    log_debug(logger, "Ejecutando PID: %d, Estimación: %.2f, Ráfaga acumulada: %.2f", 
+              ejecutando->pid, ejecutando->estimacion_rafaga, ejecutando->rafaga_acumulada);
+    log_debug(logger, "Nuevo PID: %d, Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
+
+
     double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
-    double rafaga_total_estimada = ejecutando->estimacion_rafaga;
     double tiempo_total_usado = ejecutando->rafaga_acumulada + tiempo_ejecutando;
-    double estimacion_restante = rafaga_total_estimada - tiempo_total_usado;
+    double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_total_usado;
+
+    log_debug(logger, "Tiempo ejecutando actual: %.2f", tiempo_ejecutando);
+    log_debug(logger, "Tiempo total usado: %.2f", tiempo_total_usado);
+    log_debug(logger, "Estimación restante: %.2f", estimacion_restante);
+
 
     if(estimacion_restante < 0){
         log_debug(logger, "La estimacion restante fue menor a 0");
         estimacion_restante = 0;
     }
-    log_debug(logger, "PID %d (ejecutando) - Estimación restante: %.2f", ejecutando->pid, estimacion_restante);
-    log_debug(logger, "PID %d (nuevo) - Estimación: %.2f", nuevo->pid, nuevo->estimacion_rafaga);
     
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
+        log_error(logger, "*** SRT: DESALOJANDO PID %d (restante: %.2f) por PID %d (estimación: %.2f) ***", 
+                 ejecutando->pid, estimacion_restante, nuevo->pid, nuevo->estimacion_rafaga);
         char* pid_str = string_itoa(ejecutando->pid);
 
         pthread_mutex_lock(&mutex_exec);
@@ -242,17 +252,14 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 
 t_pcb* obtener_proceso_en_exec(){
     t_pcb* pcb_en_exec = NULL;
-    log_debug(logger,"hasta aca llegue 3");
     void buscar_exec(char* key, void* pcb_void){
         t_pcb* pcb = (t_pcb*)pcb_void;
         if (pcb->estado_actual == EXEC){
             pcb_en_exec = pcb;
         }
     }
-   // log_error(logger, "222: pthread_mutex_lock(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
     dictionary_iterator(tabla_pcbs, buscar_exec);
-   // log_error(logger, "225: pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
     return pcb_en_exec;
 }
