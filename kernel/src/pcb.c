@@ -61,6 +61,8 @@ void cambiar_estado_sin_lock(t_pcb* pcb, t_estado_proceso nuevo_estado) {
         log_error(logger, "Error en cambio de estado PCB NULL");
         return;
     }
+
+
     int duracion = temporal_gettime(pcb->temporal_estado);
     pcb->metricas_tiempo[pcb->estado_actual] += duracion;
     //devuelve el tiempo que tomó el cronometro y lo suma a la metrica de tiempo del estado actual
@@ -132,7 +134,6 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, bool rafaga_completa) {
     pthread_mutex_lock(&pcb->mutex_pcb);
 
     double tiempo_actual = temporal_gettime(pcb->temporal_estado);
-    double tiempo;
     pcb->rafaga_acumulada = tiempo_actual;
 
     if(rafaga_completa){
@@ -147,8 +148,6 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, bool rafaga_completa) {
         log_debug(logger, "Nueva estimacion %f", nueva_estimacion);
     }
 
-    temporal_destroy(pcb->temporal_estado);
-    pcb->temporal_estado = temporal_create();
     pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 
