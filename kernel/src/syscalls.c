@@ -19,11 +19,8 @@ void llamar_a_io(int socket_dispatch) {
 
     log_info(logger, "Recibi syscall IO - PID %d - PC %d - Dispositivo [%s] - Tiempo %d", pid, pc, dispositivo, tiempo);
 
-    //log_error(logger, "22 pthread_mutex_lock(&mutex_dispositivos);");
     pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
-    //log_error(logger, "25 pthread_mutex_unlock(&mutex_dispositivos);");
-    // pthread_mutex_unlock(&mutex_dispositivos);
 
     if(io == NULL) {
         log_debug(logger, "Dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
@@ -78,18 +75,14 @@ void llamar_a_io(int socket_dispatch) {
     asignar_timer_blocked(pcb);
 
     log_debug(logger, "Se bloquea el proceso PID %d", pcb->pid);
-    //log_error(logger,"54: pthread_mutex_lock(&mutex_blocked);");
     pthread_mutex_lock(&mutex_blocked);
     
     queue_push(cola_blocked, pcb);
-    //log_error(logger, "58: pthread_mutex_unlock(&mutex_blocked);");
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
-    //log_error(logger, "62: pthread_mutex_lock(&mutex_interrupt);");
     pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
-    //log_error(logger, "65: pthread_mutex_unlock(&mutex_interrupt);");
     pthread_mutex_unlock(&mutex_interrupt);
     if(!socket_interrupt_ptr){
         log_error(logger, "No se encontro el socket_interrupt para CPU ID %d", cpu_id);
@@ -363,7 +356,6 @@ void dump_memory(int socket_dispatch){
     int pc = *pc_raw;
     int cpu_id = *cpu_id_raw;
     log_trace(logger, "## DUMP MEMORY - PID %d - PC %d - CPU_ID %d", pid, pc, cpu_id);
-   // log_error(logger,"344: pthread_mutex_lock(&mutex_blocked);");
     pthread_mutex_lock(&mutex_blocked);
     
     t_pcb* pcb = obtener_pcb(pid);
@@ -381,10 +373,8 @@ void dump_memory(int socket_dispatch){
     pthread_mutex_unlock(&mutex_blocked);
 
     char* cpu_id_str = string_itoa(cpu_id);
-   // log_error(logger, "361: pthread_mutex_lock(&mutex_interrupt);");
     pthread_mutex_lock(&mutex_interrupt);
     int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
-   // log_error(logger, "364: pthread_mutex_unlock(&mutex_interrupt);");
     pthread_mutex_unlock(&mutex_interrupt);
     socket_interrupt = *socket_interrupt_ptr;
     free(cpu_id_str);

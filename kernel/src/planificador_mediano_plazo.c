@@ -141,7 +141,9 @@ void informar_memoria_desuspension(int pid){
     borrar_paquete(paquete);
 
     int confirmacion = recibir_operacion(socket_memoria);
-    if(confirmacion != OK){log_error(logger, "No se recibio confirmacion de la desuspension (%d)", confirmacion);}
+    if(confirmacion != OK){
+    log_debug(logger, "No se recibio confirmacion de la desuspension (%d)", confirmacion);
+    }
     cerrar_conexion_memoria(socket_memoria);
 }
 

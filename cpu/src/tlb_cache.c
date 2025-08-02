@@ -42,7 +42,7 @@ void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pc
 
     int confirmacion = recibir_operacion(socket_memoria);
 
-    if(confirmacion != OK) log_error(logger, "No se confirmo la escritura de pagina");
+    if(confirmacion != OK) log_debug(logger, "No se confirmo la escritura de pagina");
     recibir_operacion(socket_memoria);//0 basura de cerrado
     return;
 }
@@ -499,7 +499,7 @@ int pedir_frame(t_pcb* pcb, int nro_pagina){
 
     int opcode = recibir_operacion(socket_memoria);
     if(opcode != OC_FRAME){
-        log_error(logger, "no se recibio el marco");
+        log_debug(logger, "no se recibio el marco");
         return -1;
     }
 

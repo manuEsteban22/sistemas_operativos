@@ -71,7 +71,7 @@ int espacio_libre()
 
 void liberar_memoria(char* pid) 
 {
-    log_warning(logger, "Liberar memoria Pid %s", pid);
+    //log_warning(logger, "Liberar memoria Pid %s", pid);
     list_destroy_and_destroy_elements(dictionary_get(lista_de_instrucciones_por_pid, pid), free);
 }
 

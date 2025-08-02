@@ -100,7 +100,7 @@ void* manejar_servidor_cpu(void* arg){
             case ERROR:
                 break;
             default:
-                log_info(logger, "error en el recv");
+                log_debug(logger, "error en el recv");
                 break;
         }
     }
@@ -235,7 +235,7 @@ void matar_io (int socket_cliente){
         log_info(logger, "Se desconecto un dispositivo [%s] de socket (%d)", nombre, socket_cliente);
         t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
         if(dispositivo == NULL){
-            log_error(logger, "Dispositivo %s no encontrado en diccionario", nombre);
+            log_debug(logger, "Dispositivo %s no encontrado en diccionario", nombre);
             free(nombre);
             pthread_mutex_unlock(&mutex_dispositivos);
             return;
@@ -320,7 +320,7 @@ void matar_io (int socket_cliente){
         
         free(nombre);
     } else{
-        log_error(logger, "No se encontro un IO con socket %d", socket_cliente);
+        log_debug(logger, "No se encontro un IO con socket %d", socket_cliente);
     }
     pthread_mutex_unlock(&mutex_dispositivos);
 }
@@ -354,7 +354,7 @@ void* manejar_servidor_io(void* arg){
             case ERROR:
                 break;
             default:
-                log_info(logger, "error en el recv");
+                //log_info(logger, "error en el recv");
                 break;
         }
     }

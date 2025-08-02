@@ -44,7 +44,7 @@ void* manejar_conexion_cpu(void* arg) {
                 log_trace(logger, "Se cerro la conexion con CPU");
                 break;
             default:
-                log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
+                //log_error(logger, "Operación CPU desconocida: %d", codigo_operacion);
                 break;
         }
     }

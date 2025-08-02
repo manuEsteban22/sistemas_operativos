@@ -1,10 +1,5 @@
 NOOP
-INIT_PROC instruccion_0 0
-INIT_PROC instruccion_0 0
-WRITE 0 PRUEBA_VARIAS_CPU
-READ 0 17
-IO IMPRESORA 10000
-WRITE 17 A_VER_ESTO
-READ 0 27
-GOTO 0
+INIT_PROC instrucciones_1 0
+INIT_PROC instrucciones_2 0
+INIT_PROC instrucciones_2 0
 EXIT

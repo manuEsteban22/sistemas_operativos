@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
 t_log* iniciar_logger(void){
     t_log* nuevo_logger;
-    nuevo_logger = log_create("io.log","LogIO",true,LOG_LEVEL_TRACE);
+    nuevo_logger = log_create("io.log","LogIO",true,LOG_LEVEL_INFO);
     log_info(nuevo_logger, "Funciona logger IO :)");
     return nuevo_logger;
 }

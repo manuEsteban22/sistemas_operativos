@@ -133,20 +133,33 @@ void actualizar_estimacion_rafaga(t_pcb* pcb, bool rafaga_completa) {
    // log_error(logger, "bloquea pcb pcb:102");
     pthread_mutex_lock(&pcb->mutex_pcb);
 
-    double tiempo_actual = temporal_gettime(pcb->temporal_estado);
-    pcb->rafaga_acumulada = tiempo_actual;
+    // double tiempo_actual = temporal_gettime(pcb->temporal_estado);
+    // pcb->rafaga_acumulada = tiempo_actual;
 
-    if(rafaga_completa){
-        double rafaga_real_completa = pcb->rafaga_acumulada;
-        pcb->rafaga_real_anterior = rafaga_real_completa;
+    // if(rafaga_completa){
+    //     double rafaga_real_completa = pcb->rafaga_acumulada;
+    //     pcb->rafaga_real_anterior = rafaga_real_completa;
 
-        log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga completa %f - Estimacion previa %f", pcb->pid, rafaga_real_completa, pcb->estimacion_rafaga);
+    //     log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga completa %f - Estimacion previa %f", pcb->pid, rafaga_real_completa, pcb->estimacion_rafaga);
 
-        double nueva_estimacion = (alfa * rafaga_real_completa) + ((1 - alfa) * pcb->estimacion_rafaga);
+    //     double nueva_estimacion = (alfa * rafaga_real_completa) + ((1 - alfa) * pcb->estimacion_rafaga);
+    //     pcb->estimacion_rafaga = nueva_estimacion;
+    //     pcb->rafaga_acumulada = 0;
+    //     log_debug(logger, "Nueva estimacion %f", nueva_estimacion);
+    // }
+    if (rafaga_completa) {
+        double tiempo_real = temporal_gettime(pcb->temporal_estado);  // mide el tiempo total de EXEC
+        pcb->rafaga_real_anterior = tiempo_real;
+    
+        log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga completa %.2f - Estimacion previa %.2f", 
+                  pcb->pid, tiempo_real, pcb->estimacion_rafaga);
+    
+        double nueva_estimacion = (alfa * tiempo_real) + ((1 - alfa) * pcb->estimacion_rafaga);
         pcb->estimacion_rafaga = nueva_estimacion;
-        pcb->rafaga_acumulada = 0;
-        log_debug(logger, "Nueva estimacion %f", nueva_estimacion);
+    
+        log_debug(logger, "Nueva estimacion %.2f", nueva_estimacion);
     }
+
 
     pthread_mutex_unlock(&pcb->mutex_pcb);
 }
