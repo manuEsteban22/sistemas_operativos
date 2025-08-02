@@ -179,31 +179,47 @@ void liberar_marcos_de_proceso(t_tabla_paginas* tabla, int nivel_actual) {
     }
 }
 
-
-void* finalizar_proceso(int pid) {
-    char* pid_str = string_itoa(pid);
-    pthread_mutex_lock(&mutex_diccionario_procesos);
-    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
-    pthread_mutex_unlock(&mutex_diccionario_procesos);
-
+void liberar_proceso(void* proceso_void) 
+{
+    t_proceso* proceso = (t_proceso*)proceso_void;
     if (!proceso) 
     {
-        log_error(logger, "No se encontró el proceso %d", pid);
-        free(pid_str);
-        return NULL;
+        log_error(logger, "Intento de liberar un proceso NULL");
+        return;
     }
 
-    // Libera toda la jerarquía de tablas de páginas
-    if (proceso->tabla_raiz) {
+    // Libera la tabla de páginas y marcos ocupados
+    if (proceso->tabla_raiz) 
+    {
         liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
 
+    char* pid_str = string_itoa(proceso->pid);
+
+    // Liberar instrucciones
+    pthread_mutex_lock(&mutex_diccionario_instrucciones);
+    t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
+    if (instrucciones)
+        list_destroy_and_destroy_elements(instrucciones, free);
+
+    // Liberar semáforo asociado
+    pthread_mutex_lock(&mutex_semaforos);
+    t_sem* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_semaforos);
+    if (semaforo)
+    {
+        sem_destroy(semaforo);
+        free(semaforo);
+    }
+
+    // Eliminar páginas en swap asociadas al proceso
     for (int i = 0; i < list_size(paginas_en_swap); ) 
     {
         t_pagina_swap* relacion = list_get(paginas_en_swap, i);
-        if (relacion->pid == pid) 
+        if (relacion->pid == proceso->pid) 
         {
             int* marco_swap_ptr = malloc(sizeof(int));
             *marco_swap_ptr = relacion->marco_swap;
@@ -214,18 +230,23 @@ void* finalizar_proceso(int pid) {
 
             list_remove(paginas_en_swap, i);
             free(relacion);
-        } else {
+        }
+        else
+        {
             i++;
         }
     }
 
+    // Sacar del diccionario de procesos
     pthread_mutex_lock(&mutex_diccionario_procesos);
     dictionary_remove(tablas_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_procesos);
 
-    // Log de métricas
-    log_error(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
-        pid,
+    // Liberar mutex del proceso para evitar leaks
+    pthread_mutex_destroy(&proceso->mutex_tabla);
+
+    log_info(logger, "## PID: %d - Proceso Destruido - Métricas - Acc.T.Pag: %d; Inst.Sol.: %d; SWAP: %d; Mem.Prin.: %d; Lec.Mem.: %d; Esc.Mem.: %d",
+        proceso->pid,
         proceso->metricas.cantidad_accesos_tablas_de_paginas,
         proceso->metricas.cantidad_instrucciones_solicitadas,
         proceso->metricas.cantidad_bajadas_a_swap,
@@ -234,8 +255,28 @@ void* finalizar_proceso(int pid) {
         proceso->metricas.cantidad_escrituras_memoria
     );
 
-    free(proceso);
     free(pid_str);
+    free(proceso);
+}
+
+
+void* finalizar_proceso(int pid) 
+{
+    char* pid_str = string_itoa(pid);
+
+    pthread_mutex_lock(&mutex_diccionario_procesos);
+    t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_diccionario_procesos);
+
+    free(pid_str);
+
+    if (!proceso)
+    {
+        log_error(logger, "No se encontró el proceso %d", pid);
+        return NULL;
+    }
+
+    liberar_proceso(proceso);
     return NULL;
 }
 
@@ -396,53 +437,4 @@ void liberar_tabla(t_tabla_paginas* tabla, int nivel_actual)
     }
     list_destroy(tabla->entradas);
     free(tabla);
-}
-
-void liberar_proceso(void* proceso_void) 
-{
-    t_proceso* proceso = (t_proceso*)proceso_void;
-    if (!proceso) 
-    {
-        log_error(logger, "Intento de liberar un proceso NULL");
-        return;
-    }
-
-    if (proceso->tabla_raiz) 
-    {
-        liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
-        liberar_tabla(proceso->tabla_raiz, 0);
-        proceso->tabla_raiz = NULL;
-    }
-
-    char* pid_str = string_itoa(proceso->pid);
-
-    pthread_mutex_lock(&mutex_diccionario_instrucciones);
-    t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
-    pthread_mutex_unlock(&mutex_diccionario_instrucciones);
-
-    
-
-    if (instrucciones)
-    {
-        list_destroy_and_destroy_elements(instrucciones, free);
-    }
-    
-    pthread_mutex_lock(&mutex_semaforos);
-    t_sem* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
-    pthread_mutex_unlock(&mutex_semaforos);
-
-    if (semaforo)
-    {
-        sem_destroy (semaforo);
-        free (semaforo);
-    }
-
-    pthread_mutex_lock(&mutex_diccionario_procesos);
-    dictionary_remove(tablas_por_pid, pid_str);  
-    pthread_mutex_unlock(&mutex_diccionario_procesos);
-
-    free(pid_str);
-
-    log_trace(logger, "Liberando proceso PID %d", proceso->pid);
-    free(proceso);
 }
