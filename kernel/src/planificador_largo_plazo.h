@@ -37,6 +37,7 @@ void chequear_algoritmo_planificacion ();
 void planificador_largo_plazo();
 int crear_proceso(int tamanio_proceso);
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo);
+void enviar_finalizacion_a_memoria(int pid);
 
 #include<planificador_corto_plazo.h>
 #endif

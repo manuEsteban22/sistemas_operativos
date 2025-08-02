@@ -106,7 +106,7 @@ void dump_memory(t_pcb* pcb, int cpu_id){
         return;
     }
     else{
-        log_error(logger, "No se recibio respuesta del DUMP de kernel");
+        log_error(logger, "No se recibio respuesta del DUMP de kernel (%d)", respuesta);
     }
 }
 

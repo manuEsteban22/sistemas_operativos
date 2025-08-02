@@ -377,6 +377,16 @@ void suspender_pagina(int pid, int nro_pagina, int marco)
 
     void* buffer = malloc(campos_config.tam_pagina);
 
+    
+    if (marco < 0 || marco >= (campos_config.tam_memoria/campos_config.tam_pagina)) {
+        log_error(logger, "ERROR: marco inválido (%d) al suspender pagina del PID %d", marco, pid);
+        free(buffer);
+        list_destroy_and_destroy_elements(marcos_swap, free);
+        return;
+    }
+
+
+
     memcpy(buffer, memoria_usuario + marco * campos_config.tam_pagina, campos_config.tam_pagina);
 
     escribir_en_swap(buffer, marco_swap);
@@ -384,7 +394,7 @@ void suspender_pagina(int pid, int nro_pagina, int marco)
     t_pagina_swap* relacion = malloc(sizeof(t_pagina_swap));
     relacion->pid = pid;
     relacion->nro_pagina = nro_pagina;
-    relacion->marco_swap = marco_swap;
+    relacion->marco_swap = marco_swap;//esta es la 387
     list_add(paginas_en_swap, relacion);
 
     free(buffer);

@@ -20,7 +20,7 @@ void* trackear_bloqueo(void* args){
         cambiar_estado_sin_lock(pcb, SUSP_BLOCKED);
         //cambiar_estado(pcb, SUSP_BLOCKED);
         log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-        log_error(logger, "SE SUSPENDIO PROCESO PID %d", pcb->pid);
+        //log_error(logger, "SE SUSPENDIO PROCESO PID %d", pcb->pid);
         pthread_mutex_lock(&mutex_susp_blocked);
         queue_push(cola_susp_blocked, pcb);
         informar_memoria_suspension(pcb->pid);

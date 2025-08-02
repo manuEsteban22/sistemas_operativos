@@ -234,9 +234,17 @@ int ejecutar_write(int socket_cliente){
     //log_debug(logger, "DATOS (%s)", datos);
     usleep(campos_config.retardo_memoria * 1000);
 
+    if (direccion_fisica < 0 || direccion_fisica + tamanio > (campos_config.tam_memoria)) {
+        log_error(logger, "ERROR WRITE: dirección física fuera de rango (dir=%d, tam=%d)", direccion_fisica, tamanio);
+        list_destroy_and_destroy_elements(recibido, free);
+        free(pid_str);
+        return -1;
+    }
+
+
 
     pthread_mutex_lock(&mutex_memoria);
-    memcpy(memoria_usuario + direccion_fisica, datos, tamanio);
+    memcpy(memoria_usuario + direccion_fisica, datos, tamanio); // esta es la 239
     pthread_mutex_unlock(&mutex_memoria);
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
@@ -300,10 +308,13 @@ int escribir_pagina_completa(int socket_cliente){
     log_debug(logger, "PID: %d Direccion fisica: %d", pid, direccion_fisica);
     log_debug(logger, "Los datos a escribir en la pagina son %s", datos);
 
+    int marco = direccion_fisica / campos_config.tam_pagina;
+    int base = marco * campos_config.tam_pagina;
+
     usleep(campos_config.retardo_memoria * 1000);
 
     pthread_mutex_lock(&mutex_memoria);
-    memcpy(memoria_usuario + direccion_fisica, datos, campos_config.tam_pagina);
+    memcpy(memoria_usuario + base, datos, campos_config.tam_pagina);
     pthread_mutex_unlock(&mutex_memoria);
 
     t_paquete* paquete = crear_paquete();

@@ -90,6 +90,7 @@ int crear_proceso(int tamanio_proceso){
 }
 
 void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
+    //pthread_mutex_lock(&mutex_new);
     t_list* lista_aux = list_create();
     bool insertado = false;
 
@@ -109,11 +110,13 @@ void insertar_en_orden_por_memoria(t_queue* cola, t_pcb* nuevo){
     
     for (int i = 0; i < list_size(lista_aux); i++){
         t_pcb* pcb = list_get(lista_aux, i);
-        log_trace(logger, "PCB INSERTADO PID: %d - TAMANIO: %d", pcb->pid, pcb->tamanio);
+        //log_trace(logger, "PCB INSERTADO PID: %d - TAMANIO: %d", pcb->pid, pcb->tamanio);
         queue_push(cola, pcb);
     }
 
     list_destroy(lista_aux);
+    //pthread_mutex_unlock(&mutex_new);
+    
     sem_post(&sem_plp);
 }
 
@@ -149,7 +152,7 @@ void finalizar_proceso(t_pcb* pcb){
     if(!cpu_esta_en_lista(*cpu_id_ptr_copy)){
         list_add(cpus_libres, cpu_id_ptr_copy);
     } else{
-        free(cpu_id_ptr_copy);
+        //free(cpu_id_ptr_copy);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);

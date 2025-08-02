@@ -103,10 +103,6 @@ void llamar_a_io(int socket_dispatch) {
     enviar_paquete(senial_bloqueante, socket_interrupt, logger);
     borrar_paquete(senial_bloqueante);
     
-    // t_paquete* confirmacion = crear_paquete();
-    // cambiar_opcode_paquete(confirmacion, OK);
-    // enviar_paquete(confirmacion, socket_dispatch, logger);
-    // borrar_paquete(confirmacion);
 
     t_instancia_io* instancia = obtener_instancia_disponible(io);
 
@@ -144,7 +140,7 @@ void llamar_a_io(int socket_dispatch) {
     if(!cpu_esta_en_lista(*cpu_id_ptr)){
         list_add(cpus_libres, cpu_id_ptr);
     } else{
-        free(cpu_id_ptr);
+        //free(cpu_id_ptr);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
    // log_error(logger, "122: pthread_mutex_unlock(&mutex_cpus_libres);");
@@ -412,7 +408,7 @@ void dump_memory(int socket_dispatch){
     if(!cpu_esta_en_lista(*nuevo_cpu_id)){
         list_add(cpus_libres, nuevo_cpu_id);
     } else{
-        free(nuevo_cpu_id);
+        //free(nuevo_cpu_id);
     }
     log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
     pthread_mutex_unlock(&mutex_cpus_libres);

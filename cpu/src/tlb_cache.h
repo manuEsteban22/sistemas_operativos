@@ -35,5 +35,11 @@ int esta_en_tlb(int pagina);
 int pedir_frame(t_pcb* pcb, int nro_pagina);
 void* leer_de_cache(int direccion_logica, int tamanio, t_pcb* pcb);
 void gestionar_desalojo (t_pcb* pcb);
+bool escribir_en_cache(int direccion_logica, char* datos, t_pcb* pcb);
+void actualizar_cache(int pagina, int marco, void* contenido, bool modificado, t_pcb* pcb);
+void limpiar_tlb();
+void limpiar_cache(t_pcb* pcb);
+int encontrar_victima_cache(t_pcb* pcb);
+void actualizar_tlb(int pagina, int marco); 
 
 #endif

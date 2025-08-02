@@ -1,4 +1,5 @@
 #include<mmu.h>
+#include<math.h>
 
 int calcular_entrada_nivel(int direccion_logica, int nivel, int entradas_por_tabla, int cant_niveles, t_pcb* pcb){
     int nro_pagina = direccion_logica / tam_pagina;
@@ -30,10 +31,16 @@ int traducir_direccion(t_pcb* pcb, int direccion_logica){
             marco = pedir_frame(pcb, nro_pagina);
             actualizar_tlb(nro_pagina, marco);
             log_info(logger, "PID: %d - TLB MISS - Pagina: %d", pcb->pid, nro_pagina);
+            return marco * tam_pagina + desplazamiento;
         }
     }
 
     marco = pedir_frame(pcb, nro_pagina);
+
+    if(marco == -1){
+        log_error(logger, "Error: marco inválido para PID %d - Página %d", pcb->pid, nro_pagina);
+        return -1;
+    }
 
     return marco * tam_pagina + desplazamiento;
 }

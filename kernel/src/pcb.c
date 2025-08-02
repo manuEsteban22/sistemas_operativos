@@ -3,12 +3,14 @@
 
 t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
+    log_error(logger, "Se crea PID %d", pid);
     pcb->pid = pid;
     pcb->pc = 0;
     pcb->tamanio = tamanio_proceso;
     pcb->estado_actual = NEW;
     pcb->temporal_estado = temporal_create();
     pcb->temporal_blocked = NULL;
+    pcb->en_suspension_check = false;
     //Inicializo el pcb en estado NEW y creo el cronometro
 
     for(int i = 0; i < CANTIDAD_ESTADOS; i++) {
@@ -88,6 +90,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
 
 void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
+    log_error(logger, "Se borra PID %d", pcb->pid);
    // log_error(logger, "77: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     char* pid_str = string_itoa(pcb->pid);
@@ -175,7 +178,6 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
         }
 
         int cpu_id = *cpu_id_ptr;
-        log_debug(logger,"hasta aca llegue 8");
         char* cpu_id_str = string_itoa(cpu_id);
        // log_error(logger, "168: pthread_mutex_lock(&mutex_interrupt);");
         pthread_mutex_lock(&mutex_interrupt);
@@ -209,7 +211,7 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
             if(!cpu_esta_en_lista(*cpu_id)){
                 list_add(cpus_libres, cpu_id);
             } else{
-                free(cpu_id);
+                //free(cpu_id);
             }
             log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
             //log_error(logger, "197: pthread_mutex_unlock(&mutex_cpus_libres);");

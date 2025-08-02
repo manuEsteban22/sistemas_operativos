@@ -24,18 +24,7 @@ void inicializar_cache() {
 //     cambiar_opcode_paquete()
 // }
 
-void gestionar_desalojo (t_pcb* pcb){
-    if(entradas_tlb > 0){
-        limpiar_tlb();
-        log_trace(logger, "Se limpio TLB por desalojo del proceso PID %d", pcb->pid);
-    }
 
-    if(entradas_cache > 0){
-        log_trace(logger, "Se limpio la caché por desalojo del proceso PID %d", pcb->pid);
-        limpiar_cache(pcb);
-    }
-
-}
 
 void escribir_pagina_en_memoria(int direccion_fisica, char* contenido, t_pcb* pcb) {
     log_trace(logger, "PID: %d, DIRECCION FISICA: %d, contenido a escribir {%s}", pcb->pid, direccion_fisica, contenido);
@@ -64,8 +53,8 @@ char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
     agregar_a_paquete(paquete, &direccion_fisica, sizeof(int));
     enviar_paquete(paquete, socket_memoria, logger);
     borrar_paquete(paquete);
-
-    if(recibir_operacion(socket_memoria) == OC_PAG_READ){
+    int respuesta = recibir_operacion(socket_memoria);
+    if(respuesta == OC_PAG_READ){
         t_list* recibido = recibir_paquete(socket_memoria);
         char* contenido = (char*)list_get(recibido, 0);
 
@@ -74,6 +63,9 @@ char* leer_pagina_memoria(int direccion_fisica, t_pcb* pcb){
 
         list_destroy_and_destroy_elements(recibido, free);
         return pagina;
+    }else{
+        log_error(logger, "No recibi OC_PAG_READ (%d)", respuesta);
+        return NULL;
     }
 }
 
@@ -518,4 +510,17 @@ int pedir_frame(t_pcb* pcb, int nro_pagina){
 
     log_info(logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d", pcb->pid, nro_pagina, marco);
     return marco;
+}
+
+void gestionar_desalojo (t_pcb* pcb){
+    if(entradas_tlb > 0){
+        limpiar_tlb();
+        log_trace(logger, "Se limpio TLB por desalojo del proceso PID %d", pcb->pid);
+    }
+
+    if(entradas_cache > 0){
+        log_trace(logger, "Se limpio la caché por desalojo del proceso PID %d", pcb->pid);
+        limpiar_cache(pcb);
+    }
+
 }

@@ -236,6 +236,7 @@ void iniciar_ciclo_de_instrucciones(t_pcb* pcb, int cpu_id){
         if(prox == NULL){
             log_error(logger, "Error en el fetch en pc=%d", pcb->pc);
             proceso_en_running = false;
+            free(pcb);
             return;
         }
         int instruccion = prox->identificador;
