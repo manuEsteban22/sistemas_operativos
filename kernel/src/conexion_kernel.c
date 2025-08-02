@@ -263,15 +263,20 @@ void matar_io (int socket_cliente){
                 }
                 free(pcb_io);
             }
-            //list_destroy_and_destroy_elements(dispositivo->sockets_io, free);
-            //queue_destroy(dispositivo->cola_bloqueados);
+
+            
+            //limpiar_cola_susp_blocked()
+
+
+
             pthread_mutex_lock(&mutex_dispositivos);
             t_dispositivo_io* io_a_borrar = dictionary_remove(dispositivos_io, nombre);
             pthread_mutex_unlock(&mutex_dispositivos);
+            pthread_mutex_lock(&io_a_borrar->mutex_dispositivos);
             list_destroy_and_destroy_elements(io_a_borrar->sockets_io, free);
             queue_destroy(io_a_borrar->cola_bloqueados);
+            pthread_mutex_unlock(&io_a_borrar->mutex_dispositivos);
             pthread_mutex_destroy(&io_a_borrar->mutex_dispositivos);
-            //free(dispositivo);
             free(io_a_borrar);
         }
         

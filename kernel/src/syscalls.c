@@ -32,7 +32,7 @@ void llamar_a_io(int socket_dispatch) {
             estado_anterior = pcb->estado_actual;
             cambiar_estado(pcb, EXIT);
             log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
-            borrar_pcb(pcb);
+            //borrar_pcb(pcb);
         } else{
             log_error(logger, "No se encontro PCB con PID %d al intentar finalizar por IO null", pid);
         }
@@ -219,9 +219,18 @@ void manejar_finaliza_io(int socket_io){
         sem_post(&sem_procesos_ready);
 
     }
+    pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, nombre_dispositivo);
+    if(io == NULL){
+        pthread_mutex_unlock(&mutex_dispositivos);
+        return;
+    }
+    pthread_mutex_lock(&io->mutex_dispositivos);
+    pthread_mutex_unlock(&mutex_dispositivos);
     t_instancia_io* instancia = NULL;
+    
 
+    
     for(int i = 0; i < list_size(io->sockets_io); i++){
         t_instancia_io* actual = list_get(io->sockets_io, i);
         if(actual->socket == socket_io){
@@ -229,6 +238,7 @@ void manejar_finaliza_io(int socket_io){
             break;
         }
     }
+    pthread_mutex_unlock(&io->mutex_dispositivos);
 
     if(instancia != NULL){
         //log_error(logger, "216: pthread_mutex_lock(&io->mutex_dispositivos);");
