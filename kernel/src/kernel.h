@@ -42,7 +42,6 @@ typedef struct
 typedef struct {
     t_list* sockets_io;//lista de t_instancia_io
     t_queue* cola_bloqueados;
-    pthread_mutex_t mutex_dispositivos;
 } t_dispositivo_io;
 
 typedef struct {
