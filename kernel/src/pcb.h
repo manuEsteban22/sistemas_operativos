@@ -54,6 +54,7 @@ void log_metricas_estado(t_pcb* pcb);
 bool hay_proceso_en_exec();
 t_pcb* obtener_proceso_en_exec();
 bool cpu_esta_en_lista(int cpu_id);
+void enviar_interrupcion_a_cpu(int socket_interrupt);
 
 #include<planificador_largo_plazo.h>
 

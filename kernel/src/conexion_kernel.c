@@ -237,7 +237,9 @@ void matar_io (int socket_cliente){
     char* nombre = buscar_io_por_socket(socket_cliente);
     if(nombre != NULL){
         log_info(logger, "Se desconecto un dispositivo [%s] de socket (%d)", nombre, socket_cliente);
-        t_dispositivo_io* dispositivo = dictionary_get(dispositivos_io, nombre);
+        pthread_mutex_lock(&mutex_dispositivos);
+        t_dispositivo_io* dispositivo = dictionary_remove(dispositivos_io, nombre);
+        pthread_mutex_unlock(&mutex_dispositivos);
         borrar_socket_io(dispositivo, socket_cliente);
 
 

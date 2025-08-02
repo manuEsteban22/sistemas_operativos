@@ -10,5 +10,7 @@
 void planificador_mediano_plazo();
 void informar_memoria_suspension(int pid);
 void inicializar_planificador_mp();
+int operacion_con_memoria();
+void cerrar_conexion_memoria(int socket);
 
 #endif

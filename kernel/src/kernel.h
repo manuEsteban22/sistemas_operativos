@@ -31,6 +31,7 @@ extern char* algoritmo_corto_plazo;
 extern int tiempo_suspension;
 
 void iniciar_estructuras();
+void proceso_arranque(int tamanio_proceso, char* nombre_archivo);
 
 typedef struct
 {

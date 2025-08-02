@@ -3,7 +3,7 @@
 
 t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     t_pcb* pcb = malloc(sizeof(t_pcb));
-    log_error(logger, "Se crea PID %d", pid);
+    //log_error(logger, "Se crea PID %d", pid);
     pcb->pid = pid;
     pcb->pc = 0;
     pcb->tamanio = tamanio_proceso;
@@ -90,7 +90,7 @@ void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado) {
 
 void borrar_pcb(t_pcb* pcb){
     if (pcb == NULL) return;
-    log_error(logger, "Se borra PID %d", pcb->pid);
+    //log_error(logger, "Se borra PID %d", pcb->pid);
    // log_error(logger, "77: pthread_mutex_lock(&pcb->mutex_pcb);");
     pthread_mutex_lock(&pcb->mutex_pcb);
     char* pid_str = string_itoa(pcb->pid);
@@ -107,7 +107,7 @@ void borrar_pcb(t_pcb* pcb){
 
    // log_error(logger, "92 pthread_mutex_lock(&mutex_tabla_pcbs);");
     pthread_mutex_lock(&mutex_tabla_pcbs);
-    t_pcb* pcb_borrar = dictionary_remove(tabla_pcbs, pid_str);
+    /*t_pcb* pcb_borrar = */dictionary_remove(tabla_pcbs, pid_str);
     //log_error(logger, "95: pthread_mutex_unlock(&mutex_tabla_pcbs);");
     pthread_mutex_unlock(&mutex_tabla_pcbs);
 

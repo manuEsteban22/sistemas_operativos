@@ -5,7 +5,7 @@ void* trackear_bloqueo(void* args){
     usleep(1000 * tiempo_suspension);
     
     //log_error(logger, "pmp 7: pthread_mutex_lock(&pcb->mutex_pcb);");
-    if(pcb == NULL){return;}
+    if(pcb == NULL){return NULL;}
     pthread_mutex_lock(&pcb->mutex_pcb);
     if(pcb->estado_actual == BLOCKED){
         

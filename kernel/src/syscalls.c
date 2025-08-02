@@ -7,7 +7,7 @@ void llamar_a_io(int socket_dispatch) {
 
     int* pid_raw = list_get(campos, 0);
     int* pc_raw = list_get(campos, 1);
-    int* size_disp = list_get(campos, 2);
+    //int* size_disp = list_get(campos, 2);
     char* dispositivo = list_get(campos, 3);
     int* tiempo_raw = list_get(campos, 4);
     int* cpuid_raw = list_get(campos, 5);
@@ -439,11 +439,11 @@ void dump_memory(int socket_dispatch){
 
 void iniciar_proceso(int socket_cpu){
     t_list* recibido = recibir_paquete(socket_cpu);
-    int* pid_anterior_raw = list_get(recibido, 0);
+    //int* pid_anterior_raw = list_get(recibido, 0);
     int* tamanio_proceso_raw = list_get(recibido, 1);
     char* nombre_archivo = list_get(recibido, 2);
 
-    int pid_anterior = *pid_anterior_raw;
+    //int pid_anterior = *pid_anterior_raw;
     int tamanio_proceso = *tamanio_proceso_raw;
     int pid = crear_proceso(tamanio_proceso);
 
