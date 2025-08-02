@@ -28,6 +28,7 @@ typedef struct
     int tamanio;
     double estimacion_rafaga;
     double rafaga_real_anterior;
+    double rafaga_acumulada;
     t_temporal* temporal_blocked;
     pthread_mutex_t mutex_pcb;
     bool en_suspension_check;
@@ -45,7 +46,7 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso);
 void cambiar_estado(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void cambiar_estado_sin_lock(t_pcb* pcb, t_estado_proceso nuevo_estado);
 void borrar_pcb(t_pcb* pcb);
-void actualizar_estimacion_rafaga(t_pcb* pcb);
+void actualizar_estimacion_rafaga(t_pcb* pcb, double tiempo_actual, bool rafaga_completa);
 void chequear_sjf_con_desalojo(t_pcb* nuevo);
 void asignar_timer_blocked(t_pcb* pcb);
 t_pcb* sacar_pcb_de_cola(t_queue* cola, int pid);

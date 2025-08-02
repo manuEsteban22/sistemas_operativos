@@ -11,6 +11,7 @@ t_pcb* crear_pcb(int pid, int tamanio_proceso) {
     pcb->temporal_estado = temporal_create();
     pcb->temporal_blocked = NULL;
     pcb->en_suspension_check = false;
+    pcb->rafaga_acumulada = 0;
     //Inicializo el pcb en estado NEW y creo el cronometro
 
     for(int i = 0; i < CANTIDAD_ESTADOS; i++) {
@@ -122,23 +123,31 @@ void borrar_pcb(t_pcb* pcb){
 
 }
 
-void actualizar_estimacion_rafaga(t_pcb* pcb) {
+void actualizar_estimacion_rafaga(t_pcb* pcb, double tiempo_actual, bool rafaga_completa) {
     if (pcb == NULL) {
         log_error(logger, "No se pudo actualizar la estimacion, el PCB es NULL");
         return;
     }
    // log_error(logger, "bloquea pcb pcb:102");
     pthread_mutex_lock(&pcb->mutex_pcb);
-    double rafaga_real = temporal_gettime(pcb->temporal_estado);
-    pcb->rafaga_real_anterior = rafaga_real;
 
-    log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga %f - Estimacion previa %f", pcb->pid, pcb->rafaga_real_anterior, pcb->estimacion_rafaga);
-    double nueva_estimacion = (alfa * rafaga_real) + ((1 - alfa) * pcb->estimacion_rafaga);
-    pcb->estimacion_rafaga = nueva_estimacion;
-    log_debug(logger, "Nueva estimacion = %f", nueva_estimacion);
+    //double tiempo_actual = temporal_gettime(pcb->temporal_estado);
+    pcb->rafaga_acumulada = tiempo_actual;
+
+    if(rafaga_completa){
+        double rafaga_real_completa = pcb->rafaga_acumulada;
+        pcb->rafaga_real_anterior = rafaga_real_completa;
+
+        log_debug(logger, "Se actualizo la estimacion de PID %d - Rafaga completa %f - Estimacion previa %f", pcb->pid, rafaga_real_completa, pcb->estimacion_rafaga);
+
+        double nueva_estimacion = (alfa * rafaga_real_completa) + ((1 - alfa) * pcb->estimacion_rafaga);
+        pcb->estimacion_rafaga = nueva_estimacion;
+        pcb->rafaga_acumulada = 0;
+        log_debug(logger, "Nueva estimacion %f", nueva_estimacion);
+    }
+
     temporal_destroy(pcb->temporal_estado);
     pcb->temporal_estado = temporal_create();
-   // log_error(logger, "125: pthread_mutex_unlock(&pcb->mutex_pcb);");
     pthread_mutex_unlock(&pcb->mutex_pcb);
 }
 
@@ -153,7 +162,10 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     
     t_pcb* ejecutando = obtener_proceso_en_exec();
     double tiempo_ejecutando = temporal_gettime(ejecutando->temporal_estado);
-    double estimacion_restante = ejecutando->estimacion_rafaga - tiempo_ejecutando;
+
+    double rafaga_total_estimada = ejecutando->estimacion_rafaga;
+    double tiempo_ya_usado = ejecutando->rafaga_acumulada + tiempo_ejecutando;
+    double estimacion_restante = rafaga_total_estimada - tiempo_ejecutando;
 
     if(estimacion_restante < 0){
         log_debug(logger, "La estimacion restante fue menor a 0");
@@ -165,12 +177,11 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
     //el chequeo de aca tiene que ser con la estimacion - tiempo ejecutado
     if (nuevo->estimacion_rafaga < estimacion_restante) {
         char* pid_str = string_itoa(ejecutando->pid);
-       // log_error(logger, "152 pthread_mutex_lock(&mutex_exec);");
+
         pthread_mutex_lock(&mutex_exec);
         int* cpu_id_ptr = dictionary_get(tabla_exec, pid_str);
-       // log_error(logger, "155 pthread_mutex_unlock(&mutex_exec);");
         pthread_mutex_unlock(&mutex_exec);
-        log_debug(logger,"hasta aca llegue 7");
+
         if(cpu_id_ptr == NULL){
             log_error(logger, "chequear_sjf: no existe exec para PID %d", ejecutando->pid);
             free(pid_str);
@@ -179,54 +190,47 @@ void chequear_sjf_con_desalojo(t_pcb* nuevo) {
 
         int cpu_id = *cpu_id_ptr;
         char* cpu_id_str = string_itoa(cpu_id);
-       // log_error(logger, "168: pthread_mutex_lock(&mutex_interrupt);");
+
         pthread_mutex_lock(&mutex_interrupt);
         int* socket_interrupt_ptr = dictionary_get(tabla_interrupt, cpu_id_str);
-       // log_error(logger, "171: pthread_mutex_unlock(&mutex_interrupt);");
         pthread_mutex_unlock(&mutex_interrupt);
         free(cpu_id_str);
+
         if(socket_interrupt_ptr != NULL){
             int socket_interrupt = *socket_interrupt_ptr;
+
+            pthread_mutex_lock(&ejecutando->mutex_pcb);
+            double tiempo_parcial = temporal_gettime(ejecutando->temporal_estado);
+            ejecutando->rafaga_acumulada += tiempo_parcial;
+            pthread_mutex_unlock(&ejecutando->mutex_pcb);
+
             enviar_interrupcion_a_cpu(socket_interrupt);
             log_info(logger, "## (%d) - Desalojado por algoritmo SJF/SRT", ejecutando->pid);
 
-            //log_error(logger, "178: pthread_mutex_lock(&mutex_exec);");
             pthread_mutex_lock(&mutex_exec);
             int* cpu_id = dictionary_remove(tabla_exec, pid_str);
-            //log_error(logger, "181: pthread_mutex_unlock(&mutex_exec);");
             pthread_mutex_unlock(&mutex_exec);
             
-            ejecutando->estimacion_rafaga = estimacion_restante;
-            //pthread_mutex_unlock(&ejecutando->mutex_pcb);
-            //log_error(logger, "aca se hace un push a cola de ready de PID %d", ejecutando->pid);
-            //log_error(logger, "187: pthread_mutex_lock(&mutex_ready);");
+            
             pthread_mutex_lock(&mutex_ready);
             queue_push(cola_ready, ejecutando);
-            //log_error(logger, "190: pthread_mutex_unlock(&mutex_ready);");
             pthread_mutex_unlock(&mutex_ready);
             
-            //log_warning(logger, "Pusheo cpu %d a cpus libres", *cpu_id);
-            //log_error(logger, "194: pthread_mutex_lock(&mutex_cpus_libres);");
             pthread_mutex_lock(&mutex_cpus_libres);
             if(!cpu_esta_en_lista(*cpu_id)){
                 list_add(cpus_libres, cpu_id);
             } else{
-                //free(cpu_id);
+                free(cpu_id);
             }
             log_debug(logger, "La cola de CPUs libres tiene un tamaño de %d", list_size(cpus_libres));
-            //log_error(logger, "197: pthread_mutex_unlock(&mutex_cpus_libres);");
             pthread_mutex_unlock(&mutex_cpus_libres);
-            //pushear ejecutando a ready
-            //pushear a la cola de cpus libres tambien
-            //popear ejecutando de tabla exec
+
             sem_post(&cpus_disponibles);
             sem_post(&sem_procesos_ready);
         } else {
             log_error(logger, "No se encontró socket de interrupción para CPU %d", cpu_id);
         }
         free(pid_str);
-        log_debug(logger,"hasta aca llegue chequear");
-        // y hay que replanificar
     }
 }
 

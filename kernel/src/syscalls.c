@@ -23,7 +23,7 @@ void llamar_a_io(int socket_dispatch) {
     pthread_mutex_lock(&mutex_dispositivos);
     t_dispositivo_io* io = dictionary_get(dispositivos_io, dispositivo);
     //log_error(logger, "25 pthread_mutex_unlock(&mutex_dispositivos);");
-    pthread_mutex_unlock(&mutex_dispositivos);
+    // pthread_mutex_unlock(&mutex_dispositivos);
 
     if(io == NULL) {
         log_debug(logger, "Dispositivo IO [%s] no esta conectado. Enviando proceso a EXIT", dispositivo);
@@ -59,16 +59,19 @@ void llamar_a_io(int socket_dispatch) {
 
         list_destroy_and_destroy_elements(campos, free);
         //free(dispositivo);
+        pthread_mutex_unlock(&mutex_dispositivos);
         return;
     }
 
+    pthread_mutex_unlock(&mutex_dispositivos);
     
     t_pcb* pcb = obtener_pcb(pid);
     pcb->pc = pc;
 
     temporal_stop(pcb->temporal_estado);
-    actualizar_estimacion_rafaga(pcb);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s",pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
 
@@ -114,11 +117,7 @@ void llamar_a_io(int socket_dispatch) {
         bloqueado->tiempo = tiempo;
         queue_push(io->cola_bloqueados, bloqueado);
     } else {
-        //log_error(logger, "97: pthread_mutex_lock(&io->mutex_dispositivos);");
-        pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->pid_ocupado = pid;
-        //log_error(logger, "101: pthread_mutex_unlock(&io->mutex_dispositivos);");
-        pthread_mutex_unlock(&io->mutex_dispositivos);
 
         t_paquete* paquete = crear_paquete();
         cambiar_opcode_paquete(paquete, SOLICITUD_IO);
@@ -225,7 +224,6 @@ void manejar_finaliza_io(int socket_io){
         pthread_mutex_unlock(&mutex_dispositivos);
         return;
     }
-    pthread_mutex_lock(&io->mutex_dispositivos);
     pthread_mutex_unlock(&mutex_dispositivos);
     t_instancia_io* instancia = NULL;
     
@@ -238,15 +236,10 @@ void manejar_finaliza_io(int socket_io){
             break;
         }
     }
-    pthread_mutex_unlock(&io->mutex_dispositivos);
 
     if(instancia != NULL){
-        //log_error(logger, "216: pthread_mutex_lock(&io->mutex_dispositivos);");
-        pthread_mutex_lock(&io->mutex_dispositivos);
         instancia->ocupado = false;
         instancia->pid_ocupado = -1;
-        //log_error(logger, "220: pthread_mutex_unlock(&io->mutex_dispositivos);");
-        pthread_mutex_unlock(&io->mutex_dispositivos);
     }
 
     if (!queue_is_empty(io->cola_bloqueados)) {
@@ -271,12 +264,8 @@ void manejar_finaliza_io(int socket_io){
         enviar_paquete(paquete, libre->socket, logger);
         borrar_paquete(paquete);
 
-      //  log_error(logger, "247: pthread_mutex_lock(&io->mutex_dispositivos);");
-        pthread_mutex_lock(&io->mutex_dispositivos);
         libre->ocupado = true;
         libre->pid_ocupado = siguiente->pid;
-      //  log_error(logger, "251: pthread_mutex_unlock(&io->mutex_dispositivos);");
-        pthread_mutex_unlock(&io->mutex_dispositivos);
 
         int* cpu_id_ptr_copia = malloc(sizeof(int));
         *cpu_id_ptr_copia = cpu_id;
@@ -381,8 +370,10 @@ void dump_memory(int socket_dispatch){
     //pc++;
     pcb->pc = pc;
 
-    actualizar_estimacion_rafaga(pcb);
+    temporal_stop(pcb->temporal_estado);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
     estado_anterior = pcb->estado_actual;
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     cambiar_estado(pcb, BLOCKED);
     log_info(logger, "(%d) Pasa del estado %s al estado %s", pcb->pid, parsear_estado(estado_anterior), parsear_estado(pcb->estado_actual));
     
@@ -492,7 +483,9 @@ void ejecutar_exit(int socket_cpu){
     int pid = *pid_raw;
 
     t_pcb* pcb = obtener_pcb(pid);
-    actualizar_estimacion_rafaga(pcb);
+    temporal_stop(pcb->temporal_estado);
+    double tiempo_rafaga = temporal_gettime(pcb->temporal_estado);
+    actualizar_estimacion_rafaga(pcb, tiempo_rafaga, true);
     finalizar_proceso(pcb);
     list_destroy_and_destroy_elements(recibido, free);
 
