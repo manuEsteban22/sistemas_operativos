@@ -66,15 +66,10 @@ void* inicializar_proceso(int tam_proceso, int pid, char* nombre_archivo) {
     return proceso->tabla_raiz;
 }
 
-<<<<<<< HEAD
-void suspender_proceso(int pid)
-{
-=======
 
 
 
 void suspender_proceso(int pid){
->>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
     char* pid_str = string_itoa(pid);
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
@@ -163,10 +158,6 @@ void des_suspender_proceso(int pid)
     log_info(logger, "Proceso %d des-suspendido correctamente", pid);
 }
 
-<<<<<<< HEAD
-void* finalizar_proceso(int pid) 
-{
-=======
 
 void liberar_marcos_de_proceso(t_tabla_paginas* tabla, int nivel_actual) {
     int cant_entradas = list_size(tabla->entradas);
@@ -190,7 +181,6 @@ void liberar_marcos_de_proceso(t_tabla_paginas* tabla, int nivel_actual) {
 
 
 void* finalizar_proceso(int pid) {
->>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
     char* pid_str = string_itoa(pid);
     pthread_mutex_lock(&mutex_diccionario_procesos);
     t_proceso* proceso = dictionary_get(tablas_por_pid, pid_str);
@@ -203,14 +193,9 @@ void* finalizar_proceso(int pid) {
         return NULL;
     }
 
-<<<<<<< HEAD
-    if (proceso->tabla_raiz) 
-    {
-=======
     // Libera toda la jerarquía de tablas de páginas
     if (proceso->tabla_raiz) {
         liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
->>>>>>> 9f3e27dd336ca9c00c85b1e473b6f3e2d75e0731
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
