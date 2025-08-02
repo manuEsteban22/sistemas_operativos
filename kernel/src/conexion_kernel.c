@@ -79,6 +79,7 @@ void* manejar_servidor_cpu(void* arg){
                 break;
             case SYSCALL_INIT:
                 log_info(logger, "Me llego syscall INIT_PROC");
+                
                 iniciar_proceso(socket_cliente);
                 break;
             case SYSCALL_EXIT:

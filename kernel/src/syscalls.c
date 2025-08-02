@@ -442,14 +442,17 @@ void iniciar_proceso(int socket_cpu){
     //int* pid_anterior_raw = list_get(recibido, 0);
     int* tamanio_proceso_raw = list_get(recibido, 1);
     char* nombre_archivo = list_get(recibido, 2);
-
     //int pid_anterior = *pid_anterior_raw;
     int tamanio_proceso = *tamanio_proceso_raw;
     int pid = crear_proceso(tamanio_proceso);
     t_pcb* pcb = obtener_pcb(pid);
     pushear_a_new(pcb);
 
+    t_pcb* pcb = obtener_pcb(pid);
+    bool entra = enviar_pedido_memoria(pcb);
 
+    if(entra)
+    {
     t_paquete* paquete = crear_paquete();
     cambiar_opcode_paquete(paquete, OC_INIT);
     agregar_a_paquete(paquete, &pid, sizeof(int));
@@ -460,6 +463,7 @@ void iniciar_proceso(int socket_cpu){
     cerrar_conexion_memoria(socket_memoria);
     borrar_paquete(paquete);
     log_debug(logger, "Se va a iniciar el proceso (%s), tamanio [%d]", nombre_archivo, tamanio_proceso);
+    }else{}
 
     list_destroy_and_destroy_elements(recibido, free);    
 }
