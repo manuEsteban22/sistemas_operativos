@@ -409,6 +409,7 @@ void liberar_proceso(void* proceso_void)
 
     if (proceso->tabla_raiz) 
     {
+        liberar_marcos_de_proceso(proceso->tabla_raiz, 0);
         liberar_tabla(proceso->tabla_raiz, 0);
         proceso->tabla_raiz = NULL;
     }
@@ -419,9 +420,21 @@ void liberar_proceso(void* proceso_void)
     t_list* instrucciones = dictionary_remove(lista_de_instrucciones_por_pid, pid_str);
     pthread_mutex_unlock(&mutex_diccionario_instrucciones);
 
+    
+
     if (instrucciones)
     {
         list_destroy_and_destroy_elements(instrucciones, free);
+    }
+    
+    pthread_mutex_lock(&mutex_semaforos);
+    t_sem* semaforo = dictionary_remove(semaforos_por_pid, pid_str);
+    pthread_mutex_unlock(&mutex_semaforos);
+
+    if (semaforo)
+    {
+        sem_destroy (semaforo);
+        free (semaforo);
     }
 
     pthread_mutex_lock(&mutex_diccionario_procesos);
